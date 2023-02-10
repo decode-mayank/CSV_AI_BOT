@@ -12,10 +12,10 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Insert OpenAI text embedding model and input
 my_model = 'text-embedding-ada-002'
-my_input = "I think I have a sleep problem, where do I get help?"
+my_input = "I have a sleep problem"
 
 # Calculate embedding vector for the input using OpenAI Embeddings endpoint
-def get_embedding(model: str, text: str) -> list[float]:
+def get_embedding(model, text):
     result = openai.Embedding.create(
       model = model,
       input = text
@@ -30,14 +30,16 @@ df = pd.read_csv('resmed_embeddings.csv')
 df['embedding'] = df['embedding'].apply(eval).apply(np.array)
 df['similarity'] = df['embedding'].apply(lambda x: cosine_similarity(x, input_embedding_vector))
 
-print(df["similarity"])
+# print(df["similarity"])
+
 # Find the highest similarity value in the dataframe column 'similarity'
 highest_similarity = df['similarity'].max()
 
-# If the highest similarity value is equal or higher than 0.9 then print the 'completion' with the highest similarity
+# If the highest similarity value is equal or higher than 0.9 then print the 'completionzx' with the highest similarity
 if highest_similarity >= 0.8:
     fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
-    print(fact_with_highest_similarity)
+    breakpoint()
+    print(fact_with_highest_similarity,type(fact_with_highest_similarity))
 # Else pass input to the OpenAI Completions endpoint
 else:
     response = openai.Completion.create(

@@ -74,6 +74,15 @@
     Login to https://openai.com/ and get API key from https://beta.openai.com/account/api-keys
     
 #### 8. Scrape knowledge hub site ####
-    scrapy runspider scrape_knowledge_hub.py -O knowledge_hub.csv
+    scrapy runspider 1scrape_knowledge_hub.py -O knowledge_hub.csv
 
-#### 9. Change CSV to spreadsheet and create each sheet for type ####    
+#### 9. Scrape resmed products ####
+    scrapy runspider 2scrape_resmed_products.py -O resmed_products.csv
+
+#### 10. Change CSV to spreadsheet and create each sheet for type ####    
+
+#### 11. Generate embedding file ####  
+python 3get_all_embeddings.py
+
+#### 12. Run main file ####  
+python 4main.py
