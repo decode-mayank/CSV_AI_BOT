@@ -13,7 +13,6 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Insert OpenAI text embedding model and input
 my_model = 'text-embedding-ada-002'
-#my_input = "can it be cured?"
 
 context = ""
 
@@ -56,3 +55,8 @@ while True:
       )
       content = response['choices'][0]['text'].replace('\n', '')
       print(content)
+
+
+
+
+
