@@ -44,7 +44,8 @@ while True:
   # If the highest similarity value is equal or higher than 0.9 then print the 'completion' with the highest similarity
   if highest_similarity >= 0.8:
       fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
-      print(fact_with_highest_similarity)
+      print(fact_with_highest_similarity.iloc[0])
+      
   # Else pass input to the OpenAI Completions endpoint
   else:
       response = openai.Completion.create(
