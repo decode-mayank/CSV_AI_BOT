@@ -1,26 +1,31 @@
 # Resmed-Chatbot-for-knowledge-hub
 
-## Setup
-
+## Prerequisites:
 ####  1. If you don’t have Python installed, [install it from here](https://www.python.org/downloads/)
 
    * Note : 
      - Atleast Python >= 3.7.1 version is required to work with open ai
        - Reference - https://github.com/openai/openai-python#requirements
-   
-#### 2. Clone this Repository ####
+
+#### 2. Install postgresql ####
+    * Reference - https://www.postgresql.org/download/
+  
+
+## Setup
+
+#### 1. Clone this Repository ####
 
   ``` bash
     git clone https://bitbucket.org/bitcot/bitcot.ai.git
   ```
     
-#### 3. Navigate into the Project Directory ####
+#### 2. Navigate into the Project Directory ####
 
   ``` bash
      cd bitcot.ai
   ```
 
-#### 4. Install and configure virtualenv - Run below command ####
+#### 3. Install and configure virtualenv - Run below command ####
 
   ``` bash
       pip install virtualenv
@@ -50,12 +55,12 @@
         .\env\Scripts\activate 
        ```
 
-#### 5. To install the requirements ####
+#### 4. To install the requirements ####
   ``` bash
     pip install -r requirements.txt
   ```
 
-#### 6. Make a copy of the example environment variables file ####
+#### 5. Make a copy of the example environment variables file ####
 
   * On Linux/Mac: 
 
@@ -69,18 +74,33 @@
     $ copy .env.example .env
   ```
 
-#### 7. Follow below steps to get secret key from openai, open .env then assign that key to OPENAI_API_KEY 
+#### 6. Follow below steps to get secret key from openai, open .env then assign that key to OPENAI_API_KEY 
     
     Login to https://openai.com/ and get API key from https://beta.openai.com/account/api-keys
     
+#### 7. Create database ####
+    * On Linux/Ubuntu: 
+    ``` bash
+      $ psql -U postgres
+      $ CREATE DATABASE bitcotai
+      $ \q
+    ```
+
+    * On Mac: 
+    ``` bash
+      $ psql postgres
+      $ CREATE DATABASE bitcotai
+      $ \q
+    ```
+
 #### 8. Scrape knowledge hub site ####
     scrapy runspider 1scrape_knowledge_hub.py -O knowledge_hub.csv
 
 #### 9. Scrape resmed products ####
     scrapy runspider 2scrape_resmed_products.py -O resmed_products.csv
 
-#### 10. Change CSV to spreadsheet and create each sheet for type ####    
-
+#### 10. Change CSV to spreadsheet and create each sheet for type ####  
+ 
 #### 11. Generate embedding file ####  
 python 3get_all_embeddings.py
 
