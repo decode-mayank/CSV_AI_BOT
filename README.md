@@ -89,16 +89,19 @@
       $ psql postgres -c "CREATE DATABASE bitcotai"
     ```
 
-#### 8. Scrape knowledge hub site ####
+#### 8. Run 0init_db.py - This will create table in bitcotai database ####
+        python 0init_db.py
+
+#### 9. Scrape knowledge hub site ####
     scrapy runspider 1scrape_knowledge_hub.py -O knowledge_hub.csv
 
-#### 9. Scrape resmed products ####
+#### 10. Scrape resmed products ####
     scrapy runspider 2scrape_resmed_products.py -O resmed_products.csv
 
-#### 10. Change CSV to spreadsheet and create each sheet for type ####  
+#### 11. Change CSV to spreadsheet and create each sheet for type ####  
  
-#### 11. Generate embedding file ####  
+#### 12. Generate embedding file ####  
 python 3get_all_embeddings.py
 
-#### 12. Run main file ####  
+#### 13. Run main file ####  
 python 4main.py
