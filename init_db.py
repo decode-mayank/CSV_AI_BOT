@@ -17,7 +17,9 @@ try:
   cur.execute("""CREATE TABLE chatbot_datas (
     prompt VARCHAR(500),
     completion VARCHAR(1000),
-    response_accepted BOOLEAN NOT NULL DEFAULT FALSE
+    response_accepted BOOLEAN NOT NULL DEFAULT FALSE,
+    response_time SMALLINT NOT NULL CHECK (response_time > 0),
+    time_stamp TIMESTAMP NOT NULL
   );""")
 except psycopg2.errors.DuplicateTable:
   print(f"Table chatbot_datas already exist - If you want to drop this table then run DROP TABLE IF EXISTS chatbot_datas;")

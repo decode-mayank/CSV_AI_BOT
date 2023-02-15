@@ -1,5 +1,7 @@
 # Imports
 import os
+import time
+from datetime import datetime
 
 import openai
 from openai.embeddings_utils import cosine_similarity
@@ -13,7 +15,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def get_db_connection():
     conn = psycopg2.connect(host='localhost',
-                            database=os.getenv("DB"),
+                            database=os.getenv('DB'),
                             user=os.getenv('DB_USERNAME'),
                             password=os.getenv('DB_PASSWORD'))
     return conn
@@ -35,10 +37,13 @@ def get_embedding(model,text):
       return result['data'][0]['embedding']
 
 while True:
+  time_stamp=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
   response_accepted=True
   bot_response = None
+  response_time = 0
 
   my_input = input("User: ")
+  start_time = time.time()
   context = context + my_input
   
   # Save embedding vector of the input
@@ -47,7 +52,7 @@ while True:
   # Calculate similarity between the input and "facts" from companies_embeddings.csv file which we created before
   df = pd.read_csv('resmed_embeddings.csv')
   df['embedding'] = df['embedding'].apply(eval).apply(np.array)
-  df['similarity'] = df['embedding'].apply(lambda (x): cosine_similarity(x, input_embedding_vector))
+  df['similarity'] = df['embedding'].apply(lambda x: cosine_similarity(x, input_embedding_vector))
 
   print(df["similarity"])
   # Find the highest similarity value in the dataframe column 'similarity'
@@ -67,9 +72,14 @@ while True:
         temperature = 0
       )
       bot_response = response['choices'][0]['text'].replace('\n', '')
-  
+      
+  response_time = time.time() - start_time
   print(bot_response)
-  query = f"INSERT INTO chatbot_datas (prompt,completion,response_accepted) VALUES('{my_input}','{bot_response}','{response_accepted}');"
+  # Bot response may include single quotes when we pass that with conn.execute will return syntax error
+  # So, let's replace single quotes with double quotes
+  # Reference: https://stackoverflow.com/questions/12316953/insert-text-with-single-quotes-in-postgresql
+  bot_response = bot_response.replace("'","''")
+  query = f"INSERT INTO chatbot_datas (prompt,completion,response_accepted,response_time,time_stamp) VALUES('{my_input}','{bot_response}','{response_accepted}',{response_time},'{time_stamp}');"
   print(f"Query to execute - {query}")
   cur.execute(query)
   conn.commit()
