@@ -81,16 +81,12 @@
 #### 7. Create database ####
     * On Linux/Ubuntu: 
     ``` bash
-      $ psql -U postgres
-      $ CREATE DATABASE bitcotai
-      $ \q
+      $ sudo -u postgres psql -c "CREATE DATABASE bitcotai"
     ```
 
     * On Mac: 
     ``` bash
-      $ psql postgres
-      $ CREATE DATABASE bitcotai
-      $ \q
+      $ psql postgres -c "CREATE DATABASE bitcotai"
     ```
 
 #### 8. Scrape knowledge hub site ####
