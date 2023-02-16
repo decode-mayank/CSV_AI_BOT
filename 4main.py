@@ -16,6 +16,7 @@ my_model = 'text-embedding-ada-002'
 
 context = ""
 
+print("Bot: Hello! I'm Resmed Chatbot, a virtual assistant designed to help you with any questions or concerns you may have about Resmed products or services. Resmed is a global leader in sleep apnea treatment, and we're committed to improving the quality of life for people who suffer from sleep-disordered breathing.")
 while True:
   my_input = input("User: ")
   context = context + my_input
@@ -48,16 +49,7 @@ while True:
       
   # Else pass input to the OpenAI Completions endpoint
   else:
-      response = openai.Completion.create(
-        model = 'text-davinci-003',
-        prompt = my_input,
-        max_tokens = 100,
-        temperature = 0
-      )
-      content = response['choices'][0]['text'].replace('\n', '')
-      print(content)
-
-
-
-
+    link = "https://www.resmed.com.au/knowledge-hub"
+    text = "Resmed"
+    print(f"\u001b]8;;{link}\u001b\\{text}\u001b]8;;\u001b\\ operates in more than 140 countries worldwide.\nResmed's virtual assistant here to help you!\nWe at Resmed provide Products and Solutions for the treatment of Sleep-disordered breathing, such as Sleep Apnea. We Develop, Manufacture and Distribute a range of Products.")
 
