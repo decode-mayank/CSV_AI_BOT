@@ -17,6 +17,7 @@ try:
   cur.execute("""CREATE TABLE chatbot_datas (
     prompt VARCHAR(500),
     completion VARCHAR(1000),
+    probability FLOAT NOT NULL DEFAULT 0,
     response_accepted BOOLEAN NOT NULL DEFAULT FALSE,
     response_time SMALLINT NOT NULL CHECK (response_time > 0),
     time_stamp TIMESTAMP NOT NULL

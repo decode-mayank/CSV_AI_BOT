@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
+probability = 0
 
 def get_db_connection():
     conn = psycopg2.connect(host='localhost',
@@ -62,6 +63,7 @@ while True:
   if highest_similarity >= 0.8:
       fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
       bot_response=fact_with_highest_similarity.iloc[0]
+      probability = highest_similarity
       
   # Else pass input to the OpenAI Completions endpoint
   else:
@@ -72,6 +74,7 @@ while True:
         temperature = 0
       )
       bot_response = response['choices'][0]['text'].replace('\n', '')
+      probability = 0
       
   response_time = time.time() - start_time
   print(bot_response)
@@ -79,7 +82,7 @@ while True:
   # So, let's replace single quotes with double quotes
   # Reference: https://stackoverflow.com/questions/12316953/insert-text-with-single-quotes-in-postgresql
   bot_response = bot_response.replace("'","''")
-  query = f"INSERT INTO chatbot_datas (prompt,completion,response_accepted,response_time,time_stamp) VALUES('{my_input}','{bot_response}','{response_accepted}',{response_time},'{time_stamp}');"
+  query = f"INSERT INTO chatbot_datas (prompt,completion,probability,response_accepted,response_time,time_stamp) VALUES('{my_input}','{bot_response}','{probability}','{response_accepted}',{response_time},'{time_stamp}');"
   print(f"Query to execute - {query}")
   cur.execute(query)
   conn.commit()
