@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import os
 from dotenv import load_dotenv
+from colorama import Fore, Back, Style
 
 # Insert your API key
 load_dotenv()
@@ -16,9 +17,50 @@ my_model = 'text-embedding-ada-002'
 
 context = ""
 
+
+def get_moderation(question):
+    """
+    Check the question is safe to ask the model
+    Parameters:
+        question (str): The question to check
+    Returns a list of errors if the question is not safe, otherwise returns None
+    """
+
+    errors = {
+        "hate": "Content that expresses, incites, or promotes hate based on race, gender, ethnicity, religion, nationality, sexual orientation, disability status, or caste.",
+        "hate/threatening": "Hateful content that also includes violence or serious harm towards the targeted group.",
+        "self-harm": "Content that promotes, encourages, or depicts acts of self-harm, such as suicide, cutting, and eating disorders.",
+        "sexual": "Content meant to arouse sexual excitement, such as the description of sexual activity, or that promotes sexual services (excluding sex education and wellness).",
+        "sexual/minors": "Sexual content that includes an individual who is under 18 years old.",
+        "violence": "Content that promotes or glorifies violence or celebrates the suffering or humiliation of others.",
+        "violence/graphic": "Violent content that depicts death, violence, or serious physical injury in extreme graphic detail.",
+    }
+    response = openai.Moderation.create(input=question)
+    if response.results[0].flagged:
+        # get the categories that are flagged and generate a message
+        result = [
+            error
+            for category, error in errors.items()
+            if response.results[0].categories[category]
+        ]
+        return result
+    return None
+
+
 while True:
-  my_input = input("User: ")
+  my_input = input(Fore.GREEN + Style.BRIGHT + "User: " + Style.RESET_ALL)
   context = context + my_input
+  errors = get_moderation(my_input)
+  if errors:
+    print(
+        Fore.RED 
+        + Style.BRIGHT
+        + "Sorry, you're question didn't pass the moderation check:"
+    )
+    for error in errors:
+      print(error)
+    print(Style.RESET_ALL)
+    continue
   
 
 # Calculate embedding vector for the input using OpenAI Embeddings endpoint
@@ -44,7 +86,7 @@ while True:
   # If the highest similarity value is equal or higher than 0.9 then print the 'completion' with the highest similarity
   if highest_similarity >= 0.8:
       fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
-      print(fact_with_highest_similarity.iloc[0])
+      print(Fore.CYAN + Style.BRIGHT + fact_with_highest_similarity.iloc[0] + Style.NORMAL)
       
   # Else pass input to the OpenAI Completions endpoint
   else:
@@ -55,9 +97,4 @@ while True:
         temperature = 0
       )
       content = response['choices'][0]['text'].replace('\n', '')
-      print(content)
-
-
-
-
-
+      print(Fore.CYAN + Style.BRIGHT + content+ Style.NORMAL)
