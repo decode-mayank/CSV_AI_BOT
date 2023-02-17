@@ -9,6 +9,11 @@ import pandas as pd
 import numpy as np
 import psycopg2
 from dotenv import load_dotenv
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_random_exponential,
+)  # for exponential backoff
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -33,12 +38,13 @@ conn = get_db_connection()
 cur = conn.cursor()
 
 # Calculate embedding vector for the input using OpenAI Embeddings endpoint
+@retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
 def get_embedding(model,text):
-      result = openai.Embedding.create(
-        model = model,
-        input = text
-      )
-      return result['data'][0]['embedding']
+  result = openai.Embedding.create(
+    model = model,
+    input = text
+  )
+  return result['data'][0]['embedding']
 
 while True:
   time_stamp=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
