@@ -5,6 +5,11 @@ import pandas as pd
 import numpy as np
 import os
 from dotenv import load_dotenv
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_random_exponential,
+)  # for exponential backoff
 
 # Insert your API key
 load_dotenv()
@@ -22,6 +27,7 @@ while True:
   
 
 # Calculate embedding vector for the input using OpenAI Embeddings endpoint
+  @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
   def get_embedding(model,text):
       result = openai.Embedding.create(
         model = model,
