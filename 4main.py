@@ -26,6 +26,9 @@ def get_db_connection():
 my_model = 'text-embedding-ada-002'
 
 context = ""
+
+print("Bot: Hello! I'm Resmed Chatbot, a virtual assistant designed to help you with any questions or concerns you may have about Resmed products or services. Resmed is a global leader in sleep apnea treatment, and we're committed to improving the quality of life for people who suffer from sleep-disordered breathing.")
+  
 conn = get_db_connection()
 cur = conn.cursor()
 
@@ -67,14 +70,14 @@ while True:
       
   # Else pass input to the OpenAI Completions endpoint
   else:
-      response = openai.Completion.create(
+    response = openai.Completion.create(
         model = 'text-davinci-003',
         prompt = my_input,
         max_tokens = 100,
         temperature = 0
       )
-      bot_response = response['choices'][0]['text'].replace('\n', '')
-      probability = 0
+    bot_response = response['choices'][0]['text'].replace('\n', '')
+    probability = 0
       
   response_time = time.time() - start_time
   print(bot_response)
