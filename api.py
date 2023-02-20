@@ -25,10 +25,16 @@ app.add_middleware(
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content=jsonable_encoder({"detail": exc.errors(), "Error": "user_input url parameter is missing in the url eg: {base_url}/api/embed?user_input="}),
+        content=jsonable_encoder({"detail": exc.errors(), "body": exc.body}),
     )
 
 
 @app.get("/api/embed")
 async def embed_api(user_input):
+    '''
+    How to use this embed API ?
+    eg: Assuming your Base URL is - http://127.0.0.1:8001
+     curl -X GET \
+    'http://127.0.0.1:8001/api/embed?user_input=depression'
+    '''
     return {'answer': get_content(user_input)}
