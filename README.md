@@ -103,5 +103,13 @@
 #### 12. Generate embedding file ####  
 python 3get_all_embeddings.py
 
-#### 13. Run main file ####  
-python 4main.py
+#### 13. Run the chatbot ####
+a) To run chatbot as script - Run main file 
+python main.py
+
+b) To run chatbot as API - Run api file
+uvicorn api:app
+Default port is 8000
+
+To use other ports
+uvicorn api:app --port 8001
