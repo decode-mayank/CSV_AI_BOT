@@ -6,7 +6,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 # custom module imports
-from main import get_content
+from main import resmed_chatbot
 
 app = FastAPI()
 
@@ -37,4 +37,4 @@ async def embed_api(user_input):
      curl -X GET \
     'http://127.0.0.1:8001/api/embed?user_input=depression'
     '''
-    return {'answer': get_content(user_input)}
+    return {'answer': resmed_chatbot(user_input)}

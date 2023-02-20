@@ -19,7 +19,7 @@ try:
     completion VARCHAR(1000),
     probability FLOAT NOT NULL DEFAULT 0,
     response_accepted BOOLEAN NOT NULL DEFAULT FALSE,
-    response_time SMALLINT NOT NULL CHECK (response_time > 0),
+    response_time SMALLINT NOT NULL,
     time_stamp TIMESTAMP NOT NULL
   );""")
 except psycopg2.errors.DuplicateTable:
