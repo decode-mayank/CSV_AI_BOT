@@ -9,6 +9,11 @@ import pandas as pd
 import numpy as np
 import psycopg2
 from dotenv import load_dotenv
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_random_exponential,
+)  # for exponential backoff
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -25,11 +30,11 @@ def get_db_connection():
 # Insert OpenAI text embedding model and input
 my_model = 'text-embedding-ada-002'
 
-context = ""
 conn = get_db_connection()
 cur = conn.cursor()
 
 # Calculate embedding vector for the input using OpenAI Embeddings endpoint
+@retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
 def get_embedding(model,text):
       result = openai.Embedding.create(
         model = model,
@@ -95,4 +100,5 @@ def get_content(user_input=None):
 
 if __name__ == '__main__':
   while True:
+    print("Bot: Hello! I'm Resmed Chatbot, a virtual assistant designed to help you with any questions or concerns you may have about Resmed products or services. Resmed is a global leader in sleep apnea treatment, and we're committed to improving the quality of life for people who suffer from sleep-disordered breathing.")
     get_content()
