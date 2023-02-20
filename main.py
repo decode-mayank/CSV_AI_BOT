@@ -83,7 +83,6 @@ def resmed_chatbot(user_input, inputs=[]):
     # Else pass input to the OpenAI Completions endpoint
     else:
         prompt = user_input
-        breakpoint()
         if inputs and len(inputs) > 0 and len(outputs)>0:
             last_input = inputs[-1]
             last_output = outputs[-1]
