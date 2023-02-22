@@ -98,7 +98,7 @@ def resmed_chatbot(user_input, inputs=[]):
         probability = 0
     
     response_time = time.time() - start_time
-    print(Fore.CYAN + Style.BRIGHT + bot_response+ Style.NORMAL)
+    print(Fore.CYAN + Style.BRIGHT + f"Bot: {bot_response}" + Style.NORMAL)
     # Bot response may include single quotes when we pass that with conn.execute will return syntax error
     # So, let's replace single quotes with double quotes
     # Reference: https://stackoverflow.com/questions/12316953/insert-text-with-single-quotes-in-postgresql
@@ -140,7 +140,7 @@ def get_moderation(question):
     return None
     
 if __name__ == '__main__':
-  print("Bot: Hello! I'm Resmed Chatbot, a virtual assistant designed to help you with any questions or concerns you may have about Resmed products or services. Resmed is a global leader in sleep apnea treatment, and we're committed to improving the quality of life for people who suffer from sleep-disordered breathing.")
+  print(Fore.CYAN + Style.BRIGHT + f"Bot: Hello! I'm Resmed Chatbot, a virtual assistant designed to help you with any questions or concerns you may have about Resmed products or services. Resmed is a global leader in sleep apnea treatment, and we're committed to improving the quality of life for people who suffer from sleep-disordered breathing." + Style.NORMAL)
   while True:
     input_text = input(Fore.GREEN + Style.BRIGHT + "User: " + Style.RESET_ALL)
     inputs.append(input_text)
