@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import psycopg2
 from dotenv import load_dotenv
+from colorama import Fore, Back, Style
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -57,7 +58,7 @@ def resmed_chatbot(user_input, inputs=[]):
     
     
     if(not(user_input)):
-      user_input = input("User: ")
+      user_input = input(Fore.GREEN + Style.BRIGHT + "User: " + Style.RESET_ALL)
 
     start_time = time.time()
     context = context + user_input
@@ -97,7 +98,7 @@ def resmed_chatbot(user_input, inputs=[]):
         probability = 0
     
     response_time = time.time() - start_time
-    print(bot_response)
+    print(Fore.CYAN + Style.BRIGHT + f"Bot: {bot_response}" + Style.NORMAL)
     # Bot response may include single quotes when we pass that with conn.execute will return syntax error
     # So, let's replace single quotes with double quotes
     # Reference: https://stackoverflow.com/questions/12316953/insert-text-with-single-quotes-in-postgresql
@@ -109,10 +110,49 @@ def resmed_chatbot(user_input, inputs=[]):
     print("Data added successfully")
     return bot_response
 
+
+def get_moderation(question):
+    """
+    Check the question is safe to ask the model
+    Parameters:
+        question (str): The question to check
+    Returns a list of errors if the question is not safe, otherwise returns None
+    """
+
+    errors = {
+        "hate": "Content that expresses, incites, or promotes hate based on race, gender, ethnicity, religion, nationality, sexual orientation, disability status, or caste.",
+        "hate/threatening": "Hateful content that also includes violence or serious harm towards the targeted group.",
+        "self-harm": "Content that promotes, encourages, or depicts acts of self-harm, such as suicide, cutting, and eating disorders.",
+        "sexual": "Content meant to arouse sexual excitement, such as the description of sexual activity, or that promotes sexual services (excluding sex education and wellness).",
+        "sexual/minors": "Sexual content that includes an individual who is under 18 years old.",
+        "violence": "Content that promotes or glorifies violence or celebrates the suffering or humiliation of others.",
+        "violence/graphic": "Violent content that depicts death, violence, or serious physical injury in extreme graphic detail.",
+    }
+    response = openai.Moderation.create(input=question)
+    if response.results[0].flagged:
+        # get the categories that are flagged and generate a message
+        result = [
+            error
+            for category, error in errors.items()
+            if response.results[0].categories[category]
+        ]
+        return result
+    return None
     
 if __name__ == '__main__':
-  print("Bot: Hello! I'm Resmed Chatbot, a virtual assistant designed to help you with any questions or concerns you may have about Resmed products or services. Resmed is a global leader in sleep apnea treatment, and we're committed to improving the quality of life for people who suffer from sleep-disordered breathing.")
+  print(Fore.CYAN + Style.BRIGHT + f"Bot: Hello! I'm Resmed Chatbot, a virtual assistant designed to help you with any questions or concerns you may have about Resmed products or services. Resmed is a global leader in sleep apnea treatment, and we're committed to improving the quality of life for people who suffer from sleep-disordered breathing." + Style.NORMAL)
   while True:
-    input_text = input("User: ")
+    input_text = input(Fore.GREEN + Style.BRIGHT + "User: " + Style.RESET_ALL)
     inputs.append(input_text)
+    errors = get_moderation(input_text)
+    if errors:
+        print(
+            Fore.RED 
+            + Style.BRIGHT
+            + "Sorry, you're question didn't pass the moderation check:"
+        )
+        for error in errors:
+            print(error)
+        print(Style.RESET_ALL)
+        continue
     resmed_chatbot(input_text, inputs)
