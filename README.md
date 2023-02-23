@@ -113,3 +113,6 @@ Default port is 8000
 
 To use other ports
 uvicorn api:app --port 8001
+
+c) To launch chabot UI - Run output.py
+python output.py

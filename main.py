@@ -58,7 +58,9 @@ def resmed_chatbot(user_input, inputs=[]):
     
     
     if(not(user_input)):
-      user_input = input(Fore.GREEN + Style.BRIGHT + "User: " + Style.RESET_ALL)
+      user_input = input(f"{Fore.GREEN}{Style.BRIGHT}User: {Style.RESET_ALL}")
+    else:
+        print(f"{Fore.GREEN}{Style.BRIGHT}User: {user_input}{Style.RESET_ALL}")
 
     start_time = time.time()
     context = context + user_input

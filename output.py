@@ -1,11 +1,12 @@
-import openai
 import os
+
+import openai
 from dotenv import load_dotenv
 import gradio as gr
-from main import resmed_chatbot, get_embedding, get_db_connection
-from openai.embeddings_utils import cosine_similarity
 import pandas as pd
 import numpy as np
+
+from main import resmed_chatbot
 
 # Insert your API key
 load_dotenv()
@@ -19,7 +20,6 @@ def chatgpt_clone(input, history):
     history = history or []
     s = list(sum(history, ()))
     s.append(input)
-    inp = ' '.join(s)
     output = resmed_chatbot(input, history)
     history.append((input, output))
     return history, history 
@@ -34,14 +34,4 @@ with block:
     submit = gr.Button("SEND")
     submit.click(chatgpt_clone, inputs=[message, state], outputs=[chatbot, state])
 
-
 block.launch(debug=True)
-
-
-
-
-
-
-
-
-
