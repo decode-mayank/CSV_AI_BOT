@@ -98,9 +98,10 @@ def resmed_chatbot(user_input, inputs=[]):
     
     response_time = time.time() - start_time
     print(bot_response)
-    # Bot response may include single quotes when we pass that with conn.execute will return syntax error
+    # User input, Bot response may include single quotes when we pass that with conn.execute will return syntax error
     # So, let's replace single quotes with double quotes
     # Reference: https://stackoverflow.com/questions/12316953/insert-text-with-single-quotes-in-postgresql
+    user_input = user_input.replace("'","''")
     bot_response = bot_response.replace("'","''")
     query = f"INSERT INTO chatbot_datas (prompt,completion,probability,response_accepted,response_time,time_stamp) VALUES('{user_input}','{bot_response}','{probability}','{response_accepted}',{response_time},'{time_stamp}');"
     print(f"Query to execute - {query}")
