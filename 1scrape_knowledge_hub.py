@@ -1,6 +1,4 @@
 import scrapy
-from scrapy.crawler import CrawlerProcess
-
 
 class ResmedSpider(scrapy.Spider):
 
