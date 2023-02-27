@@ -69,7 +69,7 @@ def resmed_chatbot(user_input, inputs=[]):
     input_embedding_vector = get_embedding(my_model, user_input)
 
     # Calculate similarity between the input and "facts" from companies_embeddings.csv file which we created before
-    df = pd.read_csv('resmed_embeddings.csv')
+    df = pd.read_csv('resmed_embeddings_final.csv')
     df['embedding'] = df['embedding'].apply(eval).apply(np.array)
     df['similarity'] = df['embedding'].apply(lambda x: cosine_similarity(x, input_embedding_vector))
 
