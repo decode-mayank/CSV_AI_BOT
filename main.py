@@ -92,10 +92,7 @@ def resmed_chatbot(user_input, inputs=[]):
         response = openai.Completion.create(
             prompt="Answer the question only related to the topics of sleep,health,mask and if you're unsure of the answer, say That I have been trained to answer only sleep and health related queries " + user_input,
             temperature=0,
-            max_tokens=300,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0,
+            max_tokens=200,
             model="text-davinci-003"
         )
         bot_response = response['choices'][0]['text'].replace('\n', '')
