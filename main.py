@@ -59,8 +59,6 @@ def resmed_chatbot(user_input, inputs=[]):
     
     if(not(user_input)):
       user_input = input(f"{Fore.GREEN}{Style.BRIGHT}User: {Style.RESET_ALL}")
-    else:
-        print(f"{Fore.GREEN}{Style.BRIGHT}User: {user_input}{Style.RESET_ALL}")
 
     start_time = time.time()
     context = context + user_input
@@ -85,16 +83,16 @@ def resmed_chatbot(user_input, inputs=[]):
         
     # Else pass input to the OpenAI Completions endpoint
     else:
-        prompt = user_input
+        prompt = f"Answer the question only related to the topics of sleep,health,mask and if you're unsure of the answer, say That I have been trained to answer only sleep and health related queries"
         if inputs and len(inputs) > 0 and len(outputs)>0:
             last_input = inputs[-1]
             last_output = outputs[-1]
-            prompt = f"{user_input} (based on my previous question: {last_input}, and your previous answer: {last_output})"
+            prompt += f"(based on my previous question: {last_input}, and your previous answer: {last_output})"
         response = openai.Completion.create(
-            model="text-davinci-003",
-            prompt=prompt,
-            max_tokens=200,
+            prompt= f"{prompt} {user_input}?",
             temperature=0,
+            max_tokens=50,
+            model="text-davinci-003"
         )
         bot_response = response['choices'][0]['text'].replace('\n', '')
         probability = 0
