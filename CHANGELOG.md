@@ -8,3 +8,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - [BITCOTAI-35] - Created UI for resmed chatbot using gradio
 - pip install gradio
+
+### Changed
+- [BITCOTAI-44] - Embed entire knowledge hub records
