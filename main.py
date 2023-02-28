@@ -98,7 +98,7 @@ def resmed_chatbot(user_input, inputs=[]):
         probability = 0
     
     response_time = time.time() - start_time
-    print(Fore.CYAN + Style.BRIGHT + f"{'Bot:' if  highest_similarity >= 0.8 else 'EmbeddedBot:'} {bot_response}" + Style.NORMAL)
+    print(Fore.CYAN + Style.BRIGHT + f"{'Bot:' if  probability == 0 else 'EmbeddedBot:'} {bot_response}" + Style.NORMAL)
     # Bot response may include single quotes when we pass that with conn.execute will return syntax error
     # So, let's replace single quotes with double quotes
     # Reference: https://stackoverflow.com/questions/12316953/insert-text-with-single-quotes-in-postgresql
