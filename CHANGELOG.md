@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Changed
+- When we answer query with help of embedding then use EmbeddedBot: as prefix otherwise Bot:
+
+### Changed
 - [BITCOTAI-44] - Embed entire knowledge hub records
 
 ### Added
