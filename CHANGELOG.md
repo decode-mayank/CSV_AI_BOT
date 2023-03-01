@@ -17,3 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - [BITCOTAI-35] - Created UI for resmed chatbot using gradio
 - pip install gradio
+
+### Added 
+- [BITCOTAI-42] - Added new column "source" in DB
+- cur.execute('ALTER TABLE chatbot_datas ADD COLUMN "source" text;')
