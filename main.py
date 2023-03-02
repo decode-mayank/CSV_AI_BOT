@@ -85,7 +85,7 @@ def resmed_chatbot(user_input, inputs=[]):
         
     # Else pass input to the OpenAI Completions endpoint
     else:
-        prompt = f"Answer the question only related to the topics of sleep,health,mask and if you're unsure of the answer, say That I have been trained to answer only sleep and health related queries"
+        prompt = f"Answer the question only related to the topics of sleep,health,mask from the website https://www.resmed.com.au/knowledge-hub and if you're unsure of the answer, say That I have been trained to answer only sleep and health related queries"
         if inputs and len(inputs) > 0 and len(outputs)>0:
             last_input = inputs[-1]
             last_output = outputs[-1]
