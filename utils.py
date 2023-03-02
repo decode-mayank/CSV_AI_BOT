@@ -34,6 +34,21 @@ inputs, outputs = [], []
 conn = get_db_connection()
 cur = conn.cursor()
 
+
+#Color
+"""
+Initial conversation Bot - Cyan(Dark)
+user input - White
+List of probability - Yellow(Dim)
+Highest probability - Magenta
+Bot output - Cyan(Normal)
+Violent Answer - Red
+Other category - Green
+
+ """
+
+
+
 # Calculate embedding vector for the input using OpenAI Embeddings endpoint
 @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
 def get_embedding(model, text):
@@ -61,22 +76,25 @@ def resmed_chatbot(user_input, inputs=[]):
     input_embedding_vector = get_embedding(my_model, user_input)
 
     # Calculate similarity between the input and "facts" from companies_embeddings.csv file which we created before
-    df = pd.read_csv('product_embeddings.csv')
+    df = pd.read_csv('category_embeddings.csv')
     df['embedding'] = df['embedding'].apply(eval).apply(np.array)
     df['similarity'] = df['embedding'].apply(lambda x: cosine_similarity(x, input_embedding_vector))
-    #print(df['similarity'])
+    
 
     # Find the highest similarity value in the dataframe column 'similarity'
     highest_similarity = df['similarity'].max()
-    #print(highest_similarity)
 
     # If the highest similarity value is equal or higher than 0.8 then print the 'completion' with the highest similarity
     if highest_similarity >= 0.85:
         probability = highest_similarity
         fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
         bot_response = fact_with_highest_similarity.iloc[0]
+        print(Fore.YELLOW + Style.DIM + f"{df['similarity']}" + Style.NORMAL)
+        print(Fore.MAGENTA + Style.NORMAL + f"{highest_similarity}")
+
         if "others" in bot_response:
-            more_detail = input("Your symptoms are more common to define the exact syndrome. can you please provide more detail: \n User: ")
+            more_detail = (Fore.GREEN + "Your symptoms are more common to define the exact syndrome. can you please provide more detail: \n User: ")
+            print(input(more_detail))
             bot_response = resmed_chatbot(more_detail, inputs)
 
         outputs.append(bot_response)
@@ -102,7 +120,7 @@ def resmed_chatbot(user_input, inputs=[]):
         probability = 0
 
     response_time = time.time() - start_time
-    print(Fore.CYAN + Style.BRIGHT + f"Bot: {bot_response}" + Style.NORMAL)
+    print(Fore.CYAN + Style.NORMAL + f"Bot: {bot_response}" + Style.NORMAL)
     # Bot response may include single quotes when we pass that with conn.execute will return syntax error
     # So, let's replace single quotes with double quotes
     # Reference: https://stackoverflow.com/questions/12316953/insert-text-with-single-quotes-in-postgresql
