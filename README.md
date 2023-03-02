@@ -116,3 +116,15 @@ uvicorn api:app --port 8001
 
 c) To launch chabot UI - Run output.py
 python output.py
+
+
+### 14.File Names ###
+
+a) To run and detect the category chatbot - Run test file
+python test.py 
+
+Files used for test.py
+  1. utils.py
+  2. category.xlsx
+  3. category_embeddings.csv
+  
