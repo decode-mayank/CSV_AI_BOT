@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - [BITCOTAI-43] - Updated prompt with resmed domain to stop to suggest product outside of ResMed
 
 ### Changed
+- Updated prompt with resmed domain to stop to suggest product outside of ResMed
+
+### Changed
 - When we answer query with help of embedding then use EmbeddedBot: as prefix otherwise Bot:
 
 ### Changed
