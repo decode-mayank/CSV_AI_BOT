@@ -6,7 +6,7 @@ import gradio as gr
 import pandas as pd
 import numpy as np
 
-from main import resmed_chatbot
+from utils import resmed_chatbot, get_moderation
 
 # Insert your API key
 load_dotenv()
@@ -28,7 +28,7 @@ def chatgpt_clone(input, history):
 block = gr.Blocks()
 with block:
     gr.Markdown("""<h1><center>Resmed Chatbot</center></h1>""")
-    chatbot = gr.Chatbot()
+    chatbot = gr.Chatbot([("Hello! I'm Resmed Chatbot, a virtual assistant designed to help you with any questions or concerns you may have about Resmed products or services. Resmed is a global leader in sleep apnea treatment, and we're committed to improving the quality of life for people who suffer from sleep-disordered breathing", None)])
     message = gr.Textbox(placeholder="Text Here")
     state = gr.State()
     submit = gr.Button("SEND")
