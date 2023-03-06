@@ -67,7 +67,7 @@ def resmed_chatbot(user_input, inputs=[]):
     input_embedding_vector = get_embedding(my_model, user_input)
 
     # Calculate similarity between the input and "facts" from companies_embeddings.csv file which we created before
-    df = pd.read_csv('resmed_embeddings.csv')
+    df = pd.read_csv('resmed_embeddings_final.csv')
     df['embedding'] = df['embedding'].apply(eval).apply(np.array)
     df['similarity'] = df['embedding'].apply(lambda x: cosine_similarity(x, input_embedding_vector))
 
@@ -80,10 +80,12 @@ def resmed_chatbot(user_input, inputs=[]):
         fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
         bot_response = fact_with_highest_similarity.iloc[0]
         outputs.append(bot_response)
+        prompt_with_respect_completion = df.loc[df['similarity'] == highest_similarity, 'prompt']
+        source = prompt_with_respect_completion.iloc[0]
         
     # Else pass input to the OpenAI Completions endpoint
     else:
-        prompt = f"Answer the question only related to the topics of sleep,health,mask and if you're unsure of the answer, say That I have been trained to answer only sleep and health related queries"
+        prompt = f"Answer the question only related to the topics of sleep,health,mask from the website https://www.resmed.com.au/knowledge-hub and if you're unsure of the answer, say That I have been trained to answer only sleep and health related queries"
         if inputs and len(inputs) > 0 and len(outputs)>0:
             last_input = inputs[-1]
             last_output = outputs[-1]
@@ -96,15 +98,16 @@ def resmed_chatbot(user_input, inputs=[]):
         )
         bot_response = response['choices'][0]['text'].replace('\n', '')
         probability = 0
+        source = ""
     
     response_time = time.time() - start_time
-    print(Fore.CYAN + Style.BRIGHT + f"Bot: {bot_response}" + Style.NORMAL)
+    print(Fore.CYAN + Style.BRIGHT + f"{'Bot:' if  probability == 0 else 'EmbeddedBot:'} {bot_response}" + Style.NORMAL)
     # Bot response may include single quotes when we pass that with conn.execute will return syntax error
     # So, let's replace single quotes with double quotes
     # Reference: https://stackoverflow.com/questions/12316953/insert-text-with-single-quotes-in-postgresql
     user_input = user_input.replace("'","''")
     bot_response = bot_response.replace("'","''")
-    query = f"INSERT INTO chatbot_datas (prompt,completion,probability,response_accepted,response_time,time_stamp) VALUES('{user_input}','{bot_response}','{probability}','{response_accepted}',{response_time},'{time_stamp}');"
+    query = f"INSERT INTO chatbot_datas (prompt,completion,probability,response_accepted,response_time,time_stamp,source) VALUES('{user_input}','{bot_response}','{probability}','{response_accepted}',{response_time},'{time_stamp}','{source}');"
     print(f"Query to execute - {query}")
     cur.execute(query)
     conn.commit()
