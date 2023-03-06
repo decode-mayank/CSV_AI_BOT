@@ -83,23 +83,17 @@ def resmed_chatbot(user_input, inputs=[]):
 
     # Find the highest similarity value in the dataframe column 'similarity'
     highest_similarity = df['similarity'].max()
-
+    #breakpoint()
     # If the highest similarity value is equal or higher than 0.8 then print the 'completion' with the highest similarity
     if highest_similarity >= 0.85:
         probability = highest_similarity
         fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
         bot_response = fact_with_highest_similarity.iloc[0]
-        print(Fore.YELLOW + Style.DIM + f"{df['similarity']}" + Style.NORMAL)
+        #print(Fore.YELLOW + Style.DIM + f"{df['similarity']}" + Style.NORMAL)
         print(Fore.MAGENTA + Style.NORMAL + f"{highest_similarity}")
-
-        if "others" in bot_response:
-            more_detail = (Fore.GREEN + "Your symptoms are more common to define the exact syndrome. can you please provide more detail: \n User: ")
-            print(input(more_detail))
-            bot_response = resmed_chatbot(more_detail, inputs)
-
-        outputs.append(bot_response)
+        # print(bot_response)
+        category(bot_response, user_input)
         
-
     # Else pass input to the OpenAI Completions endpoint
     else:
         prompt = user_input
@@ -117,10 +111,11 @@ def resmed_chatbot(user_input, inputs=[]):
             model="text-davinci-003"
         )
         bot_response = response["choices"][0]["text"].replace('.\n', '')
+        print(Fore.CYAN + Style.NORMAL + f"Bot: {bot_response}" + Style.NORMAL)
         probability = 0
 
     response_time = time.time() - start_time
-    print(Fore.CYAN + Style.NORMAL + f"Bot: {bot_response}" + Style.NORMAL)
+    
     # Bot response may include single quotes when we pass that with conn.execute will return syntax error
     # So, let's replace single quotes with double quotes
     # Reference: https://stackoverflow.com/questions/12316953/insert-text-with-single-quotes-in-postgresql
@@ -133,6 +128,19 @@ def resmed_chatbot(user_input, inputs=[]):
     # print("Data added successfully")
     return bot_response
 
+
+def category(bot_response, user_input):
+    # breakpoint()
+    if "others" == bot_response:
+        more_detail = (Fore.GREEN + "Your symptoms are more common to define the exact syndrome. can you please provide more detail:")
+        print(more_detail)
+        user = input(Fore.GREEN + Style.BRIGHT + "Users: " + Style.RESET_ALL)
+        resmed_chatbot(user + user_input)
+    
+    else:
+        print(bot_response)
+        outputs.append(bot_response)
+                  
 
 def get_moderation(question):
     """
