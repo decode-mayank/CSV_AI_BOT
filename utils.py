@@ -7,6 +7,7 @@ import psycopg2
 import pandas as pd
 import numpy as np
 from colorama import Fore, Back, Style
+from products import product
 from dotenv import load_dotenv
 from tenacity import (
     retry,
@@ -143,6 +144,7 @@ def category(bot_response, user_input):
     else:
         print(bot_response)
         outputs.append(bot_response)
+        product(bot_response)
                   
 
 def get_moderation(question):
