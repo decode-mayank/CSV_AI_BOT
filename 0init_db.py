@@ -24,6 +24,14 @@ try:
   );""")
 except psycopg2.errors.DuplicateTable:
   print(f"Table chatbot_datas already exist - If you want to drop this table then run DROP TABLE IF EXISTS chatbot_datas;")
+  conn.rollback()
+
+try:
+  cur.execute('ALTER TABLE chatbot_datas ADD COLUMN "source" text;')
+  print("Added source column in database")
+except psycopg2.errors.DuplicateColumn:
+  print("Source column already exists")
+
 
 # Below line of code is to add new column to existing table
 # cur.execute('ALTER TABLE chatbot_datas ADD COLUMN "response_accepted" BOOLEAN NOT NULL DEFAULT FALSE;')

@@ -93,6 +93,7 @@ def resmed_chatbot(user_input, inputs=[]):
         print(Fore.MAGENTA + Style.NORMAL + f"{highest_similarity}")
         # print(bot_response)
         category(bot_response, user_input)
+        source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
         
     # Else pass input to the OpenAI Completions endpoint
     else:
@@ -113,6 +114,8 @@ def resmed_chatbot(user_input, inputs=[]):
         bot_response = response["choices"][0]["text"].replace('.\n', '')
         print(Fore.CYAN + Style.NORMAL + f"Bot: {bot_response}" + Style.NORMAL)
         probability = 0
+        source = ""
+        
 
     response_time = time.time() - start_time
     
@@ -121,7 +124,7 @@ def resmed_chatbot(user_input, inputs=[]):
     # Reference: https://stackoverflow.com/questions/12316953/insert-text-with-single-quotes-in-postgresql
     user_input = user_input.replace("'","''")
     bot_response = bot_response.replace("'", "''")
-    query = f"INSERT INTO chatbot_datas (prompt,completion,probability,response_accepted,response_time,time_stamp) VALUES('{user_input}','{bot_response}','{probability}','{response_accepted}',{response_time},'{time_stamp}');"
+    query = f"INSERT INTO chatbot_datas (prompt,completion,probability,response_accepted,response_time,time_stamp,source) VALUES('{user_input}','{bot_response}','{probability}','{response_accepted}',{response_time},'{time_stamp}','{source}');"
     #print(f"Query to execute - {query}")
     cur.execute(query)
     conn.commit()
