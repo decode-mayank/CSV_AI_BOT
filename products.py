@@ -31,7 +31,8 @@ def product(text):
     )
 
     query = response['choices'][0]['text'].replace('\n', '')
-    print(sqlparse.format(query, reindent=True))
+    sqlparse.format(query, reindent=True, use_space_around_operators=True)
+    # print(sqlparse.format(query, reindent=True, use_space_around_operators=True))
     cur = conn.cursor()
     cur.execute(query)
     print(cur.fetchall())
