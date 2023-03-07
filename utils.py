@@ -40,7 +40,6 @@ cur = conn.cursor()
 """
 Initial conversation Bot - Cyan(Dark)
 user input - White
-List of probability - Yellow(Dim)
 Highest probability - Magenta
 Bot output - Cyan(Normal)
 Violent Answer - Red
@@ -48,10 +47,10 @@ Other category - Green
 
  """
 
-words = ["what", "why", "when", "where", 
-             "name", "is", "how", "do", "does", 
+words = ["what", "why", "where", 
+             "name", "how", "do", "does", 
              "which", "are", "could", "would", 
-             "should", "has", "have", "whom", "whose", "don't"]
+             "should","whom", "whose", "don't"]
 
 
 # Calculate embedding vector for the input using OpenAI Embeddings endpoint
@@ -85,7 +84,7 @@ def resmed_chatbot(user_input, inputs=[]):
     df['embedding'] = df['embedding'].apply(eval).apply(np.array)
     df['similarity'] = df['embedding'].apply(lambda x: cosine_similarity(x, input_embedding_vector))
     
-
+    
     # Find the highest similarity value in the dataframe column 'similarity'
     highest_similarity = df['similarity'].max()
     if any(x in user_input.split(' ')[0] for x in words):
@@ -95,7 +94,7 @@ def resmed_chatbot(user_input, inputs=[]):
             last_output = outputs[-1]
             prompt = f"{user_input} (based on my previous question: {last_input}, and your previous answer: {last_output})"
         response = openai.Completion.create(
-            prompt=prompt+"Answer the question only related to the topics of sleep,health,mask and if you're unsure of the answer, say That I have been trained to answer only sleep and health related queries",
+            prompt=prompt+"Answer the question only related to the topics of sleep,health,mask from the website https://www.resmed.com.au/knowledge-hub and if you're unsure of the answer, say That I have been trained to answer only sleep and health related queries",
             temperature=0,
             max_tokens=300,
             top_p=1,
@@ -107,6 +106,8 @@ def resmed_chatbot(user_input, inputs=[]):
         print(Fore.CYAN + Style.NORMAL + f"Bot: {bot_response}" + Style.NORMAL)
         probability = 0
         source = ""
+        inputs.append(user_input)
+        outputs.append(bot_response)
        
 
     elif highest_similarity >= 0.85:
@@ -132,7 +133,7 @@ def resmed_chatbot(user_input, inputs=[]):
             last_output = outputs[-1]
             prompt = f"{user_input} (based on my previous question: {last_input}, and your previous answer: {last_output})"
         response = openai.Completion.create(
-            prompt=prompt+"Answer the question only related to the topics of sleep,health,mask and if you're unsure of the answer, say That I have been trained to answer only sleep and health related queries",
+            prompt=prompt+"Answer the question only related to the topics of sleep,health,mask from the website https://www.resmed.com.au/knowledge-hub and if you're unsure of the answer, say That I have been trained to answer only sleep and health related queries",
             temperature=0,
             max_tokens=300,
             top_p=1,
@@ -168,12 +169,20 @@ def category(bot_response, user_input):
         more_detail = (Fore.GREEN + "Your symptoms are more common to define the exact syndrome. can you please provide more detail:")
         print(more_detail)
         user = input(Fore.GREEN + Style.BRIGHT + "Users: " + Style.RESET_ALL)
-        resmed_chatbot(user + user_input)
-    
+        errors = get_moderation(user)
+        if errors:
+            print(
+                Fore.RED
+                + Style.BRIGHT
+                + "Sorry, you're question didn't pass the moderation check:"
+            )
+            for error in errors:
+                print(error)
+            print(Style.RESET_ALL)
+        
     else:
         print(bot_response)
-        outputs.append(bot_response)
-                  
+        outputs.append(bot_response)        
 
 def get_moderation(question):
     """
@@ -202,3 +211,7 @@ def get_moderation(question):
         ]
         return result
     return None
+
+
+
+    
