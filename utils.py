@@ -5,6 +5,7 @@ from openai.embeddings_utils import cosine_similarity
 import os
 import psycopg2
 
+import argparse 
 import pandas as pd
 import numpy as np
 from colorama import Fore, Back, Style
@@ -86,7 +87,10 @@ def resmed_chatbot(user_input, inputs=[]):
     
     
     # Find the highest similarity value in the dataframe column 'similarity'
+    
     highest_similarity = df['similarity'].max()
+    debug(highest_similarity)
+
     if any(x in user_input.split(' ')[0] for x in words):
         prompt = user_input
         if inputs and len(inputs) > 0 and len(outputs) > 0:
@@ -114,13 +118,17 @@ def resmed_chatbot(user_input, inputs=[]):
         probability = highest_similarity
         fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
         bot_response = fact_with_highest_similarity.iloc[0]
+        highest_similarity = df['similarity'].max()
+        
+
         #print(Fore.YELLOW + Style.DIM + f"{df['similarity']}" + Style.NORMAL)
-        print(Fore.MAGENTA + Style.NORMAL + f"{highest_similarity}")
+        #print(Fore.MAGENTA + Style.NORMAL + f"{highest_similarity}")
         if "others" == bot_response:
             print("Common Symptom")
             category(bot_response, user_input)
         else:
             print(Fore.CYAN + Style.NORMAL + "This appears to be a condition called " + f"{bot_response}" + ".It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
+            print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
             category(bot_response, user_input)
             source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
         
@@ -155,11 +163,11 @@ def resmed_chatbot(user_input, inputs=[]):
     # So, let's replace single quotes with double quotes
     # Reference: https://stackoverflow.com/questions/12316953/insert-text-with-single-quotes-in-postgresql
     user_input = user_input.replace("'","''")
-    #bot_response = bot_response.replace("'", "''")
-    #query = f"INSERT INTO chatbot_datas (prompt,completion,probability,response_accepted,response_time,time_stamp,source) VALUES('{user_input}','{bot_response}','{probability}','{response_accepted}',{response_time},'{time_stamp}','{source}');"
-    #print(f"Query to execute - {query}")
-    #cur.execute(query)
-    #conn.commit()
+    bot_response = bot_response.replace("'", "''")
+    query = f"INSERT INTO chatbot_datas (prompt,completion,probability,response_accepted,response_time,time_stamp,source) VALUES('{user_input}','{bot_response}','{probability}','{response_accepted}',{response_time},'{time_stamp}','{source}');"
+    # print(f"Query to execute - {query}")
+    # cur.execute(query)
+    # conn.commit()
     # print("Data added successfully")
     return bot_response
 
@@ -213,5 +221,7 @@ def get_moderation(question):
     return None
 
 
-
-    
+def debug(msg):
+    verbose=os.getenv('VERBOSE')
+    if verbose=="True":
+        print(msg)  
