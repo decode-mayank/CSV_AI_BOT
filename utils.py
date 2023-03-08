@@ -5,7 +5,6 @@ from openai.embeddings_utils import cosine_similarity
 import os
 import psycopg2
 
-import argparse 
 import pandas as pd
 import numpy as np
 from colorama import Fore, Back, Style
@@ -16,14 +15,6 @@ from tenacity import (
     wait_random_exponential,
 )  # for exponential backoff
 
-# Get db connections
-def get_db_connection():
-    conn = psycopg2.connect(host='localhost',
-                            database=os.getenv('DB'),
-                            user=os.getenv('DB_USERNAME'),
-                            password=os.getenv('DB_PASSWORD'))
-    return conn
-
 
 # Insert your API key
 load_dotenv()
@@ -32,10 +23,23 @@ my_model = 'text-embedding-ada-002'
 
 inputs, outputs = [], []
 
+def debug(msg):
+    verbose=os.getenv('VERBOSE')
+    if verbose=="True":
+        print(msg)  
+        
+# Get db connections
+def get_db_connection():
+    conn = psycopg2.connect(host='localhost',
+                            database=os.getenv('DB'),
+                            user=os.getenv('DB_USERNAME'),
+                            password=os.getenv('DB_PASSWORD'))
+    return conn
 
 conn = get_db_connection()
 cur = conn.cursor()
 
+df = pd.read_csv('category_embeddings.csv')
 
 #Color
 """
@@ -65,11 +69,13 @@ def get_embedding(model, text):
 
 # Save embedding vector of the input
 def resmed_chatbot(user_input, inputs=[]):
+    debug("Clean input from the user")
     time_stamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     response_accepted = True
     bot_response = None
     context = ""
     response_time = 0
+    source = ""
 
     if (not (user_input)):
         user_input = input(Fore.GREEN + Style.BRIGHT + "User: " + Style.RESET_ALL)
@@ -81,10 +87,14 @@ def resmed_chatbot(user_input, inputs=[]):
     input_embedding_vector = get_embedding(my_model, user_input)
 
     # Calculate similarity between the input and "facts" from companies_embeddings.csv file which we created before
-    df = pd.read_csv('category_embeddings.csv')
-    df['embedding'] = df['embedding'].apply(eval).apply(np.array)
-    df['similarity'] = df['embedding'].apply(lambda x: cosine_similarity(x, input_embedding_vector))
+    debug("Reading category_embedding csv")
+    if 'similarity' in df.columns:
+        df['embedding'] = df['embedding'].apply(np.array)
+    else:
+        df['embedding'] = df['embedding'].apply(eval).apply(np.array)
     
+    df['similarity'] = df['embedding'].apply(lambda x: cosine_similarity(x, input_embedding_vector))
+    debug("Let's find max similarity")
     
     # Find the highest similarity value in the dataframe column 'similarity'
     
@@ -92,6 +102,7 @@ def resmed_chatbot(user_input, inputs=[]):
     debug(highest_similarity)
 
     if any(x in user_input.split(' ')[0] for x in words):
+        debug("User asked question to our system")
         prompt = user_input
         if inputs and len(inputs) > 0 and len(outputs) > 0:
             last_input = inputs[-1]
@@ -109,32 +120,33 @@ def resmed_chatbot(user_input, inputs=[]):
         bot_response = response["choices"][0]["text"].replace('.\n', '')
         print(Fore.CYAN + Style.NORMAL + f"Bot: {bot_response}" + Style.NORMAL)
         probability = 0
-        source = ""
         inputs.append(user_input)
         outputs.append(bot_response)
        
 
     elif highest_similarity >= 0.85:
+        debug("Found completion which has >=0.85")
         probability = highest_similarity
         fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
         bot_response = fact_with_highest_similarity.iloc[0]
         highest_similarity = df['similarity'].max()
         
 
-        #print(Fore.YELLOW + Style.DIM + f"{df['similarity']}" + Style.NORMAL)
+        print(Fore.YELLOW + Style.DIM + f"{df['similarity']}" + Style.NORMAL)
         #print(Fore.MAGENTA + Style.NORMAL + f"{highest_similarity}")
         if "others" == bot_response:
             print("Common Symptom")
-            category(bot_response, user_input)
+            category(bot_response)
         else:
             print(Fore.CYAN + Style.NORMAL + "This appears to be a condition called " + f"{bot_response}" + ".It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
             print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
-            category(bot_response, user_input)
+            category(bot_response)
             source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
         
             
     # Else pass input to the OpenAI Completions endpoint
     else:
+        debug("Let's ask ChatGPT to answer user query")
         prompt = user_input
         if inputs and len(inputs) > 0 and len(outputs) > 0:
             last_input = inputs[-1]
@@ -153,7 +165,6 @@ def resmed_chatbot(user_input, inputs=[]):
         bot_response = response["choices"][0]["text"].replace('.\n', '')
         print(Fore.CYAN + Style.NORMAL + f"Bot: {bot_response}" + Style.NORMAL)
         probability = 0
-        source = ""
        
             
 
@@ -165,29 +176,17 @@ def resmed_chatbot(user_input, inputs=[]):
     user_input = user_input.replace("'","''")
     bot_response = bot_response.replace("'", "''")
     query = f"INSERT INTO chatbot_datas (prompt,completion,probability,response_accepted,response_time,time_stamp,source) VALUES('{user_input}','{bot_response}','{probability}','{response_accepted}',{response_time},'{time_stamp}','{source}');"
-    # print(f"Query to execute - {query}")
-    # cur.execute(query)
-    # conn.commit()
-    # print("Data added successfully")
+    debug(f"Query to execute - {query}")
+    cur.execute(query)
+    conn.commit()
+    debug("Data added successfully")
     return bot_response
 
 
-def category(bot_response, user_input):
+def category(bot_response):
     if "others" == bot_response:
         more_detail = (Fore.GREEN + "Your symptoms are more common to define the exact syndrome. can you please provide more detail:")
-        print(more_detail)
-        user = input(Fore.GREEN + Style.BRIGHT + "Users: " + Style.RESET_ALL)
-        errors = get_moderation(user)
-        if errors:
-            print(
-                Fore.RED
-                + Style.BRIGHT
-                + "Sorry, you're question didn't pass the moderation check:"
-            )
-            for error in errors:
-                print(error)
-            print(Style.RESET_ALL)
-        
+        print(more_detail)        
     else:
         print(bot_response)
         outputs.append(bot_response)        
@@ -219,9 +218,3 @@ def get_moderation(question):
         ]
         return result
     return None
-
-
-def debug(msg):
-    verbose=os.getenv('VERBOSE')
-    if verbose=="True":
-        print(msg)  
