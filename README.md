@@ -1,4 +1,4 @@
-# Resmed-Chatbot-for-knowledge-hub
+# Bitcot AI Cookbook
 
 ## Prerequisites:
 ####  1. If you don’t have Python installed, [install it from here](https://www.python.org/downloads/)
@@ -6,10 +6,6 @@
    * Note : 
      - Atleast Python >= 3.7.1 version is required to work with open ai
        - Reference - https://github.com/openai/openai-python#requirements
-
-#### 2. Install postgresql ####
-    * Reference - https://www.postgresql.org/download/
-  
 
 ## Setup
 
