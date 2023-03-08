@@ -81,7 +81,7 @@
 #### 7. Open .env and Update OPENAI_API_KEY
 
 
-#### Example - Chatbot using gpt 3.5 turbo
+## Example 1 - Chatbot using gpt 3.5 turbo
  * On Linux/Mac: 
 
   ``` bash
