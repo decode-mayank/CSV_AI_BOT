@@ -22,7 +22,7 @@ conn = psycopg2.connect(
 def product(text):
     response = openai.Completion.create(
         model="text-davinci-003",
-        prompt="Given an input question, respond with syntactically correct PostgreSQL. Be creative but the query must be correct. Only use table called product. The product table has columns: category (character varying), sku (character varying), product (character varying), description (character varying), price (character varying), breadcrumb (character varying), and product_url (character varying). Give a Select query for product and product_url, where the category matches to the input question. Format the query in the correct format. Use Order_by command to order the rating in Descending order and list top 2 items." + text,
+        prompt="Given an input question, respond with syntactically correct PostgreSQL. Be creative but the query must be correct. Only use table called product. The product table has columns: category (character varying), sku (character varying), product (character varying), description (character varying), price (character varying), breadcrumb (character varying), and product_url (character varying). Give a Select query for product and product_url, where the category matches to the input question. Format the query in the correct format. Use Order_by command to order the rating in Descending order and list top 3 items." + text,
         temperature=0.3,
         max_tokens=60,
         top_p=1.0,
@@ -30,9 +30,25 @@ def product(text):
         presence_penalty=0.0
     )
 
-    query = response['choices'][0]['text'].replace('\n', '')
-    sqlparse.format(query, reindent=True, use_space_around_operators=True)
-    # print(sqlparse.format(query, reindent=True, use_space_around_operators=True))
+    query = response['choices'][0]['text']
+    sqlparse.format(query, reindent=True, keyword_case='upper')
     cur = conn.cursor()
     cur.execute(query)
-    print(cur.fetchall())
+    [print(prod, "-", url) for prod, url in cur.fetchall()]
+
+def other_products(text):
+    response = openai.Completion.create(
+        model="text-davinci-003",
+        prompt="Given an input question, respond with syntactically correct PostgreSQL. Be creative but the query must be correct. Only use table called product. The product table has columns: category (character varying), sku (character varying), product (character varying), description (character varying), price (character varying), breadcrumb (character varying), and product_url (character varying). Give a Select query for product and product_url, where the category matches to the input question. Format the query in the correct format. Use Order_by command to order the rating in Ascending order and list top 3 items." + text,
+        temperature=0.3,
+        max_tokens=60,
+        top_p=1.0,
+        frequency_penalty=0.0,
+        presence_penalty=0.0
+    )
+
+    query = response['choices'][0]['text']
+    sqlparse.format(query, reindent=True, keyword_case='upper')
+    cur = conn.cursor()
+    cur.execute(query)
+    [print(prod, "-", url) for prod, url in cur.fetchall()]

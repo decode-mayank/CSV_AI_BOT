@@ -7,7 +7,7 @@ import psycopg2
 import pandas as pd
 import numpy as np
 from colorama import Fore, Back, Style
-from products import product
+from products import product, other_products
 from dotenv import load_dotenv
 from tenacity import (
     retry,
@@ -84,9 +84,8 @@ def resmed_chatbot(user_input, inputs=[]):
 
     # Find the highest similarity value in the dataframe column 'similarity'
     highest_similarity = df['similarity'].max()
-    #breakpoint()
     # If the highest similarity value is equal or higher than 0.8 then print the 'completion' with the highest similarity
-    if highest_similarity >= 0.85:
+    if highest_similarity >= 0.8:
         probability = highest_similarity
         fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
         bot_response = fact_with_highest_similarity.iloc[0]
@@ -134,13 +133,13 @@ def resmed_chatbot(user_input, inputs=[]):
 
 
 def category(bot_response, user_input):
-    # breakpoint()
     if "others" == bot_response:
         more_detail = (Fore.GREEN + "Your symptoms are more common to define the exact syndrome. can you please provide more detail:")
         print(more_detail)
         user = input(Fore.GREEN + Style.BRIGHT + "Users: " + Style.RESET_ALL)
         resmed_chatbot(user + user_input)
-    
+    elif "Product" == bot_response:
+        other_products(outputs[-1])
     else:
         print(bot_response)
         outputs.append(bot_response)
