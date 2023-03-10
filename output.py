@@ -6,7 +6,8 @@ import gradio as gr
 import pandas as pd
 import numpy as np
 
-from utils import resmed_chatbot, get_moderation
+from main import resmed_chatbot, get_moderation
+
 
 # Insert your API key
 load_dotenv()

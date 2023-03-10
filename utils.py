@@ -21,7 +21,7 @@ load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 my_model = 'text-embedding-ada-002'
 
-inputs, outputs = [], []
+
 
 def debug(msg):
     verbose=os.getenv('VERBOSE')
@@ -35,6 +35,7 @@ def get_db_connection():
                             user=os.getenv('DB_USERNAME'),
                             password=os.getenv('DB_PASSWORD'))
     return conn
+
 
 conn = get_db_connection()
 cur = conn.cursor()
@@ -52,7 +53,7 @@ Other category - Green
 
  """
 
-words = ["what", "why", "where", 
+words = ["what", "why", "where", "can",
              "name", "how", "do", "does", 
              "which", "are", "could", "would", 
              "should","whom", "whose", "don't"]
@@ -68,23 +69,19 @@ def get_embedding(model, text):
     return result['data'][0]['embedding']
 
 # Save embedding vector of the input
-def resmed_chatbot(user_input, inputs=[]):
+
+def resmed_chatbot(message_log):
     debug("Clean input from the user")
     time_stamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     response_accepted = True
     bot_response = None
     context = ""
     response_time = 0
-    source = ""
-
-    if (not (user_input)):
-        user_input = input(Fore.GREEN + Style.BRIGHT + "User: " + Style.RESET_ALL)
 
     start_time = time.time()
-    context = context + user_input
 
     # Save embedding vector of the input
-    input_embedding_vector = get_embedding(my_model, user_input)
+    input_embedding_vector = get_embedding(my_model, input_text)
 
     # Calculate similarity between the input and "facts" from companies_embeddings.csv file which we created before
     debug("Reading category_embedding csv")
@@ -101,29 +98,21 @@ def resmed_chatbot(user_input, inputs=[]):
     highest_similarity = df['similarity'].max()
     debug(highest_similarity)
 
-    if any(x in user_input.split(' ')[0] for x in words):
+    if any(x in input_text.split(' ')[0] for x in words):
         debug("User asked question to our system")
-        prompt = user_input
-        if inputs and len(inputs) > 0 and len(outputs) > 0:
-            last_input = inputs[-1]
-            last_output = outputs[-1]
-            prompt = f"{user_input} (based on my previous question: {last_input}, and your previous answer: {last_output})"
-        response = openai.Completion.create(
-            prompt=prompt+"Answer the question only related to the topics of sleep,health,mask from the website https://www.resmed.com.au/knowledge-hub and if you're unsure of the answer, say That I have been trained to answer only sleep and health related queries",
-            temperature=0,
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages = message_log,
             max_tokens=300,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0,
-            model="text-davinci-003"
+            stop=None,
+            temperature=0.7,
         )
-        bot_response = response["choices"][0]["text"].replace('.\n', '')
+        #print(response)
+        bot_response = response["choices"][0]['message']['content']
         print(Fore.CYAN + Style.NORMAL + f"Bot: {bot_response}" + Style.NORMAL)
         probability = 0
-        inputs.append(user_input)
-        outputs.append(bot_response)
+        source = ""
        
-
     elif highest_similarity >= 0.85:
         debug("Found completion which has >=0.85")
         probability = highest_similarity
@@ -131,38 +120,34 @@ def resmed_chatbot(user_input, inputs=[]):
         bot_response = fact_with_highest_similarity.iloc[0]
         highest_similarity = df['similarity'].max()
         
-
-        print(Fore.YELLOW + Style.DIM + f"{df['similarity']}" + Style.NORMAL)
+        #print(Fore.YELLOW + Style.DIM + f"{df['similarity']}" + Style.NORMAL)
         #print(Fore.MAGENTA + Style.NORMAL + f"{highest_similarity}")
+
         if "others" == bot_response:
             print("Common Symptom")
-            category(bot_response)
+            category(bot_response, input_text)
+            
+      
         else:
             print(Fore.CYAN + Style.NORMAL + "This appears to be a condition called " + f"{bot_response}" + ".It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
             print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
-            category(bot_response)
+            category(bot_response, input_text)
+
             source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
         
             
     # Else pass input to the OpenAI Completions endpoint
     else:
-        debug("Let's ask ChatGPT to answer user query")
-        prompt = user_input
-        if inputs and len(inputs) > 0 and len(outputs) > 0:
-            last_input = inputs[-1]
-            last_output = outputs[-1]
-            prompt = f"{user_input} (based on my previous question: {last_input}, and your previous answer: {last_output})"
-        response = openai.Completion.create(
-            prompt=prompt+"Answer the question only related to the topics of sleep,health,mask from the website https://www.resmed.com.au/knowledge-hub and if you're unsure of the answer, say That I have been trained to answer only sleep and health related queries",
-            temperature=0,
+        debug("Let's ask ChatGPT to answer user query")   
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages = message_log,
             max_tokens=300,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0,
-            model="text-davinci-003"
+            stop=None,
+            temperature=0.7,
         )
-        outputs.append(bot_response)
-        bot_response = response["choices"][0]["text"].replace('.\n', '')
+        #print(response)
+        bot_response = response['choices'][0]['message']['content']
         print(Fore.CYAN + Style.NORMAL + f"Bot: {bot_response}" + Style.NORMAL)
         probability = 0
        
@@ -173,23 +158,14 @@ def resmed_chatbot(user_input, inputs=[]):
     # Bot response may include single quotes when we pass that with conn.execute will return syntax error
     # So, let's replace single quotes with double quotes
     # Reference: https://stackoverflow.com/questions/12316953/insert-text-with-single-quotes-in-postgresql
-    user_input = user_input.replace("'","''")
-    bot_response = bot_response.replace("'", "''")
-    query = f"INSERT INTO chatbot_datas (prompt,completion,probability,response_accepted,response_time,time_stamp,source) VALUES('{user_input}','{bot_response}','{probability}','{response_accepted}',{response_time},'{time_stamp}','{source}');"
-    debug(f"Query to execute - {query}")
-    cur.execute(query)
-    conn.commit()
-    debug("Data added successfully")
-    return bot_response
 
 
-def category(bot_response):
+def category(bot_response, input_text):
     if "others" == bot_response:
         more_detail = (Fore.GREEN + "Your symptoms are more common to define the exact syndrome. can you please provide more detail:")
         print(more_detail)        
     else:
-        print(bot_response)
-        outputs.append(bot_response)        
+        print(bot_response)      
 
 def get_moderation(question):
     """
@@ -218,3 +194,47 @@ def get_moderation(question):
         ]
         return result
     return None
+     
+
+if __name__ == '__main__':
+    print(
+        Fore.CYAN + Style.BRIGHT + f"Bot: Hello! I'm Resmed Chatbot, a virtual assistant designed to help you with any questions or concerns you may have about Resmed products or services. Resmed is a global leader in sleep apnea treatment, and we're committed to improving the quality of life for people who suffer from sleep-disordered breathing." + Style.NORMAL)
+    message_log = [
+        {"role": "system", "content": "Answer the question only related to the topics of sleep,health,mask from the website https://www.resmed.com.au/knowledge-hub and if you're unsure of the answer, say That I have been trained to answer only sleep and health related queries"}
+    ] 
+
+    first_request = True
+
+    while True:
+        if first_request:
+            input_text = input(Fore.GREEN + Style.BRIGHT + "User: " + Style.RESET_ALL)
+            message_log.append({"role": "user", "content": input_text})
+
+            # Add a message from the chatbot to the conversation history
+            message_log.append({"role": "assistant", "content": "You are a helpful assistant."})
+
+            # Send the conversation history to the chatbot and get its response
+            response = resmed_chatbot(message_log)
+
+            # Add the chatbot's response to the conversation history and print it to the console
+            #message_log.append({"role": "assistant", "content": response})
+
+            first_request = False
+
+        else:
+            # If this is not the first request, get the user's input and add it to the conversation history
+            input_text = input(Fore.GREEN + Style.BRIGHT + "User: "+ Style.RESET_ALL)
+
+            # If the user types "quit", end the loop and print a goodbye message
+            if input_text.lower() == "quit":
+                print("Goodbye!")
+                break
+
+            message_log.append({"role": "user", "content": input_text})
+
+            # Send the conversation history to the chatbot and get its response
+            response = resmed_chatbot(message_log)
+
+            # Add the chatbot's response to the conversation history and print it to the console
+            message_log.append({"role": "assistant", "content": response})
+

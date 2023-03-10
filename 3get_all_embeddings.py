@@ -16,7 +16,7 @@ load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 INPUT_FILE_NAME = "knowledge_hub.csv"
-OUTPUT_FILE_NAME = "resmed_embeddings_final.csv"
+OUTPUT_FILE_NAME = "knowledge-hub-1.csv"
 TIME_TO_SLEEP = 30 # seconds
 
 
@@ -46,7 +46,7 @@ def embedding():
         print(f"Chunks length {len(chunks)}")
 
         for index,chunk in enumerate(chunks,start=1):
-            chunk['embedding'] = chunk['completion'].apply(lambda x: get_embedding(x, engine = 'text-embedding-ada-002'))
+            chunk['embedding'] = chunk['prompt'].apply(lambda x: get_embedding(x, engine = 'text-embedding-ada-002'))
             chunk.to_csv(OUTPUT_FILE_NAME, mode='a', index=False, header=not os.path.exists(OUTPUT_FILE_NAME))
             print(f"Completed Chunk {index}, processed {len(chunk)} rows")
             print(f"Sleeping {TIME_TO_SLEEP} seconds")
