@@ -7,7 +7,7 @@ import psycopg2
 import pandas as pd
 import numpy as np
 from colorama import Fore, Back, Style
-from products import product, other_products
+from products import product, other_products, cheap_products
 from dotenv import load_dotenv
 from tenacity import (
     retry,
@@ -85,7 +85,7 @@ def resmed_chatbot(user_input, inputs=[]):
     # Find the highest similarity value in the dataframe column 'similarity'
     highest_similarity = df['similarity'].max()
     # If the highest similarity value is equal or higher than 0.8 then print the 'completion' with the highest similarity
-    if highest_similarity >= 0.8:
+    if highest_similarity >= 0.82:
         probability = highest_similarity
         fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
         bot_response = fact_with_highest_similarity.iloc[0]
@@ -94,6 +94,14 @@ def resmed_chatbot(user_input, inputs=[]):
         # print(bot_response)
         category(bot_response, user_input)
         source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
+
+    elif "cheap" or "cheapest" in user_input:
+        probability = 0
+        source = ""
+        output = cheap_products(outputs[-1])
+        for prod, url in output:
+            bot_response = prod + " - " + url
+            print(Fore.CYAN + Style.NORMAL + f"Cheapest option: {bot_response}" + Style.NORMAL)
         
     # Else pass input to the OpenAI Completions endpoint
     else:
@@ -123,7 +131,7 @@ def resmed_chatbot(user_input, inputs=[]):
     # So, let's replace single quotes with double quotes
     # Reference: https://stackoverflow.com/questions/12316953/insert-text-with-single-quotes-in-postgresql
     user_input = user_input.replace("'","''")
-    bot_response = bot_response.replace("'", "''")
+    # bot_response = bot_response.replace("'", "''")
     query = f"INSERT INTO chatbot_datas (prompt,completion,probability,response_accepted,response_time,time_stamp,source) VALUES('{user_input}','{bot_response}','{probability}','{response_accepted}',{response_time},'{time_stamp}','{source}');"
     #print(f"Query to execute - {query}")
     cur.execute(query)
