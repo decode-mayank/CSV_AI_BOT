@@ -125,13 +125,13 @@ def resmed_chatbot(message_log):
 
         if "others" == bot_response:
             print("Common Symptom")
-            category(bot_response, input_text)
+            category(bot_response,input_text)
             
       
         else:
             print(Fore.CYAN + Style.NORMAL + "This appears to be a condition called " + f"{bot_response}" + ".It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
             print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
-            category(bot_response, input_text)
+            category(bot_response,input_text)
 
             source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
         
@@ -158,9 +158,11 @@ def resmed_chatbot(message_log):
     # Bot response may include single quotes when we pass that with conn.execute will return syntax error
     # So, let's replace single quotes with double quotes
     # Reference: https://stackoverflow.com/questions/12316953/insert-text-with-single-quotes-in-postgresql
+    
+    return bot_response
 
 
-def category(bot_response, input_text):
+def category(bot_response,input_text):
     if "others" == bot_response:
         more_detail = (Fore.GREEN + "Your symptoms are more common to define the exact syndrome. can you please provide more detail:")
         print(more_detail)        
@@ -217,7 +219,7 @@ if __name__ == '__main__':
             response = resmed_chatbot(message_log)
 
             # Add the chatbot's response to the conversation history and print it to the console
-            #message_log.append({"role": "assistant", "content": response})
+            message_log.append({"role": "assistant", "content": response})
 
             first_request = False
 
