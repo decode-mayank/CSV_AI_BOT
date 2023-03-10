@@ -41,7 +41,7 @@ def create_product_table():
   try:
     cur.execute("""CREATE TABLE product(
       category VARCHAR(500) NOT NULL,
-      sku VARCHAR(500),
+      sku VARCHAR(500) PRIMARY KEY,
       product VARCHAR(500) NOT NULL,
       description VARCHAR(5000),
       price FLOAT,
@@ -62,7 +62,7 @@ def add_csv_to_db():
       next(reader) # Skip the header row.
       for row in reader:
           cur.execute(
-          "INSERT INTO product VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+          "INSERT INTO product VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (sku) DO UPDATE SET category = EXCLUDED.category, product = EXCLUDED.product, description = EXCLUDED.description, price = EXCLUDED.price, breadcrumb = EXCLUDED.breadcrumb, product_url = EXCLUDED.product_url, money_back = EXCLUDED.money_back, rating = EXCLUDED.rating, total_reviews = EXCLUDED.total_reviews",
           row
       )
   except:

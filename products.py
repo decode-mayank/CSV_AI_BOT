@@ -35,7 +35,8 @@ def product(text):
     sqlparse.format(query, reindent=True, keyword_case='upper')
     cur = conn.cursor()
     cur.execute(query)
-    [print(prod, "-", url) for prod, url in cur.fetchall()]
+    output = cur.fetchall()
+    return(output)
 
 def other_products(text):
     response = openai.Completion.create(
@@ -52,8 +53,8 @@ def other_products(text):
     sqlparse.format(query, reindent=True, keyword_case='upper')
     cur = conn.cursor()
     cur.execute(query)
-    print("More Products:")
-    [print(prod, "-", url) for prod, url in cur.fetchall()]
+    output = cur.fetchall()
+    return(output)
 
 
 def cheap_products(text):
@@ -73,4 +74,3 @@ def cheap_products(text):
     cur.execute(query)
     output = cur.fetchall()
     return(output)
-    # [print(prod, "-", url) for prod, url in cur.fetchall()]
