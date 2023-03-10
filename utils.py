@@ -143,16 +143,19 @@ def resmed_chatbot(user_input, inputs=[]):
                 print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
                 bot_response = bot_response + "\n" + products
         else:
-            print(Fore.CYAN + Style.NORMAL + "This appears to be a condition called " + f"{bot_response}" + ".It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
-            print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
-            source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
-            outputs.append(bot_response)
-            output = product(bot_response)
+            if "product" in user_input or "products" in user_input:
+                output = product(bot_response)
+            else:
+                print(Fore.CYAN + Style.NORMAL + "This appears to be a condition called " + f"{bot_response}" + ".It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
+                print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
+                output = product(bot_response)
             for prod, url in output:
                 products = prod + " - " + url
                 print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
                 bot_response = bot_response + "\n" + products
-    
+            outputs.append(bot_response)
+            source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
+            
     elif "cheap" in user_input or "cheapest" in user_input:
         probability = 0
         source = ""
