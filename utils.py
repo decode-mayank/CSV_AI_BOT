@@ -4,6 +4,7 @@ import openai
 from openai.embeddings_utils import cosine_similarity
 import os
 import psycopg2
+
 import pandas as pd
 import numpy as np
 from colorama import Fore, Back, Style
@@ -15,14 +16,6 @@ from tenacity import (
     wait_random_exponential,
 )  # for exponential backoff
 
-# Get db connections
-def get_db_connection():
-    conn = psycopg2.connect(host='localhost',
-                            database=os.getenv('DB'),
-                            user=os.getenv('DB_USERNAME'),
-                            password=os.getenv('DB_PASSWORD'))
-    return conn
-
 
 # Insert your API key
 load_dotenv()
@@ -31,16 +24,28 @@ my_model = 'text-embedding-ada-002'
 
 inputs, outputs = [], []
 
+def debug(msg):
+    verbose=os.getenv('VERBOSE')
+    if verbose=="True":
+        print(msg)  
+        
+# Get db connections
+def get_db_connection():
+    conn = psycopg2.connect(host='localhost',
+                            database=os.getenv('DB'),
+                            user=os.getenv('DB_USERNAME'),
+                            password=os.getenv('DB_PASSWORD'))
+    return conn
 
 conn = get_db_connection()
 cur = conn.cursor()
 
+df = pd.read_csv('category_embeddings.csv')
 
 #Color
 """
 Initial conversation Bot - Cyan(Dark)
 user input - White
-List of probability - Yellow(Dim)
 Highest probability - Magenta
 Bot output - Cyan(Normal)
 Violent Answer - Red
@@ -48,6 +53,10 @@ Other category - Green
 
  """
 
+words = ["what", "why", "where", 
+             "name", "how", "do", "does", 
+             "which", "are", "could", "would", 
+             "should","whom", "whose", "don't"]
 
 
 # Calculate embedding vector for the input using OpenAI Embeddings endpoint
@@ -59,13 +68,16 @@ def get_embedding(model, text):
     )
     return result['data'][0]['embedding']
 
+
 # Save embedding vector of the input
 def resmed_chatbot(user_input, inputs=[]):
+    debug("Clean input from the user")
     time_stamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     response_accepted = True
     bot_response = None
     context = ""
     response_time = 0
+    source = ""
 
     if (not (user_input)):
         user_input = input(Fore.GREEN + Style.BRIGHT + "User: " + Style.RESET_ALL)
@@ -77,41 +89,30 @@ def resmed_chatbot(user_input, inputs=[]):
     input_embedding_vector = get_embedding(my_model, user_input)
 
     # Calculate similarity between the input and "facts" from companies_embeddings.csv file which we created before
-    df = pd.read_csv('category_embeddings.csv')
-    df['embedding'] = df['embedding'].apply(eval).apply(np.array)
-    df['similarity'] = df['embedding'].apply(lambda x: cosine_similarity(x, input_embedding_vector))
-    
-
-    # Find the highest similarity value in the dataframe column 'similarity'
-    highest_similarity = df['similarity'].max()
-    # If the highest similarity value is equal or higher than 0.8 then print the 'completion' with the highest similarity
-    if highest_similarity >= 0.82:
-        probability = highest_similarity
-        fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
-        bot_response = fact_with_highest_similarity.iloc[0]
-        #print(Fore.YELLOW + Style.DIM + f"{df['similarity']}" + Style.NORMAL)
-        print(Fore.MAGENTA + Style.NORMAL + f"{highest_similarity}")
-        # print(bot_response)
-        category(bot_response, user_input)
-        source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
-
-    elif "cheap" or "cheapest" in user_input:
-        probability = 0
-        source = ""
-        output = cheap_products(outputs[-1])
-        for prod, url in output:
-            bot_response = prod + " - " + url
-            print(Fore.CYAN + Style.NORMAL + f"Cheapest option: {bot_response}" + Style.NORMAL)
-        
-    # Else pass input to the OpenAI Completions endpoint
+    debug("Reading category_embedding csv")
+    if 'similarity' in df.columns:
+        df['embedding'] = df['embedding'].apply(np.array)
     else:
+        df['embedding'] = df['embedding'].apply(eval).apply(np.array)
+    
+    df['similarity'] = df['embedding'].apply(lambda x: cosine_similarity(x, input_embedding_vector))
+    debug("Let's find max similarity")
+    
+    # Find the highest similarity value in the dataframe column 'similarity'
+    
+    highest_similarity = df['similarity'].max()
+
+    debug(highest_similarity)
+
+    if any(x in user_input.split(' ')[0] for x in words):
+        debug("User asked question to our system")
         prompt = user_input
         if inputs and len(inputs) > 0 and len(outputs) > 0:
             last_input = inputs[-1]
             last_output = outputs[-1]
             prompt = f"{user_input} (based on my previous question: {last_input}, and your previous answer: {last_output})"
         response = openai.Completion.create(
-            prompt=prompt+"Answer the question only related to the topics of sleep,health,mask and if you're unsure of the answer, say That I have been trained to answer only sleep and health related queries",
+            prompt=prompt+"Answer the question only related to the topics of sleep,health,mask from the website https://www.resmed.com.au/knowledge-hub and if you're unsure of the answer, say That I have been trained to answer only sleep and health related queries",
             temperature=0,
             max_tokens=300,
             top_p=1,
@@ -122,9 +123,61 @@ def resmed_chatbot(user_input, inputs=[]):
         bot_response = response["choices"][0]["text"].replace('.\n', '')
         print(Fore.CYAN + Style.NORMAL + f"Bot: {bot_response}" + Style.NORMAL)
         probability = 0
-        source = ""
-        
+        inputs.append(user_input)
+        outputs.append(bot_response)
+       
+    elif highest_similarity >= 0.82:
+        debug("Found completion which has >=0.85")
+        probability = highest_similarity
+        fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
+        bot_response = fact_with_highest_similarity.iloc[0]
+        highest_similarity = df['similarity'].max()        
 
+        print(Fore.YELLOW + Style.DIM + f"{df['similarity']}" + Style.NORMAL)
+        #print(Fore.MAGENTA + Style.NORMAL + f"{highest_similarity}")
+        if "others" == bot_response:
+            print("Common Symptom")
+            # category(bot_response)
+        elif "Product" == bot_response:
+            other_products(outputs[-1])
+        else:
+            print(Fore.CYAN + Style.NORMAL + "This appears to be a condition called " + f"{bot_response}" + ".It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
+            print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
+            # category(bot_response)
+            source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
+            outputs.append(bot_response)
+            product(bot_response)
+
+    elif "cheap" or "cheapest" in user_input:
+        probability = 0
+        source = ""
+        output = cheap_products(outputs[-1])
+        for prod, url in output:
+            bot_response = prod + " - " + url
+            print(Fore.CYAN + Style.NORMAL + f"Cheapest option: {bot_response}" + Style.NORMAL)
+            
+    # Else pass input to the OpenAI Completions endpoint
+    else:
+        debug("Let's ask ChatGPT to answer user query")
+        prompt = user_input
+        if inputs and len(inputs) > 0 and len(outputs) > 0:
+            last_input = inputs[-1]
+            last_output = outputs[-1]
+            prompt = f"{user_input} (based on my previous question: {last_input}, and your previous answer: {last_output})"
+        response = openai.Completion.create(
+            prompt=prompt+"Answer the question only related to the topics of sleep,health,mask from the website https://www.resmed.com.au/knowledge-hub and if you're unsure of the answer, say That I have been trained to answer only sleep and health related queries",
+            temperature=0,
+            max_tokens=300,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=0,
+            model="text-davinci-003"
+        )
+        outputs.append(bot_response)
+        bot_response = response["choices"][0]["text"].replace('.\n', '')
+        print(Fore.CYAN + Style.NORMAL + f"Bot: {bot_response}" + Style.NORMAL)
+        probability = 0
+       
     response_time = time.time() - start_time
     
     # Bot response may include single quotes when we pass that with conn.execute will return syntax error
@@ -133,26 +186,12 @@ def resmed_chatbot(user_input, inputs=[]):
     user_input = user_input.replace("'","''")
     # bot_response = bot_response.replace("'", "''")
     query = f"INSERT INTO chatbot_datas (prompt,completion,probability,response_accepted,response_time,time_stamp,source) VALUES('{user_input}','{bot_response}','{probability}','{response_accepted}',{response_time},'{time_stamp}','{source}');"
-    #print(f"Query to execute - {query}")
+    debug(f"Query to execute - {query}")
     cur.execute(query)
     conn.commit()
-    # print("Data added successfully")
+    debug("Data added successfully")
     return bot_response
 
-
-def category(bot_response, user_input):
-    if "others" == bot_response:
-        more_detail = (Fore.GREEN + "Your symptoms are more common to define the exact syndrome. can you please provide more detail:")
-        print(more_detail)
-        user = input(Fore.GREEN + Style.BRIGHT + "Users: " + Style.RESET_ALL)
-        resmed_chatbot(user + user_input)
-    elif "Product" == bot_response:
-        other_products(outputs[-1])
-    else:
-        print(bot_response)
-        outputs.append(bot_response)
-        product(bot_response)
-                  
 
 def get_moderation(question):
     """
