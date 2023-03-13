@@ -41,7 +41,7 @@ def get_db_connection():
 conn = get_db_connection()
 cur = conn.cursor()
 
-df = pd.read_csv('category_embeddings.csv')
+df = pd.read_csv('resmed_embeddings_final.csv')
 
 outputs = []
 words = ["what", "why", "where", "can",
@@ -49,7 +49,7 @@ words = ["what", "why", "where", "can",
              "which", "are", "could", "would", 
              "should","whom", "whose", "don't", "list", "tell", "give"]
 
-def call_chat_completion_api(message_log, user_input):
+def call_chat_completion_api(message_log):
     bot_response=""
     response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -70,9 +70,7 @@ def call_chat_completion_api(message_log, user_input):
 def get_category(bot_response):
     if "others" == bot_response:
         more_detail = (Fore.GREEN + "Your symptoms are more common to define the exact syndrome. can you please provide more detail:")
-        print(more_detail)        
-    else:
-        print(f"EmbeddedBot: {bot_response}")      
+        print(more_detail)            
 
 # Calculate embedding vector for the input using OpenAI Embeddings endpoint
 @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
