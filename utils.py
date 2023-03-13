@@ -40,7 +40,7 @@ def get_db_connection():
 conn = get_db_connection()
 cur = conn.cursor()
 
-df = pd.read_csv('category_embeddings.csv')
+df = pd.read_csv('resmed_embeddings_final.csv')
 
 
 words = ["what", "why", "where", "can",
@@ -69,9 +69,7 @@ def call_chat_completion_api(message_log):
 def get_category(bot_response):
     if "others" == bot_response:
         more_detail = (Fore.GREEN + "Your symptoms are more common to define the exact syndrome. can you please provide more detail:")
-        print(more_detail)        
-    else:
-        print(f"EmbeddedBot: {bot_response}")      
+        print(more_detail)            
 
 # Calculate embedding vector for the input using OpenAI Embeddings endpoint
 @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
@@ -140,11 +138,11 @@ def resmed_chatbot(user_input,message_log):
     highest_similarity = df['similarity'].max()
     debug(highest_similarity)
 
-    if any(x in user_input.split(' ')[0] for x in words):
+    if any(x.lower() in user_input.split(' ')[0].lower() for x in words):
         debug("User asked question to our system")
         bot_response = call_chat_completion_api(message_log)
     elif highest_similarity >= 0.85:
-        debug("Found completion which has >=0.85")
+        debug(f"Found completion which has >=0.85 - {highest_similarity}")
         probability = highest_similarity
         fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
         bot_response = fact_with_highest_similarity.iloc[0]
