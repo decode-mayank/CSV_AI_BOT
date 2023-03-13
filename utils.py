@@ -48,7 +48,7 @@ words = ["what", "why", "where", "can",
              "which", "are", "could", "would", 
              "should","whom", "whose", "don't"]
 
-def call_chat_completion_api(message_log, user_input):
+def call_chat_completion_api(message_log):
     bot_response=""
     response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
