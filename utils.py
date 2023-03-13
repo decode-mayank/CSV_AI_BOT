@@ -41,8 +41,6 @@ def get_db_connection():
 conn = get_db_connection()
 cur = conn.cursor()
 
-df = pd.read_csv('resmed_embeddings_final.csv')
-
 outputs = []
 words = ["what", "why", "where", "can",
              "name", "how", "do", "does", 
@@ -127,6 +125,14 @@ def resmed_chatbot(user_input,message_log):
 
     # Calculate similarity between the input and "facts" from companies_embeddings.csv file which we created before
     debug("Reading category_embedding csv")
+    
+    df = pd.read_csv('resmed_embeddings_final.csv')
+    
+    
+    if len(user_input.split(' '))<4:
+        # If we get user input with lesser words length of 4 then drop the rows where url is null
+        df = df[df["url"].notnull()]
+
     if 'similarity' in df.columns:
         df['embedding'] = df['embedding'].apply(np.array)
     else:
@@ -139,8 +145,6 @@ def resmed_chatbot(user_input,message_log):
     
     highest_similarity = df['similarity'].max()
     debug(highest_similarity)
-    # breakpoint()
-    
     if highest_similarity >= 0.82:
         debug("Found completion which has >=0.85")
         probability = highest_similarity
@@ -164,7 +168,7 @@ def resmed_chatbot(user_input,message_log):
             elif any(x in user_input.split(' ')[0] for x in words):
                 debug("User asked question to our system")
                 bot_response = call_chat_completion_api(message_log)
-            else:
+            elif(bot_response=="sleep apnea" or bot_response=="insomnia" or bot_response=="snoring"):
                 print(f"{Fore.CYAN} {Style.NORMAL} EmbeddedBot: This appears to be a condition called {bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
                 print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
                 get_category(bot_response)
@@ -176,7 +180,6 @@ def resmed_chatbot(user_input,message_log):
                 products = prod + " - " + url
                 print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
                 bot_response = bot_response + "\n" + products
-
     elif any(x in user_input.split(' ')[0] for x in words):
         debug("User asked question to our system")
         bot_response = call_chat_completion_api(message_log)
@@ -192,7 +195,7 @@ def resmed_chatbot(user_input,message_log):
     # Else pass input to the OpenAI Chat Completion endpoint
     else:
         debug("Let's ask ChatGPT to answer user query")  
-        bot_response = call_chat_completion_api(message_log, user_input)
+        bot_response = call_chat_completion_api(message_log)
     response_time = time.time() - start_time
     
     # Bot response may include single quotes when we pass that with conn.execute will return syntax error
