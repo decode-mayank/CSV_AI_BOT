@@ -129,6 +129,10 @@ def resmed_chatbot(user_input,message_log):
     df = pd.read_csv('resmed_embeddings_final.csv')
     
     
+    # If user types single word input then system gets confused so adding what is as a prefix
+    if (len(user_input.split(' '))==1):
+        user_input= f"What is {user_input}"
+        
     if len(user_input.split(' '))<4:
         # If we get user input with lesser words length of 4 then drop the rows where url is null
         df = df[df["url"].notnull()]
