@@ -19,7 +19,7 @@ def create_response_table():
   try:
     cur.execute("""CREATE TABLE chatbot_datas (
       prompt VARCHAR(500),
-      completion VARCHAR(1000),
+      completion VARCHAR(5000),
       probability FLOAT NOT NULL DEFAULT 0,
       response_accepted BOOLEAN NOT NULL DEFAULT FALSE,
       response_time SMALLINT NOT NULL,

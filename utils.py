@@ -43,25 +43,28 @@ cur = conn.cursor()
 
 df = pd.read_csv('category_embeddings.csv')
 
-
+outputs = []
 words = ["what", "why", "where", "can",
              "name", "how", "do", "does", 
              "which", "are", "could", "would", 
-             "should","whom", "whose", "don't"]
+             "should","whom", "whose", "don't", "list", "tell", "give"]
 
 def call_chat_completion_api(message_log, user_input):
-    message = {"role": "user",
-           "content": f"{user_input}?"};
-    conversation = [{"role": "system", "content": "DIRECTIVE_FOR_gpt-3.5-turbo"}]
-
-    while (message["content"] != "###"):
-        
-        conversation.append(message)
-        completion = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=conversation, stream=True)
-        breakpoint()
-        message["content"] = input(f"Assistant: {completion.choices[0].message.content} \nYou:")
-        print(" ")
-        conversation.append(completion.choices[0].message)
+    bot_response=""
+    response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages = message_log,
+            max_tokens=200,
+            stop=None,
+            temperature=0.7,
+            stream=True
+        )
+    print(f"{Fore.CYAN}{Style.NORMAL}Bot: {Style.NORMAL}",end="")
+    for chunk in response:
+        if "content" in chunk.choices[0].delta.keys():
+            bot_response+=chunk.choices[0].delta.content
+            print(Fore.CYAN + Style.NORMAL + f"{chunk.choices[0].delta.content}" + Style.NORMAL,end="")
+    print()
     return bot_response
    
 def get_category(bot_response):
@@ -138,12 +141,9 @@ def resmed_chatbot(user_input,message_log):
     
     highest_similarity = df['similarity'].max()
     debug(highest_similarity)
+    # breakpoint()
     
-    if any(x in user_input.split(' ')[0] for x in words):
-        debug("User asked question to our system")
-        bot_response = call_chat_completion_api(message_log, user_input)
-       
-    elif highest_similarity >= 0.82:
+    if highest_similarity >= 0.82:
         debug("Found completion which has >=0.85")
         probability = highest_similarity
         fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
@@ -153,6 +153,7 @@ def resmed_chatbot(user_input,message_log):
         if "others" == bot_response:
             debug("Common Symptom")
             get_category(bot_response)
+
         elif "Product" == bot_response:
             output = other_products(outputs[-1])
             for prod, url in output:
@@ -160,18 +161,27 @@ def resmed_chatbot(user_input,message_log):
                 print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
                 bot_response = bot_response + "\n" + products
         else:
-            if "product" in user_input or "products" in user_input:
+            if "product" in user_input or "products" in user_input.lower():
                 output = product(bot_response)
+            elif any(x in user_input.split(' ')[0] for x in words):
+                debug("User asked question to our system")
+                bot_response = call_chat_completion_api(message_log, user_input)
             else:
                 print(f"{Fore.CYAN} {Style.NORMAL} EmbeddedBot: This appears to be a condition called {bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
                 print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
                 get_category(bot_response)
-                output = product(bot_response)
-                source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
+            outputs.append(bot_response)
+            output = product(bot_response)
+            source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
+            print("Here are some products, which matches your search")
             for prod, url in output:
                 products = prod + " - " + url
                 print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
                 bot_response = bot_response + "\n" + products
+
+    elif any(x in user_input.split(' ')[0] for x in words):
+        debug("User asked question to our system")
+        bot_response = call_chat_completion_api(message_log, user_input)
 
     elif "cheap" in user_input or "cheapest" in user_input:
         probability = 0
@@ -183,16 +193,15 @@ def resmed_chatbot(user_input,message_log):
 
     # Else pass input to the OpenAI Chat Completion endpoint
     else:
-        debug("Let's ask ChatGPT to answer user query")   
-        bot_response = call_chat_completion_api(message_log, user_input)       
-            
+        debug("Let's ask ChatGPT to answer user query")  
+        bot_response = call_chat_completion_api(message_log, user_input)
     response_time = time.time() - start_time
     
     # Bot response may include single quotes when we pass that with conn.execute will return syntax error
     # So, let's replace single quotes with double quotes
     # Reference: https://stackoverflow.com/questions/12316953/insert-text-with-single-quotes-in-postgresql
     user_input = user_input.replace("'","''")
-    # bot_response = bot_response.replace("'", "''")
+    bot_response = bot_response.replace("'", "''")
     query = f"INSERT INTO chatbot_datas (prompt,completion,probability,response_accepted,response_time,time_stamp,source) VALUES('{user_input}','{bot_response}','{probability}','{response_accepted}',{response_time},'{time_stamp}','{source}');"
     debug(f"Query to execute - {query}")
     cur.execute(query)
