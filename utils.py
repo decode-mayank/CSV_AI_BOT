@@ -49,18 +49,21 @@ words = ["what", "why", "where", "can",
              "should","whom", "whose", "don't"]
 
 def call_chat_completion_api(message_log, user_input):
-    message = {"role": "user",
-           "content": f"{user_input}?"};
-    conversation = [{"role": "system", "content": "DIRECTIVE_FOR_gpt-3.5-turbo"}]
-
-    while (message["content"] != "###"):
-        
-        conversation.append(message)
-        completion = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=conversation, stream=True)
-        breakpoint()
-        message["content"] = input(f"Assistant: {completion.choices[0].message.content} \nYou:")
-        print(" ")
-        conversation.append(completion.choices[0].message)
+    bot_response=""
+    response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages = message_log,
+            max_tokens=200,
+            stop=None,
+            temperature=0.7,
+            stream=True
+        )
+    print(f"{Fore.CYAN}{Style.NORMAL}Bot: {Style.NORMAL}",end="")
+    for chunk in response:
+        if "content" in chunk.choices[0].delta.keys():
+            bot_response+=chunk.choices[0].delta.content
+            print(Fore.CYAN + Style.NORMAL + f"{chunk.choices[0].delta.content}" + Style.NORMAL,end="")
+    print()
     return bot_response
    
 def get_category(bot_response):
@@ -139,7 +142,7 @@ def resmed_chatbot(user_input,message_log):
 
     if any(x in user_input.split(' ')[0] for x in words):
         debug("User asked question to our system")
-        bot_response = call_chat_completion_api(message_log, user_input)
+        bot_response = call_chat_completion_api(message_log)
     elif highest_similarity >= 0.85:
         debug("Found completion which has >=0.85")
         probability = highest_similarity
@@ -158,7 +161,7 @@ def resmed_chatbot(user_input,message_log):
     # Else pass input to the OpenAI Chat Completion endpoint
     else:
         debug("Let's ask ChatGPT to answer user query")   
-        bot_response = call_chat_completion_api(message_log, user_input)
+        bot_response = call_chat_completion_api(message_log)
         
     response_time = time.time() - start_time
     
