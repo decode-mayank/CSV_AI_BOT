@@ -163,7 +163,7 @@ def resmed_chatbot(user_input,message_log):
                 output = product(bot_response)
             elif any(x in user_input.split(' ')[0] for x in words):
                 debug("User asked question to our system")
-                bot_response = call_chat_completion_api(message_log, user_input)
+                bot_response = call_chat_completion_api(message_log)
             else:
                 print(f"{Fore.CYAN} {Style.NORMAL} EmbeddedBot: This appears to be a condition called {bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
                 print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
@@ -179,7 +179,7 @@ def resmed_chatbot(user_input,message_log):
 
     elif any(x in user_input.split(' ')[0] for x in words):
         debug("User asked question to our system")
-        bot_response = call_chat_completion_api(message_log, user_input)
+        bot_response = call_chat_completion_api(message_log)
 
     elif "cheap" in user_input or "cheapest" in user_input:
         probability = 0
