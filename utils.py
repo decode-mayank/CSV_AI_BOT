@@ -8,6 +8,7 @@ import psycopg2
 import pandas as pd
 import numpy as np
 from colorama import Fore, Back, Style
+from products import product, other_products, cheap_products
 from dotenv import load_dotenv
 from tenacity import (
     retry,
@@ -79,6 +80,7 @@ def get_embedding(model, text):
     )
     return result['data'][0]['embedding']
 
+
 def get_moderation(question):
     """
     Check the question is safe to ask the model
@@ -136,11 +138,12 @@ def resmed_chatbot(user_input,message_log):
     
     highest_similarity = df['similarity'].max()
     debug(highest_similarity)
-
+    
     if any(x in user_input.split(' ')[0] for x in words):
         debug("User asked question to our system")
         bot_response = call_chat_completion_api(message_log, user_input)
-    elif highest_similarity >= 0.85:
+       
+    elif highest_similarity >= 0.82:
         debug("Found completion which has >=0.85")
         probability = highest_similarity
         fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
@@ -150,27 +153,49 @@ def resmed_chatbot(user_input,message_log):
         if "others" == bot_response:
             debug("Common Symptom")
             get_category(bot_response)
+        elif "Product" == bot_response:
+            output = other_products(outputs[-1])
+            for prod, url in output:
+                products = prod + " - " + url
+                print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
+                bot_response = bot_response + "\n" + products
         else:
-            print(f"{Fore.CYAN} {Style.NORMAL} EmbeddedBot: This appears to be a condition called {bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
-            print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
-            get_category(bot_response)
-            source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
+            if "product" in user_input or "products" in user_input:
+                output = product(bot_response)
+            else:
+                print(f"{Fore.CYAN} {Style.NORMAL} EmbeddedBot: This appears to be a condition called {bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
+                print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
+                get_category(bot_response)
+                output = product(bot_response)
+                source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
+            for prod, url in output:
+                products = prod + " - " + url
+                print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
+                bot_response = bot_response + "\n" + products
+
+    elif "cheap" in user_input or "cheapest" in user_input:
+        probability = 0
+        source = ""
+        output = cheap_products(outputs[-1])
+        for prod, url in output:
+            bot_response = prod + " - " + url
+            print(Fore.CYAN + Style.NORMAL + f"Cheapest option: {bot_response}" + Style.NORMAL)
+
     # Else pass input to the OpenAI Chat Completion endpoint
     else:
         debug("Let's ask ChatGPT to answer user query")   
-        bot_response = call_chat_completion_api(message_log, user_input)
-        
+        bot_response = call_chat_completion_api(message_log, user_input)       
+            
     response_time = time.time() - start_time
     
     # Bot response may include single quotes when we pass that with conn.execute will return syntax error
     # So, let's replace single quotes with double quotes
     # Reference: https://stackoverflow.com/questions/12316953/insert-text-with-single-quotes-in-postgresql
     user_input = user_input.replace("'","''")
-    bot_response = bot_response.replace("'","''")
+    # bot_response = bot_response.replace("'", "''")
     query = f"INSERT INTO chatbot_datas (prompt,completion,probability,response_accepted,response_time,time_stamp,source) VALUES('{user_input}','{bot_response}','{probability}','{response_accepted}',{response_time},'{time_stamp}','{source}');"
     debug(f"Query to execute - {query}")
     cur.execute(query)
     conn.commit()
     debug("Data added successfully")
     return bot_response
- 

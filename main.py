@@ -39,7 +39,6 @@ if __name__ == '__main__':
         else:
             # If this is not the first request, get the user's input and add it to the conversation history
             input_text = input(Fore.GREEN + Style.BRIGHT + "User: "+ Style.RESET_ALL)
-
             # If the user types "quit", end the loop and print a goodbye message
             if input_text.lower() == "quit":
                 print("Goodbye!")
