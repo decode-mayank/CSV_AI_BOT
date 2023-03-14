@@ -27,6 +27,9 @@ GENERAL_QUERY = "General query"
 SYMPTOM_QUERY = "Symptom query"
 PRODUCT_QUERY = "Product query"
 
+YES = "Yes"
+NO = "No"
+
 def debug(msg):
     verbose=os.getenv('VERBOSE')
     if verbose=="True":
@@ -125,6 +128,15 @@ def find_what_user_expects(user_input):
     )
     return response.choices[0].text.strip()
  
+def find_whether_user_knows_sleeping_disorder(user_input):
+    response = openai.Completion.create(
+    model="text-davinci-003",
+  prompt=f"The following is a conversation with an AI assistant. The assistant only answers {YES} or {NO}\n{YES} when human knows that they have insomnia, sleep apnea, snoring otherwise {NO}\n\nHuman: I feel very tired and stressed?\nAI: {NO}\nHuman: Atleast weekly thrice i snore a lot at night do i have snoring?\nAI: {NO}\nHuman: I am suffering from snoring is there any solution to cure snoring?\nAI: {YES}\nHuman: I have fever what to do\nAI: {NO}\nHuman:{user_input}",
+  temperature=0.5,
+  max_tokens=10,
+  stop=[" Human:", " AI:"]
+)
+    return response.choices[0].text.strip()
      
 def resmed_chatbot(user_input,message_log):
     # Append question mark at end of user_input
@@ -166,24 +178,39 @@ def resmed_chatbot(user_input,message_log):
         probability = highest_similarity
         fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
         bot_response = fact_with_highest_similarity.iloc[0]
+        source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
         debug(f"We are inside if and query_type is {query_type}, bot_response is {bot_response}, similarity is {highest_similarity}")
         
         if "others" == bot_response:
             debug("Common Symptom")
             get_category(bot_response)
 
-        found_symptom = bot_response=="Sleep Apnea" or bot_response=="Insomnia" or bot_response=="Snoring"
+        bot_response = bot_response.lower()
+
+        found_symptom = bot_response=="sleep apnea" or bot_response=="insomnia" or bot_response=="snoring"
         if (SYMPTOM_QUERY in query_type and found_symptom) or PRODUCT_QUERY in query_type:
-            if(found_symptom):
+            symptom_known = find_whether_user_knows_sleeping_disorder(user_input)
+            
+            if(found_symptom and YES not in symptom_known):
                 print(f"{Fore.CYAN} {Style.NORMAL} EmbeddedBot: This appears to be a condition called {bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
                 print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
+            else:
+                debug("User already know their symptom so we should only suggest them the product") 
+            if "Product" == bot_response:
+                output = other_products(outputs[-1])
+                for prod, url in output:
+                    products = prod + " - " + url
+                    print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
+                    source = ""
+                    bot_response = bot_response + "\n" + products                   
+                get_category(bot_response)
                 outputs.append(bot_response)
                 output = product(bot_response)
-                source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
                 print("Here are some products, which matches your search")
                 for prod, url in output:
                     products = prod + " - " + url
                     print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
+                    source = ""
                     bot_response = bot_response + "\n" + products
                 
             elif "Product" == bot_response:
