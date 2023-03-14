@@ -23,6 +23,9 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 my_model = 'text-embedding-ada-002'
 
 
+GENERAL_QUERY = "General query"
+SYMPTOM_QUERY = "Symptom query"
+PRODUCT_QUERY = "Product query"
 
 def debug(msg):
     verbose=os.getenv('VERBOSE')
@@ -48,6 +51,7 @@ words = ["what", "why", "where", "can",
              "should","whom", "whose", "don't", "list", "tell", "give"]
 
 def call_chat_completion_api(message_log):
+    debug("Let's ask ChatGPT to answer user query") 
     bot_response=""
     response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -107,7 +111,20 @@ def get_moderation(question):
         ]
         return result
     return None
-     
+    
+def find_what_user_expects(user_input):
+    response = openai.Completion.create(
+    model="text-davinci-003",
+    prompt=f"Find what user expects from the chatbot system Expected Responses are {GENERAL_QUERY},{SYMPTOM_QUERY},{PRODUCT_QUERY} \nHuman: I forget a lot and not able to concentrate \nAI:{SYMPTOM_QUERY}\nHuman: Does resmed provide CPAP Products\nAI:{GENERAL_QUERY}\nHuman: I have Mood disruptions, especially anxiety, depression and irritability\nAI:{SYMPTOM_QUERY}\nHuman: How many hours should i sleep daily\nAI:{GENERAL_QUERY}\nHuman:What is the price of CPAP mask\nAI:{PRODUCT_QUERY}\nHuman:{user_input}",
+    temperature=0.9,
+    max_tokens=150,
+    top_p=1,
+    frequency_penalty=0,
+    presence_penalty=0.6,
+    stop=[" Human:", " AI:"]
+    )
+    return response.choices[0].text.strip()
+ 
      
 def resmed_chatbot(user_input,message_log):
     debug("Clean input from the user")
@@ -117,6 +134,7 @@ def resmed_chatbot(user_input,message_log):
     response_time = 0
     probability = 0
     source = ""
+    query_type = ""
 
     start_time = time.time()
 
@@ -132,10 +150,8 @@ def resmed_chatbot(user_input,message_log):
     # If user types single word input then system gets confused so adding what is as a prefix
     if (len(user_input.split(' '))==1):
         user_input= f"What is {user_input}"
-        
-    if len(user_input.split(' '))<4:
-        # If we get user input with lesser words length of 4 then drop the rows where url is null
-        df = df[df["url"].notnull()]
+    else:
+        query_type = find_what_user_expects(user_input)
 
     if 'similarity' in df.columns:
         df['embedding'] = df['embedding'].apply(np.array)
@@ -149,57 +165,53 @@ def resmed_chatbot(user_input,message_log):
     
     highest_similarity = df['similarity'].max()
     debug(highest_similarity)
-    if highest_similarity >= 0.82:
-        debug("Found completion which has >=0.85")
-        probability = highest_similarity
-        fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
-        bot_response = fact_with_highest_similarity.iloc[0]
-        highest_similarity = df['similarity'].max()
-        
-        if "others" == bot_response:
-            debug("Common Symptom")
-            get_category(bot_response)
-
-        elif "Product" == bot_response:
-            output = other_products(outputs[-1])
-            for prod, url in output:
-                products = prod + " - " + url
-                print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
-                bot_response = bot_response + "\n" + products
-        else:
-            if "product" in user_input or "products" in user_input.lower():
-                output = product(bot_response)
-            elif any(x in user_input.split(' ')[0] for x in words):
-                debug("User asked question to our system")
-                bot_response = call_chat_completion_api(message_log)
-            elif(bot_response=="sleep apnea" or bot_response=="insomnia" or bot_response=="snoring"):
-                print(f"{Fore.CYAN} {Style.NORMAL} EmbeddedBot: This appears to be a condition called {bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
-                print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
+    
+    if(GENERAL_QUERY not in query_type):
+        if highest_similarity >= 0.82:
+            debug("Found completion which has >=0.85")
+            probability = highest_similarity
+            fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
+            bot_response = fact_with_highest_similarity.iloc[0]
+            debug(f"Response from similarity {bot_response}")
+            debug(f"Query type {query_type}")
+            
+            if "others" == bot_response:
+                debug("Common Symptom")
                 get_category(bot_response)
-            outputs.append(bot_response)
-            output = product(bot_response)
-            source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
-            print("Here are some products, which matches your search")
-            for prod, url in output:
-                products = prod + " - " + url
-                print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
-                bot_response = bot_response + "\n" + products
-    elif any(x in user_input.split(' ')[0] for x in words):
-        debug("User asked question to our system")
-        bot_response = call_chat_completion_api(message_log)
 
-    elif "cheap" in user_input or "cheapest" in user_input:
-        probability = 0
-        source = ""
-        output = cheap_products(outputs[-1])
-        for prod, url in output:
-            bot_response = prod + " - " + url
-            print(Fore.CYAN + Style.NORMAL + f"Cheapest option: {bot_response}" + Style.NORMAL)
+            found_symptom = bot_response=="Sleep Apnea" or bot_response=="Insomnia" or bot_response=="Snoring"
+            if (SYMPTOM_QUERY in query_type and found_symptom) or PRODUCT_QUERY in query_type:
+                 if(found_symptom):
+                    print(f"{Fore.CYAN} {Style.NORMAL} EmbeddedBot: This appears to be a condition called {bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
+                    print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
+                    
+                 if "Product" == bot_response:
+                    output = other_products(outputs[-1])
+                    for prod, url in output:
+                        products = prod + " - " + url
+                        print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
+                        bot_response = bot_response + "\n" + products                   
+                    get_category(bot_response)
+                    outputs.append(bot_response)
+                    output = product(bot_response)
+                    source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
+                    print("Here are some products, which matches your search")
+                    for prod, url in output:
+                        products = prod + " - " + url
+                        print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
+                        bot_response = bot_response + "\n" + products
 
-    # Else pass input to the OpenAI Chat Completion endpoint
+                 elif "cheap" in user_input or "cheapest" in user_input:
+                    probability = 0
+                    source = ""
+                    output = cheap_products(outputs[-1])
+                    for prod, url in output:
+                        bot_response = prod + " - " + url
+                        print(Fore.CYAN + Style.NORMAL + f"Cheapest option: {bot_response}" + Style.NORMAL)
     else:
-        debug("Let's ask ChatGPT to answer user query")  
+        debug(f"We are in else part,query_type is {query_type}, bot_response is {bot_response}")
         bot_response = call_chat_completion_api(message_log)
+
     response_time = time.time() - start_time
     
     # Bot response may include single quotes when we pass that with conn.execute will return syntax error
