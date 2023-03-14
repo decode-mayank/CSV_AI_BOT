@@ -194,32 +194,12 @@ def resmed_chatbot(user_input,message_log):
             if(found_symptom and YES not in symptom_known):
                 print(f"{Fore.CYAN} {Style.NORMAL} EmbeddedBot: This appears to be a condition called {bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
                 print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
-            else:
-                debug("User already know their symptom so we should only suggest them the product") 
-            if "Product" == bot_response:
-                output = other_products(outputs[-1])
-                for prod, url in output:
-                    products = prod + " - " + url
-                    print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
-                    source = ""
-                    bot_response = bot_response + "\n" + products                   
-                get_category(bot_response)
-                outputs.append(bot_response)
-                output = product(bot_response)
-                print("Here are some products, which matches your search")
-                for prod, url in output:
-                    products = prod + " - " + url
-                    print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
-                    source = ""
-                    bot_response = bot_response + "\n" + products
-                
             elif "Product" == bot_response:
                 output = other_products(outputs[-1])
                 for prod, url in output:
                     products = prod + " - " + url
                     print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
                     bot_response = bot_response + "\n" + products                   
-
             elif "cheap" in user_input or "cheapest" in user_input:
                 probability = 0
                 source = ""
@@ -227,6 +207,17 @@ def resmed_chatbot(user_input,message_log):
                 for prod, url in output:
                     bot_response = prod + " - " + url
                     print(Fore.CYAN + Style.NORMAL + f"Cheapest option: {bot_response}" + Style.NORMAL)
+            else:
+                debug("User already know their symptom so we should only suggest them the product") 
+            outputs.append(bot_response)
+            output = product(bot_response.title())
+            print("Here are some products, which matches your search")
+            for prod, url in output:
+                products = prod + " - " + url
+                print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
+                source = ""
+                bot_response = bot_response + "\n" + products                
+            
     else:
         debug(f"We are in else part,query_type is {query_type}, bot_response is {bot_response}")
         bot_response = call_chat_completion_api(message_log)
