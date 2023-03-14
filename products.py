@@ -58,9 +58,10 @@ def other_products(text):
 
 
 def cheap_products(text):
+    breakpoint()
     response = openai.Completion.create(
         model="text-davinci-003",
-        prompt="Given an input question, respond with syntactically correct PostgreSQL. Be creative but the query must be correct. Only use table called product. The product table has columns: category (character varying), sku (character varying), product (character varying), description (character varying), price (character varying), breadcrumb (character varying), and product_url (character varying). Give a Select query for product and product_url, where the category matches to the input question. Format the query in the correct format. Read the Price data and give the cheapest product of the cateogory" + text,
+        prompt="Given an input question, respond with syntactically correct PostgreSQL. Be creative but the query must be correct. Only use table called product. The product table has columns: category (character varying), sku (character varying), product (character varying), description (character varying), price (character varying), breadcrumb (character varying), and product_url (character varying). Give a Select query for product and product_url, where the category matches to the input question. Format the query in the correct format. Use Order_by command to order the price in Ascending order and list top 1 items." + text,
         temperature=0.3,
         max_tokens=60,
         top_p=1.0,
