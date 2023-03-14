@@ -164,7 +164,7 @@ def resmed_chatbot(user_input,message_log):
         probability = highest_similarity
         fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
         bot_response = fact_with_highest_similarity.iloc[0]
-        debug(f"We are inside if and query_type is {query_type}, bot_response is {bot_response}, similarity is {similarity}")
+        debug(f"We are inside if and query_type is {query_type}, bot_response is {bot_response}, similarity is {highest_similarity}")
         
         if "others" == bot_response:
             debug("Common Symptom")
