@@ -127,6 +127,8 @@ def find_what_user_expects(user_input):
  
      
 def resmed_chatbot(user_input,message_log):
+    # Append question mark at end of user_input
+    user_input += "?"
     time_stamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     response_accepted = True
     bot_response = None
@@ -160,7 +162,7 @@ def resmed_chatbot(user_input,message_log):
     highest_similarity = df['similarity'].max()
     debug(f"Max similarity - {highest_similarity}")
     
-    if(GENERAL_QUERY not in query_type and highest_similarity >= 0.82):
+    if(GENERAL_QUERY not in query_type and highest_similarity >= 0.82 and query_type!=""):
         probability = highest_similarity
         fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
         bot_response = fact_with_highest_similarity.iloc[0]
