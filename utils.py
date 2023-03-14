@@ -127,7 +127,6 @@ def find_what_user_expects(user_input):
  
      
 def resmed_chatbot(user_input,message_log):
-    debug("Clean input from the user")
     time_stamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     response_accepted = True
     bot_response = None
@@ -142,10 +141,7 @@ def resmed_chatbot(user_input,message_log):
     input_embedding_vector = get_embedding(my_model, user_input)
 
     # Calculate similarity between the input and "facts" from companies_embeddings.csv file which we created before
-    debug("Reading category_embedding csv")
-    
     df = pd.read_csv('resmed_embeddings_final.csv')
-    
     
     # If user types single word input then system gets confused so adding what is as a prefix
     if (len(user_input.split(' '))==1):
@@ -159,55 +155,50 @@ def resmed_chatbot(user_input,message_log):
         df['embedding'] = df['embedding'].apply(eval).apply(np.array)
     
     df['similarity'] = df['embedding'].apply(lambda x: cosine_similarity(x, input_embedding_vector))
-    debug("Let's find max similarity")
     
     # Find the highest similarity value in the dataframe column 'similarity'
-    
     highest_similarity = df['similarity'].max()
-    debug(highest_similarity)
+    debug(f"Max similarity - {highest_similarity}")
     
-    if(GENERAL_QUERY not in query_type):
-        if highest_similarity >= 0.82:
-            debug("Found completion which has >=0.85")
-            probability = highest_similarity
-            fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
-            bot_response = fact_with_highest_similarity.iloc[0]
-            debug(f"Response from similarity {bot_response}")
-            debug(f"Query type {query_type}")
-            
-            if "others" == bot_response:
-                debug("Common Symptom")
+    if(GENERAL_QUERY not in query_type and highest_similarity >= 0.82):
+        probability = highest_similarity
+        fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
+        bot_response = fact_with_highest_similarity.iloc[0]
+        debug(f"We are inside if and query_type is {query_type}, bot_response is {bot_response}, similarity is {similarity}")
+        
+        if "others" == bot_response:
+            debug("Common Symptom")
+            get_category(bot_response)
+
+        found_symptom = bot_response=="Sleep Apnea" or bot_response=="Insomnia" or bot_response=="Snoring"
+        if (SYMPTOM_QUERY in query_type and found_symptom) or PRODUCT_QUERY in query_type:
+            if(found_symptom):
+                print(f"{Fore.CYAN} {Style.NORMAL} EmbeddedBot: This appears to be a condition called {bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
+                print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
+                
+            if "Product" == bot_response:
+                output = other_products(outputs[-1])
+                for prod, url in output:
+                    products = prod + " - " + url
+                    print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
+                    bot_response = bot_response + "\n" + products                   
                 get_category(bot_response)
+                outputs.append(bot_response)
+                output = product(bot_response)
+                source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
+                print("Here are some products, which matches your search")
+                for prod, url in output:
+                    products = prod + " - " + url
+                    print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
+                    bot_response = bot_response + "\n" + products
 
-            found_symptom = bot_response=="Sleep Apnea" or bot_response=="Insomnia" or bot_response=="Snoring"
-            if (SYMPTOM_QUERY in query_type and found_symptom) or PRODUCT_QUERY in query_type:
-                 if(found_symptom):
-                    print(f"{Fore.CYAN} {Style.NORMAL} EmbeddedBot: This appears to be a condition called {bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
-                    print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
-                    
-                 if "Product" == bot_response:
-                    output = other_products(outputs[-1])
-                    for prod, url in output:
-                        products = prod + " - " + url
-                        print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
-                        bot_response = bot_response + "\n" + products                   
-                    get_category(bot_response)
-                    outputs.append(bot_response)
-                    output = product(bot_response)
-                    source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
-                    print("Here are some products, which matches your search")
-                    for prod, url in output:
-                        products = prod + " - " + url
-                        print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
-                        bot_response = bot_response + "\n" + products
-
-                 elif "cheap" in user_input or "cheapest" in user_input:
-                    probability = 0
-                    source = ""
-                    output = cheap_products(outputs[-1])
-                    for prod, url in output:
-                        bot_response = prod + " - " + url
-                        print(Fore.CYAN + Style.NORMAL + f"Cheapest option: {bot_response}" + Style.NORMAL)
+            elif "cheap" in user_input or "cheapest" in user_input:
+                probability = 0
+                source = ""
+                output = cheap_products(outputs[-1])
+                for prod, url in output:
+                    bot_response = prod + " - " + url
+                    print(Fore.CYAN + Style.NORMAL + f"Cheapest option: {bot_response}" + Style.NORMAL)
     else:
         debug(f"We are in else part,query_type is {query_type}, bot_response is {bot_response}")
         bot_response = call_chat_completion_api(message_log)
