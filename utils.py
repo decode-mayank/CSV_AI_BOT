@@ -242,5 +242,6 @@ def resmed_chatbot(user_input,message_log):
     cur.execute(query)
     conn.commit()
     debug("Data added successfully")
+    debug(f"Response time in seconds - {response_time}")
     #print(bot_response)
     return bot_response
