@@ -188,12 +188,27 @@ def resmed_chatbot(user_input,message_log):
 
         found_symptom = bot_response=="sleep apnea" or bot_response=="insomnia" or bot_response=="snoring"
         if (SYMPTOM_QUERY in query_type and found_symptom) or PRODUCT_QUERY in query_type:
-            symptom_known = find_whether_user_knows_sleeping_disorder(user_input)
-            
-            if(found_symptom and YES not in symptom_known):
-                print(f"{Fore.CYAN} {Style.NORMAL} EmbeddedBot: This appears to be a condition called {bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
-                print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
-            elif "Product" == bot_response:
+            # symptom_known = find_whether_user_knows_sleeping_disorder(user_input)
+            if(found_symptom):
+                if bot_response in user_input:
+                    output = product(user_input)
+                    print("Here are some products, which matches your search")
+                    for prod, url in output:
+                        products = prod + " - " + url
+                        print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
+                        source = ""
+                        bot_response = bot_response + "\n" + products
+                else:
+                    print(f"{Fore.CYAN} {Style.NORMAL} EmbeddedBot: This appears to be a condition called {bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
+                    print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
+                    output = product(bot_response)
+                    print("Here are some products, which matches your search")
+                    for prod, url in output:
+                        products = prod + " - " + url
+                        print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
+                        source = ""
+                        bot_response = bot_response + "\n" + products
+            elif "product" == bot_response:
                 output = other_products(outputs[-1])
                 for prod, url in output:
                     products = prod + " - " + url
@@ -207,15 +222,8 @@ def resmed_chatbot(user_input,message_log):
                     bot_response = prod + " - " + url
                     print(Fore.CYAN + Style.NORMAL + f"Cheapest option: {bot_response}" + Style.NORMAL)
             else:
-                debug("User already know their symptom so we should only suggest them the product") 
-            outputs.append(bot_response)
-            output = product(user_input)
-            print("Here are some products, which matches your search")
-            for prod, url in output:
-                products = prod + " - " + url
-                print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
-                source = ""
-                bot_response = bot_response + "\n" + products                
+                debug("User already know their symptom so we should only suggest them the product")
+            outputs.append(bot_response)                
             
     else:
         debug(f"We are in else part,query_type is {query_type}, bot_response is {bot_response}")
