@@ -173,7 +173,6 @@ def resmed_chatbot(user_input,message_log):
     # Find the highest similarity value in the dataframe column 'similarity'
     highest_similarity = df['similarity'].max()
     debug(f"Max similarity - {highest_similarity}")
-    
     if(GENERAL_QUERY not in query_type and highest_similarity >= 0.82 and query_type!=""):
         probability = highest_similarity
         fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
@@ -210,7 +209,7 @@ def resmed_chatbot(user_input,message_log):
             else:
                 debug("User already know their symptom so we should only suggest them the product") 
             outputs.append(bot_response)
-            output = product(bot_response.title())
+            output = product(user_input)
             print("Here are some products, which matches your search")
             for prod, url in output:
                 products = prod + " - " + url

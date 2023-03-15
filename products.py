@@ -22,7 +22,7 @@ conn = psycopg2.connect(
 def product(text):
     response = openai.Completion.create(
         model="text-davinci-003",
-        prompt="Given an input question, respond with syntactically correct PostgreSQL. Be creative but the query must be correct. Only use table called product. The product table has columns: category (character varying), sku (character varying), product (character varying), description (character varying), price (character varying), breadcrumb (character varying), and product_url (character varying). Give a Select query for product and product_url, where the category matches to the input question. Format the query in the correct format. Use Order_by command to order the rating in Descending order and list top 3 items." + text,
+        prompt="Given an input question, respond with syntactically correct PostgreSQL. Be creative but the query must be correct. Only use table called product. The product table has columns: category (character varying), sku (character varying), product (character varying), description (character varying), price (character varying), breadcrumb (character varying), product_url (character varying), money_back (BOOLEAN), rating (FLOAT), total_reviews (INTEGER). Give a Select query for product and product_url, where the category matches to the input question. Format the query in the correct format. Use Order_by command to order the rating in Descending order and list top 3 items. Where category can be Sleep Apnea, Snoring or Insomnia, any other Keyword attached with these words can be truncated." + text,
         temperature=0.3,
         max_tokens=60,
         top_p=1.0,
@@ -40,7 +40,7 @@ def product(text):
 def other_products(text):
     response = openai.Completion.create(
         model="text-davinci-003",
-        prompt="Given an input question, respond with syntactically correct PostgreSQL. Be creative but the query must be correct. Only use table called product. The product table has columns: category (character varying), sku (character varying), product (character varying), description (character varying), price (character varying), breadcrumb (character varying), and product_url (character varying). Give a Select query for product and product_url, where the category matches to the input question. Format the query in the correct format. Use Order_by command to order the rating in Ascending order and list top 3 items." + text,
+        prompt="Given an input question, respond with syntactically correct PostgreSQL. Be creative but the query must be correct. Only use table called product. The product table has columns: category (character varying), sku (character varying), product (character varying), description (character varying), price (character varying), breadcrumb (character varying), product_url (character varying), money_back (BOOLEAN), rating (FLOAT), total_reviews (INTEGER). Give a Select query for product and product_url, where the category matches to the input question. Format the query in the correct format. Use Order_by command to order the rating in Ascending order and list top 3 items. Where category can be Sleep Apnea, Snoring or Insomnia, any other Keyword attached with these words can be truncated." + text,
         temperature=0.3,
         max_tokens=60,
         top_p=1.0,
@@ -57,10 +57,9 @@ def other_products(text):
 
 
 def cheap_products(text):
-    # breakpoint()
     response = openai.Completion.create(
         model="text-davinci-003",
-        prompt="Given an input question, respond with syntactically correct PostgreSQL. Be creative but the query must be correct. Only use table called product. The product table has columns: category (character varying), sku (character varying), product (character varying), description (character varying), price (character varying), breadcrumb (character varying), and product_url (character varying). Give a Select query for product and product_url, where the category matches to the input question. Format the query in the correct format. Use Order_by command to order the price in Ascending order and list top 1 items." + text,
+        prompt="Given an input question, respond with syntactically correct PostgreSQL. Be creative but the query must be correct. Only use table called product. The product table has columns: category (character varying), sku (character varying), product (character varying), description (character varying), price (character varying), breadcrumb (character varying), product_url (character varying), money_back (BOOLEAN), rating (FLOAT), total_reviews (INTEGER). Give a Select query for product and product_url, where the category matches to the input question. Format the query in the correct format. Use Order_by command to order the price in Ascending order and list top 1 items. Where category can be Sleep Apnea, Snoring or Insomnia, any other Keyword attached with these words can be truncated." + text,
         temperature=0.3,
         max_tokens=60,
         top_p=1.0,
