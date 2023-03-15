@@ -201,7 +201,7 @@ def resmed_chatbot(user_input,message_log):
                 else:
                     print(f"{Fore.CYAN} {Style.NORMAL} EmbeddedBot: This appears to be a condition called {bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
                     print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
-                    output = product(bot_response)
+                    output = product(bot_response.title())
                     print("Here are some products, which matches your search")
                     for prod, url in output:
                         products = prod + " - " + url
@@ -242,4 +242,5 @@ def resmed_chatbot(user_input,message_log):
     cur.execute(query)
     conn.commit()
     debug("Data added successfully")
+    #print(bot_response)
     return bot_response

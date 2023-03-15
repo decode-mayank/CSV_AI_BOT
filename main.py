@@ -22,8 +22,13 @@ if __name__ == '__main__':
 
     while True:
         if first_request:
+            #breakpoint()
             input_text = input(Fore.GREEN + Style.BRIGHT + "User: " + Style.RESET_ALL)
             message_log.append({"role": "user", "content": input_text})
+
+            if len(input_text) > 500:
+                print(Fore.GREEN + Style.BRIGHT + "Please type a message that is less than 500 characters.")
+                continue
 
             # Add a message from the chatbot to the conversation history
             message_log.append({"role": "assistant", "content": "You are a helpful assistant."})
@@ -43,6 +48,10 @@ if __name__ == '__main__':
             if input_text.lower() == "quit":
                 print("Goodbye!")
                 break
+
+            if len(input_text) > 500:
+                print(Fore.GREEN + Style.BRIGHT + "Please type a message that is less than 500 characters.")
+                continue
 
             message_log.append({"role": "user", "content": input_text})
 
