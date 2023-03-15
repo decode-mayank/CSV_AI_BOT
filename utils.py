@@ -190,9 +190,12 @@ def resmed_chatbot(user_input,message_log):
         if (SYMPTOM_QUERY in query_type and found_symptom) or PRODUCT_QUERY in query_type:
             symptom_known = find_whether_user_knows_sleeping_disorder(user_input)
             
-            if(found_symptom and YES not in symptom_known):
-                print(f"{Fore.CYAN} {Style.NORMAL} EmbeddedBot: This appears to be a condition called {bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
-                print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
+            if(found_symptom):
+                if bot_response in user_input:
+                    pass
+                else:
+                    print(f"{Fore.CYAN} {Style.NORMAL} EmbeddedBot: This appears to be a condition called {bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
+                    print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
             elif "Product" == bot_response:
                 output = other_products(outputs[-1])
                 for prod, url in output:
@@ -234,4 +237,5 @@ def resmed_chatbot(user_input,message_log):
     cur.execute(query)
     conn.commit()
     debug("Data added successfully")
+    #print(bot_response)
     return bot_response
