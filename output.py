@@ -6,7 +6,7 @@ import gradio as gr
 import pandas as pd
 import numpy as np
 
-from main import resmed_chatbot, get_moderation
+from main import resmed_chatbot
 
 
 # Insert your API key
@@ -17,11 +17,18 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 my_model = 'text-embedding-ada-002'
 inputs, outputs = [], []
 
+message_log = [
+        {"role": "system", "content": "Answer the question only related to the topics of sleep,health,mask,sleep disorders from the website https://www.resmed.com.au/knowledge-hub if they ask queries outside of this topics sleep,health,mask,sleep disorders, say That I have been trained to answer only sleep and health related queries"},
+        {"role": "assistant", "content": "You are a helpful assistant."}
+    ] 
+
 def chatgpt_clone(input, history):
     history = history or []
     s = list(sum(history, ()))
     s.append(input)
-    output = resmed_chatbot(input, history)
+    message_log.append({"role": "user", "content": input})
+    output = resmed_chatbot(input, message_log)
+    message_log.append({"role": "assistant", "content": output})
     history.append((input, output))
     return history, history 
 
