@@ -8,7 +8,7 @@ import psycopg2
 import pandas as pd
 import numpy as np
 from colorama import Fore, Back, Style
-from products import product, other_products, cheap_products
+from products import product, other_products, cheap_products, general_product
 from dotenv import load_dotenv
 from tenacity import (
     retry,
@@ -143,7 +143,7 @@ def resmed_chatbot(user_input,message_log):
     user_input += "?"
     time_stamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     response_accepted = True
-    bot_response = None
+    bot_response = ""
     response_time = 0
     probability = 0
     source = ""
@@ -173,7 +173,7 @@ def resmed_chatbot(user_input,message_log):
     # Find the highest similarity value in the dataframe column 'similarity'
     highest_similarity = df['similarity'].max()
     debug(f"Max similarity - {highest_similarity}")
-    if(GENERAL_QUERY not in query_type and highest_similarity >= 0.82 and query_type!=""):
+    if(GENERAL_QUERY not in query_type and highest_similarity >= 0.85 and query_type!=""):
         probability = highest_similarity
         fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
         bot_response = fact_with_highest_similarity.iloc[0]
@@ -185,46 +185,54 @@ def resmed_chatbot(user_input,message_log):
             get_category(bot_response)
 
         bot_response = bot_response.lower()
-
         found_symptom = bot_response=="sleep apnea" or bot_response=="insomnia" or bot_response=="snoring"
         if (SYMPTOM_QUERY in query_type and found_symptom) or PRODUCT_QUERY in query_type:
             # symptom_known = find_whether_user_knows_sleeping_disorder(user_input)
             if(found_symptom):
                 if bot_response in user_input:
-                    output = product(user_input)
+                    output = general_product(user_input)
                     print("Here are some products, which matches your search")
-                    for prod, url in output:
-                        products = prod + " - " + url
+                    print(output)
+                    for prod, url, price in output:
+                        products = prod + " - " + url + " - $" + str(price)
                         print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
                         source = ""
-                        bot_response = bot_response + "\n" + products
+                        # bot_response = bot_response + "\n" + products
                 else:
                     print(f"{Fore.CYAN} {Style.NORMAL} EmbeddedBot: This appears to be a condition called {bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
                     print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
-                    output = product(bot_response.title())
+                    output = product(bot_response)
                     print("Here are some products, which matches your search")
-                    for prod, url in output:
-                        products = prod + " - " + url
+                    for prod, url, price in output:
+                        products = prod + " - " + url + " - $" + str(price)
                         print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
                         source = ""
-                        bot_response = bot_response + "\n" + products
-            elif "product" == bot_response:
-                output = other_products(outputs[-1])
-                for prod, url in output:
-                    products = prod + " - " + url
-                    print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
-                    bot_response = bot_response + "\n" + products                   
+                        # bot_response = bot_response + "\n" + products
             elif "cheap" in user_input or "cheapest" in user_input:
                 probability = 0
                 source = ""
-                output = cheap_products(outputs[-1])
-                for prod, url in output:
-                    bot_response = prod + " - " + url
+                if len(outputs)==0:
+                    output = cheap_products(user_input)
+                else:
+                    output = cheap_products(outputs[-1])
+                for prod, url, price in output:
+                    bot_response = prod + " - " + url + " - $" + str(price)
                     print(Fore.CYAN + Style.NORMAL + f"Cheapest option: {bot_response}" + Style.NORMAL)
+            elif "product" == bot_response:
+                output = other_products(outputs[-1])
+                for prod, url, price in output:
+                    products = prod + " - " + url + " - $" + str(price)
+                    print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
+                    # bot_response = bot_response + "\n" + products                   
             else:
                 debug("User already know their symptom so we should only suggest them the product")
-            outputs.append(bot_response)                
-            
+            outputs.append(bot_response)       
+    elif PRODUCT_QUERY in query_type:
+        output = general_product(user_input)
+        for prod, url, price in output:
+            products = prod + " - " + url + " - $" + str(price)
+            print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
+            bot_response = bot_response + "\n" + products            
     else:
         debug(f"We are in else part,query_type is {query_type}, bot_response is {bot_response}")
         bot_response = call_chat_completion_api(message_log)
