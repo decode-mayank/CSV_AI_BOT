@@ -1,13 +1,12 @@
 from datetime import datetime
 import time
+import os
+
 import openai
 from openai.embeddings_utils import cosine_similarity
-import os
 import psycopg2
-
 import pandas as pd
 import numpy as np
-from colorama import Fore, Back, Style
 from products import product, other_products, cheap_products, general_product
 from dotenv import load_dotenv
 from tenacity import (
@@ -16,6 +15,7 @@ from tenacity import (
     wait_random_exponential,
 )  # for exponential backoff
 
+from colors import pr_light_purple,pr_yellow,pr_pink,pr_cyan,pr_bot_response
 
 # Insert your API key
 load_dotenv()
@@ -26,15 +26,23 @@ my_model = 'text-embedding-ada-002'
 GENERAL_QUERY = "General query"
 SYMPTOM_QUERY = "Symptom query"
 PRODUCT_QUERY = "Product query"
+PROGRAM_QUERY = "Program query"
 
 YES = "Yes"
 NO = "No"
 
+VERBOSE = os.getenv('VERBOSE')
+EXPECTED_SIMILARITY = 0.80
+
 def debug(msg):
-    verbose=os.getenv('VERBOSE')
-    if verbose=="True":
-        print(msg)  
-        
+    if VERBOSE=="True":
+        pr_pink(f"[DEBUG] - {msg}")  
+    
+def debug_attribute(attribute,value):
+    if VERBOSE=="True":
+        pr_light_purple(attribute,end="")
+        pr_yellow(value,end="\n")
+       
 # Get db connections
 def get_db_connection():
     conn = psycopg2.connect(host='localhost',
@@ -48,10 +56,6 @@ conn = get_db_connection()
 cur = conn.cursor()
 
 outputs = []
-words = ["what", "why", "where", "can",
-             "name", "how", "do", "does", 
-             "which", "are", "could", "would", 
-             "should","whom", "whose", "don't", "list", "tell", "give"]
 
 def call_chat_completion_api(message_log):
     debug("Let's ask ChatGPT to answer user query") 
@@ -59,24 +63,19 @@ def call_chat_completion_api(message_log):
     response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages = message_log,
-            max_tokens=200,
+            max_tokens=100,
             stop=None,
             temperature=0.7,
             stream=True
         )
-    print(f"{Fore.CYAN}{Style.NORMAL}Bot: {Style.NORMAL}",end="")
+    pr_bot_response("",end="")
     for chunk in response:
         if "content" in chunk.choices[0].delta.keys():
             bot_response+=chunk.choices[0].delta.content
-            print(Fore.CYAN + Style.NORMAL + f"{chunk.choices[0].delta.content}" + Style.NORMAL,end="")
+            pr_cyan(f"{chunk.choices[0].delta.content}",end="")
     print()
     return bot_response
    
-def get_category(bot_response):
-    if "others" == bot_response:
-        more_detail = (Fore.GREEN + "Your symptoms are more common to define the exact syndrome. can you please provide more detail:")
-        print(more_detail)            
-
 # Calculate embedding vector for the input using OpenAI Embeddings endpoint
 @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
 def get_embedding(model, text):
@@ -114,11 +113,22 @@ def get_moderation(question):
         ]
         return result
     return None
-    
+
+
+def identify_answer(user_input, bot_response):
+    response = openai.Completion.create(
+    model="text-davinci-003",
+    prompt=f"The following is a conversation with an AI assistant. The assistant only answers {YES} or {NO}\n{YES} If the question and answer make sense otherwise say {NO} \nHuman:Q:{user_input},A:{bot_response}\nAI:",
+    temperature=0.5,
+    max_tokens=10,
+    stop=["Human:", "AI:"]
+    )
+    return response.choices[0].text.strip()
+
 def find_what_user_expects(user_input):
     response = openai.Completion.create(
     model="text-davinci-003",
-    prompt=f"Find what user expects from the chatbot system Expected Responses are {GENERAL_QUERY},{SYMPTOM_QUERY},{PRODUCT_QUERY} \nHuman: I forget a lot and not able to concentrate \nAI:{SYMPTOM_QUERY}\nHuman: Does resmed provide CPAP Products\nAI:{GENERAL_QUERY}\nHuman: I have Mood disruptions, especially anxiety, depression and irritability\nAI:{SYMPTOM_QUERY}\nHuman: How many hours should i sleep daily\nAI:{GENERAL_QUERY}\nHuman:What is the price of CPAP mask\nAI:{PRODUCT_QUERY}\nHuman:{user_input}",
+    prompt=f"Find what user expects from the chatbot system Expected Responses are {GENERAL_QUERY},{SYMPTOM_QUERY},{PRODUCT_QUERY},{PROGRAM_QUERY} \nHuman: I forget a lot and not able to concentrate \nAI:{SYMPTOM_QUERY}\nHuman: Does resmed provide CPAP Products\nAI:{GENERAL_QUERY}\nHuman: I have Mood disruptions, especially anxiety, depression and irritability\nAI:{SYMPTOM_QUERY}\nHuman: How many hours should i sleep daily\nAI:{GENERAL_QUERY}\nHuman:What is the price of CPAP mask\nAI:{PRODUCT_QUERY}\nHuman:Write a program\nAI:{PROGRAM_QUERY}\nHuman:{user_input}",
     temperature=0.9,
     max_tokens=150,
     top_p=1,
@@ -127,17 +137,16 @@ def find_what_user_expects(user_input):
     stop=[" Human:", " AI:"]
     )
     return response.choices[0].text.strip()
- 
-def find_whether_user_knows_sleeping_disorder(user_input):
-    response = openai.Completion.create(
-    model="text-davinci-003",
-  prompt=f"The following is a conversation with an AI assistant. The assistant only answers {YES} or {NO}\n{YES} when human knows that they have insomnia, sleep apnea, snoring otherwise {NO}\n\nHuman: I feel very tired and stressed?\nAI: {NO}\nHuman: Atleast weekly thrice i snore a lot at night do i have snoring?\nAI: {NO}\nHuman: I am suffering from snoring is there any solution to cure snoring?\nAI: {YES}\nHuman: I have fever what to do\nAI: {NO}\nHuman:{user_input}",
-  temperature=0.5,
-  max_tokens=10,
-  stop=[" Human:", " AI:"]
-)
-    return response.choices[0].text.strip()
-     
+  
+def show_products(output,bot_response):
+    if(len(output)>0):
+        pr_cyan("Here are some products, which matches your search")
+    for prod, url,price in output:
+        products = prod + " - " + url + " - $" + str(price)
+        pr_cyan(products)
+        bot_response = bot_response + "\n" + products
+    return bot_response
+    
 def resmed_chatbot(user_input,message_log):
     # Append question mark at end of user_input
     user_input += "?"
@@ -172,69 +181,67 @@ def resmed_chatbot(user_input,message_log):
     
     # Find the highest similarity value in the dataframe column 'similarity'
     highest_similarity = df['similarity'].max()
-    debug(f"Max similarity - {highest_similarity}")
-    if(GENERAL_QUERY not in query_type and highest_similarity >= 0.85 and query_type!=""):
+
+    debug_attribute("query_type - ",query_type)
+    debug_attribute("similarity - ",highest_similarity)
+    
+    if(PROGRAM_QUERY in query_type):
+        bot_response="I'm sorry, I am a chatbot of ResMed and my expertise is in answering questions related to sleep disorders, masks, and health.Please let me know how I can assist you with your sleep-related queries."
+    elif(GENERAL_QUERY not in query_type and highest_similarity >= EXPECTED_SIMILARITY and query_type!=""):
         probability = highest_similarity
         fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
         bot_response = fact_with_highest_similarity.iloc[0]
-        source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
-        debug(f"We are inside if and query_type is {query_type}, bot_response is {bot_response}, similarity is {highest_similarity}")
-        
-        if "others" == bot_response:
-            debug("Common Symptom")
-            get_category(bot_response)
+        show_embedding_answer_to_user = identify_answer(user_input, bot_response)
 
-        bot_response = bot_response.lower()
-        found_symptom = bot_response=="sleep apnea" or bot_response=="insomnia" or bot_response=="snoring"
-        if (SYMPTOM_QUERY in query_type and found_symptom) or PRODUCT_QUERY in query_type:
-            # symptom_known = find_whether_user_knows_sleeping_disorder(user_input)
-            if(found_symptom):
-                if bot_response in user_input:
-                    output = general_product(user_input)
-                    print("Here are some products, which matches your search")
-                    print(output)
-                    for prod, url, price in output:
-                        products = prod + " - " + url + " - $" + str(price)
-                        print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
-                        source = ""
-                        # bot_response = bot_response + "\n" + products
-                else:
-                    print(f"{Fore.CYAN} {Style.NORMAL} EmbeddedBot: This appears to be a condition called {bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor.")
-                    print("For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'")
-                    output = product(bot_response)
-                    print("Here are some products, which matches your search")
-                    for prod, url, price in output:
-                        products = prod + " - " + url + " - $" + str(price)
-                        print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
-                        source = ""
-                        # bot_response = bot_response + "\n" + products
-            elif "cheap" in user_input or "cheapest" in user_input:
-                probability = 0
-                source = ""
-                if len(outputs)==0:
-                    output = cheap_products(user_input)
-                else:
-                    output = cheap_products(outputs[-1])
-                for prod, url, price in output:
-                    bot_response = prod + " - " + url + " - $" + str(price)
-                    print(Fore.CYAN + Style.NORMAL + f"Cheapest option: {bot_response}" + Style.NORMAL)
-            elif "product" == bot_response:
-                output = other_products(outputs[-1])
-                for prod, url, price in output:
-                    products = prod + " - " + url + " - $" + str(price)
-                    print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
-                    # bot_response = bot_response + "\n" + products                   
+        debug_attribute("bot_response - ",bot_response)
+        debug_attribute("show_embedding_answer_to_user - ",show_embedding_answer_to_user)
+        
+        if show_embedding_answer_to_user=="yes":
+            source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
+        else:
+            source = ""
+            if "others" == bot_response:
+                bot_response = "Your symptoms are more common to define the exact syndrome. can you please provide more detail:"
+                pr_bot_response(bot_response)
             else:
-                debug("User already know their symptom so we should only suggest them the product")
-            outputs.append(bot_response)       
+                bot_response = bot_response.lower()
+                found_symptom = bot_response=="sleep apnea" or bot_response=="insomnia" or bot_response=="snoring"
+                if (SYMPTOM_QUERY in query_type and found_symptom) or PRODUCT_QUERY in query_type:
+                    if(found_symptom):
+                        if bot_response in user_input:
+                            output = general_product(user_input)
+                            print("Here are some products, which matches your search")
+                            bot_response = show_products(output,bot_response)  
+                        else:
+                            MSG = f"This appears to be a condition called {bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor."
+                            pr_bot_response(MSG)
+                            SLEEP_ASSESSMENT_INFO="For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'"
+                            pr_cyan(SLEEP_ASSESSMENT_INFO)
+                            bot_response= f"{bot_response}\n{MSG}\n{SLEEP_ASSESSMENT_INFO}"
+                            output = product(bot_response)
+                            bot_response = show_products(output,bot_response)
+                    elif "cheap" in user_input or "cheapest" in user_input:
+                        probability = 0
+                        if len(outputs)==0:
+                            output = cheap_products(user_input)
+                        else:
+                            output = cheap_products(outputs[-1])
+                        for prod, url, price in output:
+                            bot_response = prod + " - " + url + " - $" + str(price)
+                            pr_cyan(f"Cheapest option: {bot_response}")
+                    elif "product" == bot_response:
+                        output = other_products(outputs[-1])
+                        bot_response = show_products(output,bot_response) 
+                    else:
+                        debug(f"We are in else part,query_type is {query_type}, bot_response is {bot_response}")
+                        bot_response = call_chat_completion_api(message_log)
+                outputs.append(bot_response)  
     elif PRODUCT_QUERY in query_type:
+        source=""
         output = general_product(user_input)
-        for prod, url, price in output:
-            products = prod + " - " + url + " - $" + str(price)
-            print(Fore.CYAN + Style.NORMAL + f"{products}" + Style.NORMAL)
-            bot_response = bot_response + "\n" + products            
+        bot_response = show_products(output,bot_response)                  
     else:
-        debug(f"We are in else part,query_type is {query_type}, bot_response is {bot_response}")
+        debug(f"It is a general query / similarity {highest_similarity*100} less than {EXPECTED_SIMILARITY*100}")
         bot_response = call_chat_completion_api(message_log)
         outputs.append(bot_response)
 
@@ -243,13 +250,15 @@ def resmed_chatbot(user_input,message_log):
     # Bot response may include single quotes when we pass that with conn.execute will return syntax error
     # So, let's replace single quotes with double quotes
     # Reference: https://stackoverflow.com/questions/12316953/insert-text-with-single-quotes-in-postgresql
+    # TODO: Find smart way to replace single quote to all string columns
     user_input = user_input.replace("'","''")
     bot_response = bot_response.replace("'", "''")
+    source = source.replace("'", "''")
+    
     query = f"INSERT INTO chatbot_datas (prompt,completion,probability,response_accepted,response_time,time_stamp,source) VALUES('{user_input}','{bot_response}','{probability}','{response_accepted}',{response_time},'{time_stamp}','{source}');"
     debug(f"Query to execute - {query}")
     cur.execute(query)
     conn.commit()
     debug("Data added successfully")
     debug(f"Response time in seconds - {response_time}")
-    #print(bot_response)
     return bot_response

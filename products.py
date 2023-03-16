@@ -1,14 +1,15 @@
 # imports
-import openai
 import os
+
+import openai
 import psycopg2
-from colorama import Fore, Back, Style
-from dotenv import load_dotenv
 import sqlparse
+from dotenv import load_dotenv
 
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
 # constants
 EMBEDDING_MODEL = "text-embedding-ada-002"
 

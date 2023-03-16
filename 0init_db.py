@@ -2,6 +2,7 @@ import os
 import psycopg2
 from dotenv import load_dotenv
 import csv
+from psycopg2.errors import DuplicateTable,DuplicateColumn,InFailedSqlTransaction
 
 load_dotenv()
 
@@ -26,15 +27,16 @@ def create_response_table():
       time_stamp TIMESTAMP NOT NULL
     );""")
 
-  except psycopg2.errors.DuplicateTable:
+  except DuplicateTable:
     print(f"Table chatbot_datas already exist - If you want to drop this table then run DROP TABLE IF EXISTS chatbot_datas;")
 
 
 def alter_response_table():
   try:
     cur.execute('ALTER TABLE chatbot_datas ADD COLUMN "source" text;')
+    cur.execute('ALTER TABLE chatbot_datas ALTER COLUMN source TYPE VARCHAR(5000);;')
     print("Added source column in database")
-  except psycopg2.errors.DuplicateColumn:
+  except (DuplicateColumn):
     print("Source column already exists")
 
 def create_product_table():
@@ -52,7 +54,7 @@ def create_product_table():
       total_reviews INTEGER
     );""")
   
-  except psycopg2.errors.DuplicateTable:
+  except DuplicateTable:
     print(f"Table product already exist - If you want to drop this table then run DROP TABLE IF EXISTS product;")
 
 def add_csv_to_db():

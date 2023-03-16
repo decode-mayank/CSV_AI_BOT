@@ -8,7 +8,8 @@ intents = discord.Intents.all()
 client = discord.Client(command_prefix='!', intents=intents)
 
 message_log = [
-        {"role": "system", "content": "Answer the question only related to the topics of sleep,health,mask,sleep disorders from the website https://www.resmed.com.au/knowledge-hub if they ask queries outside of this topics sleep,health,mask,sleep disorders, say That I have been trained to answer only sleep and health related queries"}
+    {"role":"system", "content":"You are chatbot of resmed and you can answer to user queries which are related to sleep disorders,mask,health for other queries say I don't know"},
+    {"role":"assistant", "content":"You are helpful chatbot of resmed company"}
 ] 
  
 
@@ -23,6 +24,7 @@ async def on_message(message):
         return
 
     if message.content:
+        message_log.append({"role": "user", "content": message.content})
         await message.channel.send(resmed_chatbot(message.content,message_log))
 
 
