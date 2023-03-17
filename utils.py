@@ -207,7 +207,6 @@ def resmed_chatbot(user_input,message_log):
             else:
                 bot_response = bot_response.lower()
                 found_symptom = bot_response=="sleep apnea" or bot_response=="insomnia" or bot_response=="snoring"
-                breakpoint()
                 if (SYMPTOM_QUERY in query_type and found_symptom) or PRODUCT_QUERY in query_type:
                     if(found_symptom):
                         if bot_response in user_input:
