@@ -37,6 +37,11 @@ def product(text):
     )
 
     query = response['choices'][0]['text']
+    start = "SELECT"
+    end = ";"
+    start_pos = query.find(start)
+    end_pos = query.find(end)
+    query = query[(start_pos-1):(end_pos+1)].strip()
     debug(query)
     sqlparse.format(query, reindent=True, keyword_case='upper')
     cur = conn.cursor()
@@ -56,6 +61,11 @@ def other_products(text):
     )
 
     query = response['choices'][0]['text']
+    start = "SELECT"
+    end = ";"
+    start_pos = query.find(start)
+    end_pos = query.find(end)
+    query = query[(start_pos-1):(end_pos+1)].strip()
     debug(query)
     sqlparse.format(query, reindent=True, keyword_case='upper')
     cur = conn.cursor()
@@ -76,6 +86,11 @@ def cheap_products(text):
     )
 
     query = response['choices'][0]['text']
+    start = "SELECT"
+    end = ";"
+    start_pos = query.find(start)
+    end_pos = query.find(end)
+    query = query[(start_pos-1):(end_pos+1)].strip()
     debug(query)
     sqlparse.format(query, reindent=True, keyword_case='upper')
     cur = conn.cursor()

@@ -32,7 +32,7 @@ YES = "Yes"
 NO = "No"
 
 VERBOSE = os.getenv('VERBOSE')
-EXPECTED_SIMILARITY = 0.80
+EXPECTED_SIMILARITY = 0.85
 
 def debug(msg):
     if VERBOSE=="True":
@@ -138,14 +138,15 @@ def find_what_user_expects(user_input):
     )
     return response.choices[0].text.strip()
   
-def show_products(output,bot_response):
+def show_products(output):
+    prod_response = ''
     if(len(output)>0):
         pr_cyan("Here are some products, which matches your search")
     for prod, url,price in output:
         products = prod + " - " + url + " - $" + str(price)
         pr_cyan(products)
-        bot_response = bot_response + "\n" + products
-    return bot_response
+        prod_response = prod_response + "\n" + products
+    return prod_response
     
 def resmed_chatbot(user_input,message_log):
     # Append question mark at end of user_input
@@ -206,12 +207,13 @@ def resmed_chatbot(user_input,message_log):
             else:
                 bot_response = bot_response.lower()
                 found_symptom = bot_response=="sleep apnea" or bot_response=="insomnia" or bot_response=="snoring"
+                breakpoint()
                 if (SYMPTOM_QUERY in query_type and found_symptom) or PRODUCT_QUERY in query_type:
                     if(found_symptom):
                         if bot_response in user_input:
-                            output = general_product(user_input)
+                            output = product(user_input)
                             print("Here are some products, which matches your search")
-                            bot_response = show_products(output,bot_response)  
+                            show_products(output)  
                         else:
                             MSG = f"This appears to be a condition called {bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor."
                             pr_bot_response(MSG)
@@ -219,7 +221,7 @@ def resmed_chatbot(user_input,message_log):
                             pr_cyan(SLEEP_ASSESSMENT_INFO)
                             bot_response= f"{bot_response}\n{MSG}\n{SLEEP_ASSESSMENT_INFO}"
                             output = product(bot_response)
-                            bot_response = show_products(output,bot_response)
+                            show_products(output)
                     elif "cheap" in user_input or "cheapest" in user_input:
                         probability = 0
                         if len(outputs)==0:
@@ -231,7 +233,7 @@ def resmed_chatbot(user_input,message_log):
                             pr_cyan(f"Cheapest option: {bot_response}")
                     elif "product" == bot_response:
                         output = other_products(outputs[-1])
-                        bot_response = show_products(output,bot_response) 
+                        show_products(output) 
                     else:
                         debug(f"We are in else part,query_type is {query_type}, bot_response is {bot_response}")
                         bot_response = call_chat_completion_api(message_log)
@@ -239,7 +241,7 @@ def resmed_chatbot(user_input,message_log):
     elif PRODUCT_QUERY in query_type:
         source=""
         output = general_product(user_input)
-        bot_response = show_products(output,bot_response)                  
+        show_products(output)                  
     else:
         debug(f"It is a general query / similarity {highest_similarity*100} less than {EXPECTED_SIMILARITY*100}")
         bot_response = call_chat_completion_api(message_log)
