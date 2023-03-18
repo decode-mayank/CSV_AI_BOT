@@ -25,6 +25,6 @@ keyword_patterns = [r'\bSleep Apnea\b', r'\bInsomnia\b', r'\bCPAP\b',r'\bSD card
 pattern = '|'.join(keyword_patterns)
 
 df['tags'] = df['description'].str.findall(pattern, flags=re.IGNORECASE) + df['category'].str.findall(pattern, flags=re.IGNORECASE) + df['product'].str.findall(pattern, flags=re.IGNORECASE)
-df['tags'] = df['tags'].apply(lambda x: list(set(x)))
+df['tags'] = df['tags'].apply(lambda x: "|".join(list(set(x))))
 df = df.drop(df[df['price'] == 0].index)
 df.to_csv("resmed_products_1.csv", index=False)

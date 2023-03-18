@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+### Changed
+- In resmed embeddings, we use completion column to find symptom - It should be always in lowercase - eg: sleep apnea, snoring, insomnia
+- In resmed products, we use category column to match symptom - It should be always in lowercase - eg: sleep apnea, snoring, insomnia
+
 ### Removed
 - Dropped colorama use default color ANSI
 

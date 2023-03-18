@@ -3,6 +3,13 @@ from utils import resmed_chatbot
 
 from colors import pr_bot_response,pr_red
 
+
+INSTRUCTIONS = """
+As an AI assistant specialized in sleep-related topics, I am programmed to provide advice and information only on sleep, sleep medicine, mask, snoring, sleep apnea, insomnia, ResMed products, sleep health, and ResMed sleep tests and trackers. Please note that I cannot provide information or advice on topics unrelated to the aforementioned sleep-related topics.
+If you have a question that falls outside of these topics, I will not be able to provide a relevant response. In such cases, please respond with the phrase "I'm just a simple AI assistant, I can't help with that."
+Please note that while I can provide information and advice, my responses should not be considered a substitute for medical advice from a licensed medical professional. If you have any concerns about your sleep health, please consult a medical professional for further guidance.
+"""
+
 if __name__ == '__main__':
     """
     Initial conversation Bot - Cyan(Dark)
@@ -13,9 +20,7 @@ if __name__ == '__main__':
     pr_bot_response("Hello! I'm Resmed Chatbot, a virtual assistant designed to help you with any questions or concerns you may have about Resmed products or services. Resmed is a global leader in sleep apnea treatment, and we're committed to improving the quality of life for people who suffer from sleep-disordered breathing.")
     
     message_log = [
-        # {"role": "system", "content": "Answer the question only related to the topics of sleep,health,mask,sleep disorders from the website https://www.resmed.com.au/knowledge-hub if they ask queries outside of this topics sleep,health,mask,sleep disorders, say That I have been trained to answer only sleep and health related queries"}
-         {"role":"system", "content":"You are chatbot of resmed and you can answer to user queries which are related to sleep disorders,mask,health for other queries say I don't know"},
-         {"role":"assistant", "content":"You are helpful chatbot of resmed company"}
+      {"role":"system","content": INSTRUCTIONS},
     ] 
 
     first_request = True
@@ -28,9 +33,6 @@ if __name__ == '__main__':
             if len(input_text) > 500:
                 pr_red("Please type a message that is less than 500 characters.")
                 continue
-
-            # Add a message from the chatbot to the conversation history
-            message_log.append({"role": "assistant", "content": "You are a helpful assistant."})
 
             # Send the conversation history to the chatbot and get its response
             response = resmed_chatbot(input_text,message_log)
