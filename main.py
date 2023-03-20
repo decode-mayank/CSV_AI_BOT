@@ -1,6 +1,5 @@
 # Imports
 from utils import resmed_chatbot
-
 from colors import pr_bot_response,pr_red
 
 
@@ -23,42 +22,15 @@ if __name__ == '__main__':
       {"role":"system","content": INSTRUCTIONS},
     ] 
 
-    first_request = True
-
     while True:
-        if first_request:
-            input_text = input("User: ")
-            message_log.append({"role": "user", "content": input_text})
-
-            if len(input_text) > 500:
-                pr_red("Please type a message that is less than 500 characters.")
-                continue
-
-            # Send the conversation history to the chatbot and get its response
-            response = resmed_chatbot(input_text,message_log)
-
-            # Add the chatbot's response to the conversation history and print it to the console
-            message_log.append({"role": "assistant", "content": response})
-
-            first_request = False
-
+        input_text = input("User: ")
+        if len(input_text) > 100:
+            response = ("Please type a message that is less than 100 characters.")
+            pr_red(response)
         else:
-            # If this is not the first request, get the user's input and add it to the conversation history
-            input_text = input("User: ")
-            # If the user types "quit", end the loop and print a goodbye message
-            if input_text.lower() == "quit":
-                print("Goodbye!")
-                break
-
-            if len(input_text) > 500:
-                pr_red("Please type a message that is less than 500 characters.")
-                continue
-
             message_log.append({"role": "user", "content": input_text})
-
             # Send the conversation history to the chatbot and get its response
             response = resmed_chatbot(input_text,message_log)
 
             # Add the chatbot's response to the conversation history and print it to the console
             message_log.append({"role": "assistant", "content": response})
-
