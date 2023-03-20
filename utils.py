@@ -158,7 +158,14 @@ def show_products(output):
         pr_cyan(products)
         prod_response = prod_response + "\n" + products
     return prod_response
-    
+
+def product_query(user_input, message_log, bot_response):
+    output = general_product(user_input)
+    if len(output) == 0:
+        bot_response += call_chat_completion_api(message_log)
+    else:
+        bot_response += show_products(output)
+
 def resmed_chatbot(user_input,message_log):
     # Append question mark at end of user_input
     user_input += "?"
@@ -252,12 +259,11 @@ def resmed_chatbot(user_input,message_log):
                             bot_response += show_products(output) 
                         else:
                             debug(f"We are in else part,query_type is {query_type}, bot_response is {bot_response}")
-                            bot_response += call_chat_completion_api(message_log)
+                            product_query(user_input, message_log, bot_response)
                     outputs.append(bot_response)  
         elif PRODUCT_QUERY in query_type:
             source=""
-            output = general_product(user_input)
-            bot_response += show_products(output)                  
+            product_query(user_input, message_log, bot_response)                  
         else:
             debug(f"It is a general query / similarity {highest_similarity*100} less than {EXPECTED_SIMILARITY*100}")
             bot_response = call_chat_completion_api(message_log)
