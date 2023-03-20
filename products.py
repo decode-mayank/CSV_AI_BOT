@@ -16,7 +16,7 @@ EMBEDDING_MODEL = "text-embedding-ada-002"
 DEFAULT_RESPONSE_WHEN_NO_QUERY_FOUND= "Please rephrase your query"
 
 def generate_prompt(text,instruction):
-    return f"Given an input question, respond with syntactically correct PostgreSQL. Be creative but the query must be correct. Only use table called product. The product table has columns: category (character varying), sku (character varying), product (character varying), description (character varying), price (character varying), breadcrumb (character varying), product_url (character varying), money_back (BOOLEAN), rating (FLOAT), total_reviews (INTEGER), tags(character varying). Give a Select query for product, product_url and price, where the tags matches to the {text}. Format the query in the correct format.{instruction}.{text}"
+    return f"Given an input question, respond with syntactically correct PostgreSQL. Be creative but the query must be correct. Only use table called product. The product table has columns: category (character varying), sku (character varying), product (character varying), description (character varying), price (character varying), breadcrumb (character varying), product_url (character varying), money_back (BOOLEAN), rating (FLOAT), total_reviews (INTEGER). Give a Select query for product, product_url and price, where the category matches to the input question. Format the query in the correct format.{instruction}. Where category can be Sleep Apnea, Snoring or Insomnia, any other Keyword attached with these words can be truncated.{text}"
 
 def execute_query(conn,query):
     sqlparse.format(query, reindent=True, keyword_case='upper')
