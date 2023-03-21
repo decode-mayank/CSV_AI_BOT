@@ -254,7 +254,7 @@ def resmed_chatbot(user_input,message_log):
                             for prod, url, price in output:
                                 bot_response = prod + " - " + url + " - $" + str(price)
                                 pr_cyan(f"Cheapest option: {bot_response}")
-                        elif "product" == bot_response:
+                        elif "Product" == bot_response:
                             output = other_products(outputs[-1])
                             bot_response += show_products(output) 
                         else:
