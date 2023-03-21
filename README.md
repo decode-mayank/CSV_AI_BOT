@@ -118,13 +118,43 @@ c) To launch chabot UI - Run output.py
 python output.py
 
 
-### 14.File Names ###
+### Tests ###
 
-a) To run and detect the category chatbot - Run test file
-python test.py 
+1. We use pytest to run automated test
+   Test file should have prefix test_
 
-Files used for test.py
-  1. utils.py
-  2. category.xlsx
-  3. category_embeddings.csv
-  
+   To run test: pytest
+   To run test with print messages: pytest -s
+
+   If you face any error with pytest:
+   Example: 
+   '''
+    Sample log
+    (venv) bitcot@bitcots-MacBook-Pro bitcot.ai % pytest                  
+    ===================================================== test session starts =====================================================
+    platform darwin -- Python 3.10.4, pytest-7.1.2, pluggy-1.0.0
+    rootdir: /Users/bitcot/Downloads/VSCodeProjects/chatgpt/bitcot.ai
+    plugins: anyio-3.6.1, Faker-14.2.0, workflow-1.6.0
+    collecting ... 
+    collected 0 items / 1 error                                                                                                   
+
+    =========================================================== ERRORS ============================================================
+    _______________________________________________ ERROR collecting test_utils.py ________________________________________________
+    ImportError while importing test module '/Users/bitcot/Downloads/VSCodeProjects/chatgpt/bitcot.ai/test_utils.py'.
+    Hint: make sure your test modules/packages have valid Python names.
+    Traceback:
+    /Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/importlib/__init__.py:126: in import_module
+        return _bootstrap._gcd_import(name[level:], package, level)
+    test_utils.py:1: in <module>
+        from utils import  find_whether_user_query_is_valid, find_what_user_expects
+    utils.py:6: in <module>
+        import openai
+    E   ModuleNotFoundError: No module named 'openai'
+    =================================================== short test summary info ===================================================
+    ERROR test_utils.py
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ====================================================== 1 error in 0.53s =======================================================
+    (venv) bitcot@bitcots-MacBook-Pro bitcot.ai % deactivate
+  '''
+  Solution: https://stackoverflow.com/questions/35045038/how-do-i-use-pytest-with-virtualenv#:~:text=The%20reason%20is%20that%20the,installed%20within%20your%20virtual%20environment.
+

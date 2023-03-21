@@ -166,7 +166,10 @@ def product_query(user_input, message_log, bot_response):
     else:
         bot_response += show_products(output)
 
-def resmed_chatbot(user_input,message_log):
+def resmed_chatbot(user_input,message_log,db=True):
+    # Append user_input 
+    message_log.append({"role": "user", "content": user_input})
+    
     # Append question mark at end of user_input
     user_input += "?"
     time_stamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -282,14 +285,21 @@ def resmed_chatbot(user_input,message_log):
     # So, let's replace single quotes with double quotes
     # Reference: https://stackoverflow.com/questions/12316953/insert-text-with-single-quotes-in-postgresql
     # TODO: Find smart way to replace single quote to all string columns
-    user_input = user_input.replace("'","''")
+    user_input = user_input.replace("'","''")[:500]
     bot_response = bot_response.replace("'", "''")[:999]
     source = source.replace("'", "''")
     
-    query = f"INSERT INTO chatbot_datas (prompt,completion,probability,response_accepted,response_time,time_stamp,source) VALUES('{user_input}','{bot_response}','{probability}','{response_accepted}',{response_time},'{time_stamp}','{source}');"
-    debug(f"Query to execute - {query}")
-    cur.execute(query)
-    conn.commit()
-    debug("Data added successfully")
+    if db:
+        query = f"INSERT INTO chatbot_datas (prompt,completion,probability,response_accepted,response_time,time_stamp,source) VALUES('{user_input}','{bot_response}','{probability}','{response_accepted}',{response_time},'{time_stamp}','{source}');"
+        debug(f"Query to execute - {query}")
+        cur.execute(query)
+        conn.commit()
+        debug("Data added successfully")
+    else:
+        debug("DB insert is disabled")
     debug(f"Response time in seconds - {response_time}")
-    return bot_response
+    
+    # Add the chatbot's response to the conversation history and print it to the console
+    message_log.append({"role": "assistant", "content": response})
+    
+    return bot_response,message_log
