@@ -59,6 +59,7 @@ cur = conn.cursor()
 
 outputs = []
 
+# Zero shot learning
 def call_chat_completion_api(message_log):
     debug("Let's ask ChatGPT to answer user query") 
     bot_response=""
@@ -116,8 +117,9 @@ def get_moderation(question):
         return result
     return None
 
-    
+
 def identify_answer(user_input, bot_response):
+    # Multi shot learning
     response = openai.Completion.create(
     model="text-davinci-003",
     prompt=f"The following is a conversation with an AI assistant. The assistant only answers {YES} or {NO}\n{YES} If the question and answer make sense otherwise say {NO} \nHuman:Q:{user_input},A:{bot_response}\nAI:",
@@ -128,25 +130,27 @@ def identify_answer(user_input, bot_response):
     return response.choices[0].text.strip()
 
 def find_what_user_expects(user_input):
+    # Multi shot learning
     response = openai.Completion.create(
     model="text-davinci-003",
     prompt=f"Find what user expects from the chatbot system Expected Responses are {GENERAL_QUERY},{SYMPTOM_QUERY},{PRODUCT_QUERY},{PROGRAM_QUERY} \nHuman: I forget a lot and not able to concentrate \nAI:{SYMPTOM_QUERY}\nHuman: Does resmed provide CPAP Products\nAI:{GENERAL_QUERY}\nHuman: I have Mood disruptions, especially anxiety, depression and irritability\nAI:{SYMPTOM_QUERY}\nHuman: How many hours should i sleep daily\nAI:{GENERAL_QUERY}\nHuman:What is the price of CPAP mask\nAI:{PRODUCT_QUERY}\nHuman:Write a program\nAI:{PROGRAM_QUERY}\nHuman:{user_input}",
-    temperature=0.9,
-    max_tokens=150,
+    temperature=0.5,
+    max_tokens=10,
     top_p=1,
-    frequency_penalty=0,
-    presence_penalty=0.6,
     stop=[" Human:", " AI:"]
     )
     return response.choices[0].text.strip()
   
 def find_whether_user_query_is_valid(user_input):
+    TOKENS = 100
+    # Multi shot learning
     response = openai.Completion.create(
     model="text-davinci-003",
-    prompt=f"As an AI assistant specialized in sleep-related topics, I am programmed to provide advice and information only on resmed products, sleep, sleep medicine, mask, snoring, sleep apnea, insomnia and its products, sleep health and ResMed sleep tests and trackers. Please note that I cannot provide information or advice on topics unrelated to the aforementioned sleep-related topics.\nIf you have a question that falls outside of these topics, I will not be able to provide a relevant response. In such cases, please respond with the phrase \"{RESPONSE_FOR_INVALID_QUERY}\"\nPlease note that while I can provide information and advice, my responses should not be considered a substitute for medical advice from a licensed medical professional. If you have any concerns about your sleep health, please consult a medical professional for further guidance.\n\nQ: {user_input}\n",
-    max_tokens=100,
+    prompt=f"As an AI assistant specialized in sleep-related topics, I am programmed to provide advice and information only on resmed products, sleep, sleep medicine, mask, snoring, sleep apnea, insomnia and its products, sleep health and ResMed sleep tests and trackers. Please note that I cannot provide information or advice on topics unrelated to the aforementioned sleep-related topics.\nIf you have a question that falls outside of these topics, I will not be able to provide a relevant response. In such cases, please respond with the phrase \"{RESPONSE_FOR_INVALID_QUERY}\"\nPlease note that while I can provide information and advice, my responses should not be considered a substitute for medical advice from a licensed medical professional. If you have any concerns about your sleep health, please consult a medical professional for further guidance.\nPlease generate a response using a maximum of {TOKENS} \nQ: {user_input}\n",
+    max_tokens=TOKENS,
+    temperature=0.4,
     )
-    return response.choices[0].text.strip()
+    return response.choices[0].text.strip().replace("A: ","")
 
 def show_products(output):
     prod_response = '\n'
@@ -165,6 +169,7 @@ def product_query(user_input, message_log, bot_response):
         bot_response += call_chat_completion_api(message_log)
     else:
         bot_response += show_products(output)
+    return bot_response
 
 def resmed_chatbot(user_input,message_log,db=True):
     # Append user_input 
@@ -194,83 +199,84 @@ def resmed_chatbot(user_input,message_log,db=True):
         # Calculate similarity between the input and "facts" from companies_embeddings.csv file which we created before
         df = pd.read_csv('resmed_embeddings_final.csv')
         
-        # If user types single word input then system gets confused so adding what is as a prefix
         if (len(user_input.split(' '))==1):
+            # If user types single word input then system gets confused so adding what is as a prefix
             user_input= f"What is {user_input}"
         else:
             query_type = find_what_user_expects(user_input)
 
-        if 'similarity' in df.columns:
-            df['embedding'] = df['embedding'].apply(np.array)
-        else:
-            df['embedding'] = df['embedding'].apply(eval).apply(np.array)
-        
-        df['similarity'] = df['embedding'].apply(lambda x: cosine_similarity(x, input_embedding_vector))
-        
-        # Find the highest similarity value in the dataframe column 'similarity'
-        highest_similarity = df['similarity'].max()
-
         debug_attribute("query_type - ",query_type)
-        debug_attribute("similarity - ",highest_similarity)
         
         if(PROGRAM_QUERY in query_type):
             pr_bot_response(bot_response)
-        elif(GENERAL_QUERY not in query_type and highest_similarity >= EXPECTED_SIMILARITY and query_type!=""):
-            probability = highest_similarity
-            fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
-            db_input_or_bot_response = fact_with_highest_similarity.iloc[0]
-            show_embedding_answer_to_user = identify_answer(user_input, db_input_or_bot_response)
-
-            debug_attribute("embedded_bot_response - ",db_input_or_bot_response)
-            debug_attribute("show_embedding_answer_to_user - ",show_embedding_answer_to_user)
-            
-            if show_embedding_answer_to_user=="yes":
-                source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
-                bot_response = db_input_or_bot_response
+        elif(GENERAL_QUERY not in query_type):
+            if 'similarity' in df.columns:
+                df['embedding'] = df['embedding'].apply(np.array)
             else:
-                source = ""
-                if "others" == db_input_or_bot_response:
-                    bot_response = "Your symptoms are more common to define the exact syndrome. can you please provide more detail:"
-                    pr_bot_response(bot_response)
+                df['embedding'] = df['embedding'].apply(eval).apply(np.array)
+        
+            df['similarity'] = df['embedding'].apply(lambda x: cosine_similarity(x, input_embedding_vector))
+        
+            # Find the highest similarity value in the dataframe column 'similarity'
+            highest_similarity = df['similarity'].max()
+            debug_attribute("similarity - ",highest_similarity)
+                    
+            if(highest_similarity >= EXPECTED_SIMILARITY and query_type!=""):
+                probability = highest_similarity
+                fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
+                db_input_or_bot_response = fact_with_highest_similarity.iloc[0]
+                show_embedding_answer_to_user = identify_answer(user_input, db_input_or_bot_response)
+
+                debug_attribute("embedded_bot_response - ",db_input_or_bot_response)
+                debug_attribute("show_embedding_answer_to_user - ",show_embedding_answer_to_user)
+                
+                if show_embedding_answer_to_user=="yes":
+                    source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
+                    bot_response = db_input_or_bot_response
                 else:
-                    found_symptom = db_input_or_bot_response=="Sleep Apnea" or db_input_or_bot_response=="Insomnia" or db_input_or_bot_response=="Snoring"
-                    if (SYMPTOM_QUERY in query_type and found_symptom) or PRODUCT_QUERY in query_type:
-                        if(found_symptom):
-                            if db_input_or_bot_response in user_input:
-                                output = general_product(user_input)
-                                print("Here are some products, which matches your search")
-                                bot_response = show_products(output)  
+                    source = ""
+                    if "others" == db_input_or_bot_response:
+                        bot_response = "Your symptoms are more common to define the exact syndrome. can you please provide more detail:"
+                        pr_bot_response(bot_response)
+                    else:
+                        found_symptom = db_input_or_bot_response=="Sleep Apnea" or db_input_or_bot_response=="Insomnia" or db_input_or_bot_response=="Snoring"
+                        if (SYMPTOM_QUERY in query_type and found_symptom) or PRODUCT_QUERY in query_type:
+                            if(found_symptom):
+                                if db_input_or_bot_response in user_input:
+                                    output = general_product(user_input)
+                                    print("Here are some products, which matches your search")
+                                    bot_response = show_products(output)  
+                                else:
+                                    MSG = f"This appears to be a condition called {db_input_or_bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor."
+                                    pr_bot_response(MSG)
+                                    SLEEP_ASSESSMENT_INFO="For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'"
+                                    pr_cyan(SLEEP_ASSESSMENT_INFO)
+                                    bot_response= f"{MSG}\n{SLEEP_ASSESSMENT_INFO}"
+                                    output = product(db_input_or_bot_response)
+                                    bot_response += show_products(output)
+                            elif "cheap" in user_input or "cheapest" in user_input:
+                                probability = 0
+                                if len(outputs)==0:
+                                    output = cheap_products(user_input)
+                                else:
+                                    output = cheap_products(outputs[-1])
+                                for prod, url, price in output:
+                                    bot_response = prod + " - " + url + " - $" + str(price)
+                                    pr_cyan(f"Cheapest option: {bot_response}")
+                            elif "product" == bot_response:
+                                output = other_products(outputs[-1])
+                                bot_response += show_products(output) 
                             else:
-                                MSG = f"This appears to be a condition called {db_input_or_bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor."
-                                pr_bot_response(MSG)
-                                SLEEP_ASSESSMENT_INFO="For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'"
-                                pr_cyan(SLEEP_ASSESSMENT_INFO)
-                                bot_response= f"{MSG}\n{SLEEP_ASSESSMENT_INFO}"
-                                output = product(db_input_or_bot_response)
-                                bot_response += show_products(output)
-                        elif "cheap" in user_input or "cheapest" in user_input:
-                            probability = 0
-                            if len(outputs)==0:
-                                output = cheap_products(user_input)
-                            else:
-                                output = cheap_products(outputs[-1])
-                            for prod, url, price in output:
-                                bot_response = prod + " - " + url + " - $" + str(price)
-                                pr_cyan(f"Cheapest option: {bot_response}")
-                        elif "product" == bot_response:
-                            output = other_products(outputs[-1])
-                            bot_response += show_products(output) 
-                        else:
-                            debug(f"We are in else part,query_type is {query_type}, bot_response is {bot_response}")
-                            product_query(user_input, message_log, bot_response)
-                    outputs.append(bot_response)  
-        elif PRODUCT_QUERY in query_type:
-            source=""
-            product_query(user_input, message_log, bot_response)                  
-        else:
-            debug(f"It is a general query / similarity {highest_similarity*100} less than {EXPECTED_SIMILARITY*100}")
-            bot_response = call_chat_completion_api(message_log)
-            outputs.append(bot_response)
+                                debug(f"We are in else part,query_type is {query_type}, bot_response is {bot_response}")
+                                bot_response = product_query(user_input, message_log, bot_response)
+                        outputs.append(bot_response)
+            elif PRODUCT_QUERY in query_type:
+                source=""
+                bot_response = product_query(user_input, message_log, bot_response)                  
+            else:
+                debug(f"It is a general query / similarity {highest_similarity*100} less than {EXPECTED_SIMILARITY*100}")
+                bot_response = call_chat_completion_api(message_log)
+                outputs.append(bot_response)
     else:
         # Looks like user asked query which is not related to resmed
         bot_response=response
