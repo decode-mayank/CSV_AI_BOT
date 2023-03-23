@@ -23,6 +23,7 @@ load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 my_model = 'text-embedding-ada-002'
 
+DEBUG_CSV = "debug.csv"
 
 RESPONSE_FOR_INVALID_QUERY = "I am a Resmed chatbot, I can't help with that"
 
@@ -178,17 +179,16 @@ def product_query(user_input, message_log, bot_response):
         bot_response += show_products(output)
     return bot_response
 
-def resmed_chatbot(user_input,message_log,db=True,stamp=None):
+def resmed_chatbot(user_input,message_log,db=True):
     
-    mode = 'w'
-    FILE_NAME = f"log_{stamp}.csv"
+    MODE = 'w'
     fields = ["user_input","level1","level2","level3","level4","level5","level6","bot_response"]
     row = []
     row.append(user_input)
     MAX_COLUMNS = len(fields)
     
-    if os.path.exists(FILE_NAME):
-        mode='a'
+    if os.path.exists(DEBUG_CSV):
+        MODE='a'
     
     # Append user_input 
     message_log.append({"role": "user", "content": user_input})
@@ -339,27 +339,25 @@ def resmed_chatbot(user_input,message_log,db=True,stamp=None):
         debug("DB insert is disabled")
     debug(f"Response time in seconds - {response_time}")
     
-    with open(FILE_NAME, mode) as csvfile: 
-        # creating a csv writer object 
-        csvwriter = csv.writer(csvfile) 
-            
-        if mode=='w':
-            # writing the fields 
-            csvwriter.writerow(fields) 
-            
-        row_length = len(row)
-        if(row_length!=MAX_COLUMNS-1):
-            dummy_rows_to_add = MAX_COLUMNS-row_length-2
-            row.extend(('-'*dummy_rows_to_add).split('-'))
-        # writing the data rows 
-        row.append(bot_response)
-        debug(f"->>>>> {row}")
-        csvwriter.writerows([row])
+    if VERBOSE=="True":
+        debug(f"Writing the logs in {DEBUG_CSV}")
+        with open(DEBUG_CSV, MODE) as csvfile: 
+            # creating a csv writer object 
+            csvwriter = csv.writer(csvfile) 
+                
+            if MODE=='w':
+                # writing the fields 
+                csvwriter.writerow(fields) 
+                
+            row_length = len(row)
+            if(row_length!=MAX_COLUMNS-1):
+                dummy_rows_to_add = MAX_COLUMNS-row_length-2
+                row.extend(('-'*dummy_rows_to_add).split('-'))
+            # writing the data rows 
+            row.append(bot_response)
+            csvwriter.writerows([row])
     
     # Add the chatbot's response to the conversation history and print it to the console
     message_log.append({"role": "assistant", "content": response})
     
     return bot_response,message_log
-
-# Zero shot, One shot, Few shot - Here shot is an example which we share in prompt for auto completion
-# https://www.youtube.com/watch?v=v2gD8BHOaX4 - About Stop sequence
