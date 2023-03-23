@@ -209,7 +209,7 @@ def resmed_chatbot(user_input,message_log):
 
         debug_attribute("query_type - ",query_type)
         debug_attribute("similarity - ",highest_similarity)
-        
+
         if(PROGRAM_QUERY in query_type):
             pr_bot_response(bot_response)
         elif(GENERAL_QUERY not in query_type and highest_similarity >= EXPECTED_SIMILARITY and query_type!=""):
@@ -254,7 +254,7 @@ def resmed_chatbot(user_input,message_log):
                             for prod, url, price in output:
                                 bot_response = prod + " - " + url + " - $" + str(price)
                                 pr_cyan(f"Cheapest option: {bot_response}")
-                        elif "Product" == bot_response:
+                        elif "Product" == db_input_or_bot_response:
                             output = other_products(outputs[-1])
                             bot_response += show_products(output) 
                         else:
