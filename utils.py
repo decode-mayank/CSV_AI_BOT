@@ -182,7 +182,7 @@ def product_query(user_input, message_log, bot_response):
 def resmed_chatbot(user_input,message_log,db=True):
     
     MODE = 'w'
-    fields = ["user_input","level1","level2","level3","level4","level5","level6","bot_response"]
+    fields = ["user_input","bot_response","level1","level2","level3","level4","level5","level6"]
     row = []
     row.append(user_input)
     MAX_COLUMNS = len(fields)
@@ -354,7 +354,7 @@ def resmed_chatbot(user_input,message_log,db=True):
                 dummy_rows_to_add = MAX_COLUMNS-row_length-2
                 row.extend(('-'*dummy_rows_to_add).split('-'))
             # writing the data rows 
-            row.append(bot_response)
+            row.insert(1,bot_response)
             csvwriter.writerows([row])
     
     # Add the chatbot's response to the conversation history and print it to the console
