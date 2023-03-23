@@ -16,7 +16,7 @@ EMBEDDING_MODEL = "text-embedding-ada-002"
 DEFAULT_RESPONSE_WHEN_NO_QUERY_FOUND= "Please rephrase your query"
 
 def generate_prompt(text,instruction):
-    return f"Given an input question, respond with syntactically correct PostgreSQL. Be creative but the query must be correct. Only use table called product. The product table has columns: category (character varying), sku (character varying), product (character varying), description (character varying), price (character varying), breadcrumb (character varying), product_url (character varying), money_back (BOOLEAN), rating (FLOAT), total_reviews (INTEGER), tags(character varying). Give a Select query for product, product_url and price, by understanding the input question.{text}. Format the query in the correct format.{instruction}"
+    return f"Given an input question, respond with syntactically correct PostgreSQL. Be creative but the query must be correct. Only use table called product. The product table has columns: category (character varying), sku (character varying), product (character varying), description (character varying), price (character varying), breadcrumb (character varying), product_url (character varying), money_back (BOOLEAN), rating (FLOAT), total_reviews (INTEGER), tags(character varying). Give a Select query for product, product_url and price, where the tags matches to the input question.{text}. Format the query in the correct format.{instruction}"
 
 def execute_query(conn,query):
     sqlparse.format(query, reindent=True, keyword_case='upper')
@@ -103,7 +103,7 @@ def cheap_products(text):
 def general_product(text):
     response = openai.Completion.create(
         model="text-davinci-003",
-        prompt=f"Given an input question, respond with syntactically correct PostgreSQL. Be creative but the query must be correct. Only use table called product. The product table has columns: category (character varying), sku (character varying), product (character varying), description (character varying), price (character varying), breadcrumb (character varying), product_url (character varying), money_back (BOOLEAN), rating (FLOAT), total_reviews (INTEGER), tags(character varying). Give a Select query for product, product_url and price, by understanding the {text}. Format the query in the correct format. Suggest any 2 product as per user Query. Don't use category as a condition, instead use tags.",        
+        prompt=f"Given an input question, respond with syntactically correct PostgreSQL. Be creative but the query must be correct. Only use table called product. The product table has columns: category (character varying), sku (character varying), product (character varying), description (character varying), price (character varying), breadcrumb (character varying), product_url (character varying), money_back (BOOLEAN), rating (FLOAT), total_reviews (INTEGER), tags (character varying). Understand the user input correctly and create a SQL query. Give a Select query for product, product_url and price.{text}. Format the query in the correct format. Suggest any 2 product as per user Query. Write an SQL query that retrieves data from table based on a specified condition. The query should return specific columns and have proper formatting and syntax. Use tags in condition if there is any product or category mentioned in user input and if Multiple conditions go with OR command.",        
         temperature=0.3,
         max_tokens=60,
         top_p=1.0,
