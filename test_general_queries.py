@@ -1,14 +1,22 @@
-from utils import  find_whether_user_query_is_valid, find_what_user_expects, debug_attribute,resmed_chatbot
-from constants import MESSAGE_LOG
+from utils import  find_whether_user_query_is_valid, find_what_user_expects, debug_attribute,resmed_chatbot, find_whether_user_query_is_valid
+from constants import MESSAGE_LOG, GENERAL_QUERY, SYMPTOM_QUERY, PRODUCT_QUERY, PROGRAM_QUERY
 
 message_log = MESSAGE_LOG
-  
-def test_snoring():
-    user_input = "can you suggest some snoring products"
+
+# For General Query
+def test_general():
+    user_input = "5 basic things about insomnia"
     product_response = find_what_user_expects(user_input)
     debug_attribute("product_response",product_response)
-    assert product_response == "AI:Product query"
-    
+    assert product_response[3:].strip() in GENERAL_QUERY
+
+# For Symptom Query
+def test_symptom():
+    user_input = "I have fever and cold"
+    product_response = find_what_user_expects(user_input)
+    debug_attribute("product_response",product_response)
+    assert product_response[3:].strip() in SYMPTOM_QUERY
+
 def test_sleep_apnea():
     user_input = "what is sleep apnea"
     response = find_whether_user_query_is_valid(user_input)
@@ -17,7 +25,7 @@ def test_sleep_apnea():
 
 
 def test_insomnia():
-    user_input = "what is insomnia"
+    user_input = "what is sleep apnea"
     response,_ = resmed_chatbot(user_input,message_log,False)
     debug_attribute("test_insomnia",response)
     assert "Insomnia is a sleep disorder" in response

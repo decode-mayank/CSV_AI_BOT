@@ -7,3 +7,8 @@ Please note that while I can provide information and advice, my responses should
 MESSAGE_LOG = [
       {"role":"system","content": INSTRUCTIONS},
 ] 
+
+GENERAL_QUERY = "General query"
+SYMPTOM_QUERY = "Symptom query"
+PRODUCT_QUERY = "Product query"
+PROGRAM_QUERY = "Program query"
