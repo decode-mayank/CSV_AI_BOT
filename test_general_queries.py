@@ -1,5 +1,5 @@
-from utils import  find_whether_user_query_is_valid, find_what_user_expects, debug_attribute,resmed_chatbot, find_whether_user_query_is_valid
-from constants import MESSAGE_LOG, GENERAL_QUERY, SYMPTOM_QUERY, PRODUCT_QUERY, PROGRAM_QUERY
+from chatbot import  find_whether_user_query_is_valid, find_what_user_expects, debug_attribute,resmed_chatbot,find_whether_user_query_is_valid
+from constants import MESSAGE_LOG, GENERAL_QUERY, SYMPTOM_QUERY
 
 message_log = MESSAGE_LOG
 

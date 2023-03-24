@@ -1,5 +1,5 @@
 # Imports
-from utils import resmed_chatbot
+from chatbot import resmed_chatbot
 from colors import pr_bot_response,pr_red
 from constants import MESSAGE_LOG
 

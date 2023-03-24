@@ -1,4 +1,4 @@
-from utils import  find_whether_user_query_is_valid, find_what_user_expects, debug_attribute,resmed_chatbot
+from chatbot import  find_whether_user_query_is_valid, find_what_user_expects, debug_attribute,resmed_chatbot
 from constants import MESSAGE_LOG
 
 message_log = MESSAGE_LOG
