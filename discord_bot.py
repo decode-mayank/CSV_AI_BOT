@@ -25,7 +25,8 @@ async def on_message(message):
 
     if message.content:
         message_log.append({"role": "user", "content": message.content})
-        await message.channel.send(resmed_chatbot(message.content,message_log))
+        response,_  = resmed_chatbot(message.content,message_log)
+        await message.channel.send(response)
 
 
 client.run(os.getenv("DISCORD_TOKEN"))
