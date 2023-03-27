@@ -14,7 +14,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # constants
 DEFAULT_RESPONSE_WHEN_NO_QUERY_FOUND= "Please rephrase your query"
-MODEL,TEMPERATURE,TOKENS = davinci,0.3,100
+MODEL,TEMPERATURE,TOKENS = davinci,0,100
 
 conn,cur = get_db_connection()
 
@@ -24,17 +24,18 @@ def call_text_completion(prompt):
         prompt=prompt,        
         temperature=TEMPERATURE,
         max_tokens=TOKENS,
+        stop=";"
     )
     return response
 
-def execute_query(prompt,row,response,fn_name):
+def execute_query(prompt,row,response,level,fn_name):
     debug_attribute("DB response",response)
     query = response['choices'][0]['text']
     start = "SELECT"
     start_pos = query.find(start)
     query = query[(start_pos-1):].strip()
     query = sqlparse.format(query, reindent=True, keyword_case='upper')
-    debug_steps(row,f"Level 5 - {fn_name} - {response}, Additional information: Query-{query},Model-{MODEL},Tokens-{TOKENS}, TEMPERATURE-{TEMPERATURE},PROMPT-{prompt}")
+    debug_steps(row,f"{fn_name} - {response}, Additional information: Query-{query},Model-{MODEL},Tokens-{TOKENS}, TEMPERATURE-{TEMPERATURE},PROMPT-{prompt}",level=level)
     if(query):
         cur.execute(query)
         return cur.fetchall()
@@ -45,48 +46,28 @@ def execute_query(prompt,row,response,fn_name):
 def generate_prompt(text,instruction):
     return f"Given an input question, respond with syntactically correct PostgreSQL. Be creative but the query must be correct. Only use table called product. The product table has columns: category (character varying), sku (character varying), product (character varying), description (character varying), price (character varying), breadcrumb (character varying), product_url (character varying), money_back (BOOLEAN), rating (FLOAT), total_reviews (INTEGER), tags(character varying). Give a Select query for product, product_url and price, where the tags matches to the input question.{text}. Format the query in the correct format.Use case insensitive search for tags column.{instruction}"
 
-
-def product(row,text):
+def product(row,text,level):
     prompt=generate_prompt(text,"Use Order_by command to order the rating in Descending order and list top 3 items")
     response = call_text_completion(prompt)
-    output = execute_query(prompt,row,response,product.__name__)
+    output = execute_query(prompt,row,response,level,product.__name__)
     return(output)
 
-def other_products(row,text):
+def other_products(row,text,level):
     prompt=generate_prompt(text,"Use Order_by command to order the rating in Ascending order and list top 3 items")
     response = call_text_completion(prompt)
-    output = execute_query(prompt,row,response,other_products.__name__)
+    output = execute_query(prompt,row,response,level,other_products.__name__)
     return(output)
 
 
-def cheap_products(row,text):
+def cheap_products(row,text,level):
     prompt=generate_prompt(text,"Use Order_by command to order the price in Ascending order and list top 1 items")
     response = call_text_completion(prompt)
-    output = execute_query(prompt,row,response,cheap_products.__name__)
+    output = execute_query(prompt,row,response,level,cheap_products.__name__)
     return(output)
 
 
-def general_product(row,text):
-    prompt = f"Given an input question, respond with syntactically correct PostgreSQL. Only use table called product. The product table has columns: category (character varying), sku (character varying), product (character varying), description (character varying), price (character varying), breadcrumb (character varying), product_url (character varying), money_back (BOOLEAN), rating (FLOAT), total_reviews (INTEGER), tags (character varying). Understand the user input correctly and create a SQL query. Give a Select query for product, product_url and price.{text}.Suggest any 2 product as per user Query. Write an SQL query that retrieves data from table based on a specified condition. Use tags in condition if there is any product or category mentioned in user input and if Multiple conditions go with OR command. Use case insensitive search for tags column and end SQL query with semicolon"
+def general_product(row,text,level):  
+    prompt=generate_prompt(text,"Suggest any 2 product as per user Query. Write an SQL query that retrieves data from table based on a specified condition. Use tags in condition if there is any product or category mentioned in user input and if Multiple conditions go with OR command")
     response = call_text_completion(prompt)
-    output = execute_query(prompt,row,response,general_product.__name__)
+    output = execute_query(prompt,row,response,level,general_product.__name__)
     return(output)
-
-
-# def syed():
-#     query = '''
-#     \n\nSELECT product, product_url, price \nFROM product \nWHERE tags ILIKE '%sleep%' OR tags ILIKE '%test%' OR category ILIKE '%sleep%' OR category ILIKE '%test%' \nL
-#     '''
-#     query=query.strip()
-#     print(query)
-#     start = "SELECT"
-#     end = ";"
-#     start_pos = query.find(start)
-#     end_pos = query.find(end)
-#     print(start_pos,end_pos)
-#     query = query[(start_pos-1):(end_pos+1)].strip()
-#     sqlparse.format(query, reindent=True, keyword_case='upper')
-#     print("->>>> Query",query)
-    
-
-# print(syed())

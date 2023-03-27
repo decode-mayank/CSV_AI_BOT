@@ -1,12 +1,14 @@
 import os
 from colors import pr_light_purple,pr_yellow,pr_pink,pr_green
+from constants import fields_dict
 
 VERBOSE = os.getenv('VERBOSE')
 
-def debug_steps(row,msg,attribute=""):
+def debug_steps(row,msg,level):
     if VERBOSE=="True":
-        LOG = f"[DEBUG] - {msg} {attribute}"
-        row.append(LOG)
+        LOG = f"[DEBUG] - Level {level} - {msg}"
+        current_message = row[fields_dict[level]]
+        row[fields_dict[level]] = f"{current_message}\n{LOG}"
         pr_green(LOG) 
         
 def debug(msg):

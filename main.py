@@ -24,5 +24,17 @@ if __name__ == '__main__':
         else:
             # Send the conversation history to the chatbot and get its response
             # Only pass last 5 messages to chat completion API
-            message_log = message_log[-10:]
+            '''
+            1 -> passed -> system -> 1
+            2 -> passed -> system, user_input,assistant -> 3
+            3 -> passed -> system, user_input,assistant,user_input, assistant -> 5
+            Formula: 1+(n-1)*2
+            5 -> passed -> system - 1+4*2 = 9 items in message log
+            6 -> passed -> system - 1+5*2 = 11 items in message log
+            7-> passed -> system - 1+6*2 = 13 items in message log -> 1
+            '''
+            if len(message_log) > 10:
+                message_log = MESSAGE_LOG + message_log[-10:]
+
             response,message_log = resmed_chatbot(input_text,message_log)
+

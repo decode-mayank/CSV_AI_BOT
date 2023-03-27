@@ -6,13 +6,13 @@ import csv
 import openai
 import pandas as pd
 import numpy as np
-from products import other_products, cheap_products, general_product
+from products import product, other_products, cheap_products, general_product
 from dotenv import load_dotenv
 from openai.embeddings_utils import cosine_similarity
 
 from colors import pr_cyan,pr_bot_response
 from debug_utils import debug_steps,debug, debug_attribute
-from constants import GENERAL_QUERY,SYMPTOM_QUERY,PRODUCT_QUERY,PROGRAM_QUERY,davinci,turbo
+from constants import GENERAL_QUERY,SYMPTOM_QUERY,PRODUCT_QUERY,PROGRAM_QUERY,GENERAL_PRODUCT_QUERY,davinci,turbo,babbage
 from utils import get_db_connection
 from openai_utils import get_embedding
 # Insert your API key
@@ -36,9 +36,9 @@ conn,cur = get_db_connection()
 outputs = []
 
 # Zero shot learning
-def call_chat_completion_api(row,message_log,query_type,highest_similarity):
+def call_chat_completion_api(row,message_log,level):
     debug("Let's ask Chat completion API to answer user query") 
-    PROMPT,MODEL,TOKENS,TEMPERATURE = message_log,turbo,150,0.5
+    PROMPT,MODEL,TOKENS,TEMPERATURE = message_log,turbo,150,0
     # bot_response=""
     response = openai.ChatCompletion.create(
             model=MODEL,
@@ -56,13 +56,13 @@ def call_chat_completion_api(row,message_log,query_type,highest_similarity):
     #         pr_cyan(f"{chunk.choices[0].delta.content}",end="")
     # print()
     
-    debug_steps(row,f'Level 3 - Query type is {query_type} / similarity {highest_similarity*100} less than {EXPECTED_SIMILARITY*100} {call_chat_completion_api.__name__} - {response}, Additional information: Model-{MODEL}, Tokens-{TOKENS}, TEMPERATURE-{TEMPERATURE}, PROMPT-{PROMPT}"')
-    pr_bot_response(response)
-    return response
+    # Query type is {query_type} / similarity {highest_similarity*100} less than {EXPECTED_SIMILARITY*100}
+    debug_steps(row,f'{level} - {call_chat_completion_api.__name__} - {response}, Additional information: Model-{MODEL}, Tokens-{TOKENS}, TEMPERATURE-{TEMPERATURE}, PROMPT-{PROMPT}"',level)
+    return response.choices[0].message.content.strip()
 
-def find_what_user_expects(row,user_input):
+def find_what_user_expects(row,user_input,level):
     # Multi shot learning
-    PROMPT,TOKENS,TEMPERATURE,MODEL,STOP = f"Find what user expects from the chatbot system Expected Responses are {GENERAL_QUERY},{SYMPTOM_QUERY},{PRODUCT_QUERY},{PROGRAM_QUERY} \nHuman: I forget a lot and not able to concentrate \nAI:{SYMPTOM_QUERY}\nHuman: Does resmed provide CPAP Products\nAI:{GENERAL_QUERY}\nHuman: I have Mood disruptions, especially anxiety, depression and irritability\nAI:{SYMPTOM_QUERY}\nHuman: How many hours should i sleep daily\nAI:{GENERAL_QUERY}\nHuman:What is the price of CPAP mask\nAI:{PRODUCT_QUERY}\nHuman:Write a program\nAI:{PROGRAM_QUERY}\nHuman:{user_input}",10,0.5,davinci,[" Human:", " AI:"]
+    PROMPT,TOKENS,TEMPERATURE,MODEL,STOP = f"Find what user expects from the chatbot system Expected Responses are {GENERAL_QUERY},{SYMPTOM_QUERY},{GENERAL_PRODUCT_QUERY},{PRODUCT_QUERY},{PROGRAM_QUERY} \nH:do you sell mask\A:{GENERAL_QUERY},{GENERAL_PRODUCT_QUERY},\nH: I forget a lot and not able to concentrate \nA:{SYMPTOM_QUERY}\nH: Does resmed provide CPAP Products\nA:{GENERAL_QUERY}\nH: I have Mood disruptions, especially anxiety, depression and irritability\nA:{SYMPTOM_QUERY}\nH: How many hours should i sleep daily\nA:{GENERAL_QUERY}\nH:What is the price of CPAP mask\nAI:{PRODUCT_QUERY}\nH:Write a program\nA:{PROGRAM_QUERY}\nH:do you also sell cushion\nA:{GENERAL_PRODUCT_QUERY}\H:{user_input}\nA:",10,0,davinci,[" H:", " A:"]
     response = openai.Completion.create(
     model=MODEL,
     prompt=PROMPT,
@@ -70,27 +70,13 @@ def find_what_user_expects(row,user_input):
     max_tokens=TOKENS,
     stop=STOP
     )
-    debug_steps(row,f"Level 1 - {find_what_user_expects.__name__} - {response}, Additional information: Model-{MODEL},Tokens-{TOKENS}, TEMPERATURE-{TEMPERATURE},STOP-{STOP},PROMPT-{PROMPT}")
+    debug_steps(row,f"{level} - {find_what_user_expects.__name__} - {response}, Additional information: Model-{MODEL},Tokens-{TOKENS}, TEMPERATURE-{TEMPERATURE},STOP-{STOP},PROMPT-{PROMPT}",level)
     
     return response.choices[0].text.strip()
   
-def find_whether_user_query_is_valid(row,user_input):
-    TOKENS,TEMPERATURE,MODEL =100,0.4,davinci
-    PROMPT = f"As an AI assistant specialized in sleep-related topics, I am programmed to provide advice and information only on resmed products, sleep, sleep medicine, mask, snoring, sleep apnea, insomnia and its products, sleep health and ResMed sleep tests and trackers. Please note that I cannot provide information or advice on topics unrelated to the aforementioned sleep-related topics.\nIf you have a question that falls outside of these topics, I will not be able to provide a relevant response. In such cases, please respond with the phrase \"{RESPONSE_FOR_INVALID_QUERY}\"\nPlease note that while I can provide information and advice, my responses should not be considered a substitute for medical advice from a licensed medical professional. If you have any concerns about your sleep health, please consult a medical professional for further guidance.\nPlease generate a response using a maximum of {TOKENS} \nQ: {user_input}\n",
+def identify_answer(row,user_input, bot_response,level):
     # Multi shot learning
-    response = openai.Completion.create(
-    model=MODEL,
-    prompt=PROMPT,
-    max_tokens=TOKENS,
-    temperature=TEMPERATURE,
-    )
-    
-    debug_steps(row,f"Level 1 - {find_whether_user_query_is_valid.__name__} - {response}, Additional information: Model-{MODEL},Tokens-{TOKENS}, TEMPERATURE-{TEMPERATURE},PROMPT-{PROMPT}")
-    return response.choices[0].text.strip().replace("A: ","")
-
-def identify_answer(row,user_input, bot_response):
-    # Multi shot learning
-    PROMPT,TOKENS,TEMPERATURE,MODEL,STOP = f"The following is a conversation with an AI assistant. The assistant only answers {YES} or {NO}\n{YES} If the question and answer make sense otherwise say {NO} \nHuman:Q:{user_input},A:{bot_response}\nAI:",10,0.5,davinci,["Human:", "AI:"]
+    PROMPT,TOKENS,TEMPERATURE,MODEL,STOP = f"The following is a conversation with an AI assistant. The assistant only answers {YES} or {NO}\n{YES} If the question and answer make sense otherwise say {NO} \nHuman:Q:{user_input},A:{bot_response}\nAI:",10,0,davinci,["Human:", "AI:"]
     response = openai.Completion.create(
     model=davinci,
     prompt=PROMPT,
@@ -98,7 +84,7 @@ def identify_answer(row,user_input, bot_response):
     max_tokens=TOKENS,
     stop=STOP
     )
-    debug_steps(row,f"Level 4 - {identify_answer.__name__} - {response}, Additional information: Model-{MODEL},Tokens-{TOKENS}, TEMPERATURE-{TEMPERATURE},PROMPT-{PROMPT}")
+    debug_steps(row,f"{identify_answer.__name__} - {response}, Additional information: Model-{MODEL},Tokens-{TOKENS}, TEMPERATURE-{TEMPERATURE},PROMPT-{PROMPT}",level)
     return response.choices[0].text.strip()
 
 def show_products(output):
@@ -115,21 +101,37 @@ def show_products(output):
                 prod_response = prod_response + "\n" + products
     return prod_response
 
-def product_query(row,user_input, bot_response):
-    output = general_product(row,user_input)
+def product_query(row,user_input, bot_response,level):
+    output = general_product(row,user_input,level)
     if len(output) == 0:
         bot_response = "Unable to find products in DB"
     else:
         bot_response += show_products(output)
     return bot_response
 
+
+def get_products(row,query_type,user_input,bot_response):
+    debug_steps(row,f"{query_type}",level=3)
+    if "cheap" in user_input or "cheapest" in user_input:
+        if len(outputs)==0:
+            output = cheap_products(row,user_input,level=3)
+        else:
+            output = cheap_products(row,outputs[-1],level=3)
+        bot_response += show_products(output)
+    else:
+        bot_response += product_query(row,user_input, bot_response,level=3)
+    return bot_response
+    
 def resmed_chatbot(user_input,message_log,db=True):
     
+    
     MODE = 'w'
-    fields = ["user_input","bot_response","level1","level2","level3","level4","level5","level6","db_query"]
-    row = []
-    row.append(user_input)
+    fields = ["user_input","bot_response","level1","level2","level3","level4","level5","level6","level7"]
     MAX_COLUMNS = len(fields)
+    row = [""] * MAX_COLUMNS
+    row[0] = user_input
+    
+    debug_steps(row,f"Message log - {message_log}",level=7)
     
     if os.path.exists(DEBUG_CSV):
         MODE='a'
@@ -151,29 +153,33 @@ def resmed_chatbot(user_input,message_log,db=True):
     probability = 0
     source = ""
     query_type = ""
+    highest_similarity=""
 
     start_time = time.time()
-    
-    
-    response = find_whether_user_query_is_valid(row, user_input)
-    debug_attribute("find_whether_user_query_is_valid",response)
-
-    if(RESPONSE_FOR_INVALID_QUERY not in response):
-        # Save embedding vector of the input
-        input_embedding_vector = get_embedding(user_input)
-
-        # Calculate similarity between the input and "facts" from companies_embeddings.csv file which we created before
-        df = pd.read_csv('resmed_embeddings_final.csv')
-                    
-        query_type = find_what_user_expects(row,user_input)
-
-        debug_attribute("query_type - ",query_type)
         
-        if(PROGRAM_QUERY in query_type):
-            debug_steps(row,"Level 3 - Found program query - ",query_type)
-            pr_bot_response(bot_response)
-        if(GENERAL_QUERY not in query_type):
-            debug_steps(row,"Level 3 - It is not a general query -",query_type)
+
+    response_from_resmed = call_chat_completion_api(row,message_log,level=1)
+    query_type = find_what_user_expects(row,user_input,level=2).strip() 
+    debug_attribute("query_type - ",query_type)  
+        
+    if(query_type==PROGRAM_QUERY):
+            debug_steps(row,f"Found program query - {query_type}",level=3)
+            bot_response = RESPONSE_FOR_INVALID_QUERY
+            pr_bot_response(RESPONSE_FOR_INVALID_QUERY)
+    elif("sorry" in response_from_resmed and query_type!=SYMPTOM_QUERY and query_type!=PRODUCT_QUERY and query_type!=GENERAL_PRODUCT_QUERY):
+        bot_response=response_from_resmed
+        pr_bot_response(bot_response)
+    elif(query_type == GENERAL_PRODUCT_QUERY):
+            bot_response = response_from_resmed
+            bot_response+=get_products(row,query_type,user_input,bot_response)
+    elif PRODUCT_QUERY==query_type:
+            bot_response+=get_products(row,query_type,user_input,bot_response)
+    elif(SYMPTOM_QUERY==query_type):
+            # Save embedding vector of the input
+            input_embedding_vector = get_embedding(user_input)
+            # Calculate similarity between the input and "facts" from companies_embeddings.csv file which we created before
+            df = pd.read_csv('resmed_embeddings_final.csv')
+            debug_steps(row,f"Not a general query & reading embeddings - {query_type}",level=3)
             if 'similarity' in df.columns:
                 df['embedding'] = df['embedding'].apply(np.array)
             else:
@@ -186,67 +192,47 @@ def resmed_chatbot(user_input,message_log,db=True):
             debug_attribute("similarity - ",highest_similarity)
                     
             if(highest_similarity >= EXPECTED_SIMILARITY and query_type!=""):
-                debug_steps(row,"Level 4 - Found highest similarity",highest_similarity)
+                debug_steps(row,f"Found highest similarity - {highest_similarity}",level=4)
                 probability = highest_similarity
                 fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
                 db_input_or_bot_response = fact_with_highest_similarity.iloc[0]
+                debug_attribute("embedding response - ",db_input_or_bot_response)
                 
                 
                 found_symptom = db_input_or_bot_response=="Sleep Apnea" or db_input_or_bot_response=="Insomnia" or db_input_or_bot_response=="Snoring"
                 if (SYMPTOM_QUERY in query_type):
                     if(found_symptom):
                         source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
-                        debug_steps(row,f"Level 5 - {SYMPTOM_QUERY},found symptom & suggest products")
+                        debug_steps(row,f"{SYMPTOM_QUERY},found symptom & suggest products",level=5)
                         MSG = f"This appears to be a condition called {db_input_or_bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor."
                         pr_bot_response(MSG)
                         SLEEP_ASSESSMENT_INFO="For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'"
                         pr_cyan(SLEEP_ASSESSMENT_INFO)
                         bot_response= f"{MSG}\n{SLEEP_ASSESSMENT_INFO}"
-                    else:
-                        debug_steps(row,f"Level 5 - {SYMPTOM_QUERY}, Symptoms are common")
+                        output = product(row,db_input_or_bot_response,level=6)
+                        bot_response += show_products(output)
+                    elif(db_input_or_bot_response=="common"):
+                        debug_steps(row,f"{SYMPTOM_QUERY}, Symptoms are common",level=5)
                         bot_response = "Your symptoms are more common to define the exact syndrome. can you please provide more detail:"
                         pr_bot_response(bot_response)
-                 
-                elif(PRODUCT_QUERY in query_type):
-                    if "cheap" in user_input or "cheapest" in user_input:
-                        probability = 0
-                        if len(outputs)==0:
-                            output = cheap_products(row,user_input)
-                        else:
-                            output = cheap_products(row,outputs[-1])
-                        show_products(output)
-                    elif "Products" == db_input_or_bot_response:
-                        source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
-                        output = other_products(row,outputs[-1])
-                        bot_response += show_products(output) 
-                    else:
-                        bot_response = product_query(row,user_input, bot_response)
                 else:                   
-                    show_embedding_answer_to_user = identify_answer(row, user_input, db_input_or_bot_response)
+                    show_embedding_answer_to_user = identify_answer(row, user_input, db_input_or_bot_response,level=5)
                     debug_attribute("embedded_bot_response - ",db_input_or_bot_response)
                     debug_attribute("show_embedding_answer_to_user - ",show_embedding_answer_to_user)
                 
                     if show_embedding_answer_to_user=="yes":
-                        debug("Level 6 - Show embedding answer to user")
+                        debug_steps(row,f"Show embedding answer to user",level=6)
                         source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
                         bot_response = db_input_or_bot_response
                     else:
                         source = "" 
-                        debug("Level 6 - Don't show embedding answer")                
-            else:
-                bot_response = call_chat_completion_api(row,message_log,query_type,highest_similarity)
-                outputs.append(bot_response)
-    else:
-        debug_steps(row,"Level 2 - Query not related to resmed")
-        # Looks like user asked query which is not related to resmed
-        bot_response=response
-        pr_bot_response(bot_response)
-        
-    if(not bot_response or len(bot_response)<10):
-        debug_steps(row,f"Level ??? - bot_response is not useful so, let's use response from {find_whether_user_query_is_valid.__name__}")
-        bot_response=response
+                        debug("Level 5 - Don't show embedding answer")                
+            
+    if((not bot_response or len(bot_response)<10) and bot_response!=RESPONSE_FOR_INVALID_QUERY):
+        bot_response = response_from_resmed
         pr_bot_response(bot_response)
 
+        
     response_time = time.time() - start_time
     
     # Bot response may include single quotes when we pass that with conn.execute will return syntax error
@@ -282,10 +268,14 @@ def resmed_chatbot(user_input,message_log,db=True):
                 dummy_rows_to_add = MAX_COLUMNS-row_length-2
                 row.extend(('-'*dummy_rows_to_add).split('-'))
             # writing the data rows 
-            row.insert(1,bot_response)
+            row[1] = bot_response
             csvwriter.writerows([row])
     
     # Add the chatbot's response to the conversation history and print it to the console
-    message_log.append({"role": "assistant", "content": response})
+    if "sorry" in bot_response or bot_response==RESPONSE_FOR_INVALID_QUERY:
+        # User asked an invalid query to our system so, let's remove their query from message logs
+        message_log=message_log[:-1]
+    else:
+        message_log.append({"role": "assistant", "content": bot_response})
     
     return bot_response,message_log
