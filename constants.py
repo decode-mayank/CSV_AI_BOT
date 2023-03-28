@@ -6,7 +6,7 @@ Please note that while I can provide information and advice, my responses should
 """
 
 TEST_INSTRUCTIONS="""
-Create a chatbot for ResMed's website that can answer any queries related to ResMed products and services, including sleep apnea diagnosis and treatment, CPAP machines, masks, and accessories. The chatbot should also be able to provide sleep advice and information about sleep disorders. Additionally, the chatbot should provide resmed email address abc@resmed.com and contact number 0123456789.\n When dealing with queries not related to ResMed products or services, the chatbot should clearly state that it is unable to provide information about other companies or products. Generate response with maximum size of tokens 100. Answer only in english language
+Create a chatbot for ResMed's website that can answer any queries related to ResMed products and services, including sleep apnea diagnosis and treatment, CPAP machines, masks, and accessories. The chatbot should also be able to provide sleep advice and information about sleep disorders. Additionally, the chatbot should provide resmed email address abc@resmed.com and contact number 0123456789.\n When dealing with queries not related to ResMed products or services, the chatbot should clearly state that it is unable to provide information about other companies or products. Generate a crisp response within 50 words
 """
 
 MESSAGE_LOG = [

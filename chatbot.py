@@ -44,7 +44,7 @@ def call_chat_completion_api(row,message_log,level):
             model=MODEL,
             messages = PROMPT,
             max_tokens=TOKENS,
-            temperature=TEMPERATURE,
+            temperature=TEMPERATURE
             # stream=True
         )
     
@@ -73,19 +73,6 @@ def find_what_user_expects(row,user_input,level):
     debug_steps(row,f"{level} - {find_what_user_expects.__name__} - {response}, Additional information: Model-{MODEL},Tokens-{TOKENS}, TEMPERATURE-{TEMPERATURE},STOP-{STOP},PROMPT-{PROMPT}",level)
     
     return response.choices[0].text.strip()
-  
-def identify_answer(row,user_input, bot_response,level):
-    # Multi shot learning
-    PROMPT,TOKENS,TEMPERATURE,MODEL,STOP = f"The following is a conversation with an AI assistant. The assistant only answers {YES} or {NO}\n{YES} If the question and answer make sense otherwise say {NO} \nHuman:Q:{user_input},A:{bot_response}\nAI:",10,0,davinci,["Human:", "AI:"]
-    response = openai.Completion.create(
-    model=davinci,
-    prompt=PROMPT,
-    temperature=TEMPERATURE,
-    max_tokens=TOKENS,
-    stop=STOP
-    )
-    debug_steps(row,f"{identify_answer.__name__} - {response}, Additional information: Model-{MODEL},Tokens-{TOKENS}, TEMPERATURE-{TEMPERATURE},PROMPT-{PROMPT}",level)
-    return response.choices[0].text.strip()
 
 def show_products(output):
     prod_response = '\n'
@@ -94,10 +81,10 @@ def show_products(output):
         output = output if len(output)==1 else output[0:2]
         debug_attribute("DB Output",output)
         if(len(items)==3):
-            pr_cyan("Here are some products, which matches your search")
+            pr_cyan(f"Here are some products, which matches your search {output}")
             for prod, url,price in output:
                 products = prod + " - " + url + " - $" + str(price)
-                prod_response = prod_response + "\n" + products
+                prod_response += products + "\n"
     return prod_response
 
 def product_query(row,user_input, bot_response,level):
@@ -115,26 +102,24 @@ def identify_symptom(user_input):
     model="text-davinci-003",
     prompt=f"Snoring, sleep apnea, and insomnia are all different sleep disorders with distinct symptoms and causes. Here are some differences that may help you differentiate between the three:\nSnoring:\n1. Characterized by loud, rhythmic breathing sounds during sleep\n2. Usually harmless, although it can still disrupt your sleep or your partner's sleep Typically caused by a partial obstruction in the airway, often due to relaxed muscles in the throat or nasal congestion\n3. Usually associated with pauses in breathing or gasping sensations during sleep\n4. Morning headaches\n5. Change in the level of attention, concentration, or memory\nSleep apnea:\n1. Characterized by pauses in breathing or shallow breaths during sleep\n2.Often accompanied by loud snoring and gasping or choking sensations during sleep\n3. Can lead to excessive daytime sleepiness\n4.Being Overweight(adds fat around the neck and airway)\n5. Having inflamed tonsils and adenoids\n6.Having blocked nose due to allergy or cold\n7.Structural problem with shape of the nose, neck or jaw\n8.Frequently urinating at night\n9. Waking up with night sweats\n10.High blood pressure\n11.Mood swings\n12.Impotence and reduced sex drive\n13.Morning Headaches\nInsomnia:\n1. A sleep disorder characterized by difficulty falling asleep, staying asleep, or waking up too early in the morning\n2. Often associated with anxiety, stress, or other psychological factors, as well as medical conditions or medications\n3. Can lead to excessive daytime sleepiness, fatigue, irritability, difficulty concentrating, and other health problems\n4. Making more mistakes or having accidents\n5.Feel tired or sleepy during the day\nExtract Sleep disorder from user input\nQ: Sore throat on awakening\nA: Snoring\nQ: Excessive daytime sleepiness\nA: Snoring\nQ:I have fever\nA: Not a sleep disorder\nQ: Mood Swings\nA: Sleep Apnea\nQ: Difficulty staying asleep \nA: Insomnia \nQ:{user_input}\n",
     max_tokens=TOKENS,
-    temperature=0.0,
+    temperature=0,
     )
     return response.choices[0].text.strip().replace("A: ","")
 
 def get_products(row,query_type,user_input,bot_response):
+    prod_response=""
     debug_steps(row,f"{query_type}",level=3)
     if "cheap" in user_input or "cheapest" in user_input:
         if len(outputs)==0:
             output = cheap_products(row,user_input,level=3)
         else:
             output = cheap_products(row,outputs[-1],level=3)
-        bot_response += show_products(output)
+        prod_response += show_products(output)
     else:
-        bot_response += product_query(row,user_input, bot_response,level=3)
-    pr_bot_response(bot_response.strip())
-    return bot_response
+        prod_response += product_query(row,user_input, bot_response,level=3)
+    return prod_response
     
 def resmed_chatbot(user_input,message_log,db=True):
-    
-    
     MODE = 'w'
     fields = ["user_input","bot_response","level1","level2","level3","level4","level5","level6","level7"]
     MAX_COLUMNS = len(fields)
@@ -163,7 +148,6 @@ def resmed_chatbot(user_input,message_log,db=True):
     probability = 0
     source = ""
     query_type = ""
-    highest_similarity=""
 
     start_time = time.time()
         
@@ -175,15 +159,14 @@ def resmed_chatbot(user_input,message_log,db=True):
     if(query_type==PROGRAM_QUERY):
             debug_steps(row,f"Found program query - {query_type}",level=3)
             bot_response = RESPONSE_FOR_INVALID_QUERY
-            pr_bot_response(RESPONSE_FOR_INVALID_QUERY)
     elif("sorry" in response_from_resmed and query_type!=SYMPTOM_QUERY and query_type!=PRODUCT_QUERY and query_type!=GENERAL_PRODUCT_QUERY):
         bot_response=response_from_resmed
-        pr_bot_response(bot_response)
     elif(query_type == GENERAL_PRODUCT_QUERY):
             bot_response = response_from_resmed
-            bot_response+=get_products(row,query_type,user_input,bot_response)
+            prod_response=get_products(row,query_type,user_input,bot_response)
+            bot_response +=prod_response
     elif PRODUCT_QUERY==query_type:
-            bot_response+=get_products(row,query_type,user_input,bot_response)
+            bot_response=get_products(row,query_type,user_input,bot_response)
     elif(SYMPTOM_QUERY==query_type):
         db_input_or_bot_response = identify_symptom(user_input)
         found_symptom = db_input_or_bot_response=="Sleep Apnea" or db_input_or_bot_response=="Insomnia" or db_input_or_bot_response=="Snoring"
@@ -192,20 +175,18 @@ def resmed_chatbot(user_input,message_log,db=True):
                 source = ""
                 debug_steps(row,f"{SYMPTOM_QUERY},found symptom & suggest products",level=5)
                 MSG = f"This appears to be a condition called {db_input_or_bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor."
-                pr_bot_response(MSG)
                 SLEEP_ASSESSMENT_INFO="For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'"
                 pr_cyan(SLEEP_ASSESSMENT_INFO)
                 bot_response= f"{MSG}\n{SLEEP_ASSESSMENT_INFO}"
                 output = product(row,db_input_or_bot_response,level=6)
-                bot_response += show_products(output)
+                prod_response = show_products(output)
+                bot_response += prod_response
             elif(db_input_or_bot_response=="common"):
                 debug_steps(row,f"{SYMPTOM_QUERY}, Symptoms are common",level=5)
                 bot_response = "Your symptoms are more common to define the exact syndrome. can you please provide more detail:"
-                pr_bot_response(bot_response)                
     
     if((not bot_response or len(bot_response)<10) and bot_response!=RESPONSE_FOR_INVALID_QUERY):
         bot_response = response_from_resmed
-        pr_bot_response(bot_response)
 
         
     response_time = time.time() - start_time
@@ -253,4 +234,5 @@ def resmed_chatbot(user_input,message_log,db=True):
     else:
         message_log.append({"role": "assistant", "content": bot_response})
     
+    pr_bot_response(bot_response)
     return bot_response,message_log
