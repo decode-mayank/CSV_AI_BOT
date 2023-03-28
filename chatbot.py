@@ -97,7 +97,6 @@ def show_products(output):
             pr_cyan("Here are some products, which matches your search")
             for prod, url,price in output:
                 products = prod + " - " + url + " - $" + str(price)
-                pr_cyan(products)
                 prod_response = prod_response + "\n" + products
     return prod_response
 
@@ -120,6 +119,7 @@ def get_products(row,query_type,user_input,bot_response):
         bot_response += show_products(output)
     else:
         bot_response += product_query(row,user_input, bot_response,level=3)
+    pr_bot_response(bot_response.strip())
     return bot_response
     
 def resmed_chatbot(user_input,message_log,db=True):

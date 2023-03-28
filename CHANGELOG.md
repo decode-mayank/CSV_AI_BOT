@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - Optimized chatbot code
 - Include completion payload and response information in debug csv
+- For product search, Include breadcrumb, product in tags 
+- Added logs for the product response
 
 ### Added 
 - Added an option to write logs in csv
