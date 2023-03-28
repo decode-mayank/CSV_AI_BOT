@@ -108,6 +108,16 @@ def product_query(row,user_input, bot_response,level):
         bot_response += show_products(output)
     return bot_response
 
+def identify_symptom(user_input):
+    TOKENS = 100
+    # Multi shot learning
+    response = openai.Completion.create(
+    model="text-davinci-003",
+    prompt=f"Snoring, sleep apnea, and insomnia are all different sleep disorders with distinct symptoms and causes. Here are some differences that may help you differentiate between the three:\nSnoring:\n1. Characterized by loud, rhythmic breathing sounds during sleep\n2. Usually harmless, although it can still disrupt your sleep or your partner's sleep Typically caused by a partial obstruction in the airway, often due to relaxed muscles in the throat or nasal congestion\n3. Usually associated with pauses in breathing or gasping sensations during sleep\n4. Morning headaches\n5. Change in the level of attention, concentration, or memory\nSleep apnea:\n1. Characterized by pauses in breathing or shallow breaths during sleep\n2.Often accompanied by loud snoring and gasping or choking sensations during sleep\n3. Can lead to excessive daytime sleepiness\n4.Being Overweight(adds fat around the neck and airway)\n5. Having inflamed tonsils and adenoids\n6.Having blocked nose due to allergy or cold\n7.Structural problem with shape of the nose, neck or jaw\n8.Frequently urinating at night\n9. Waking up with night sweats\n10.High blood pressure\n11.Mood swings\n12.Impotence and reduced sex drive\n13.Morning Headaches\nInsomnia:\n1. A sleep disorder characterized by difficulty falling asleep, staying asleep, or waking up too early in the morning\n2. Often associated with anxiety, stress, or other psychological factors, as well as medical conditions or medications\n3. Can lead to excessive daytime sleepiness, fatigue, irritability, difficulty concentrating, and other health problems\n4. Making more mistakes or having accidents\n5.Feel tired or sleepy during the day\nExtract Sleep disorder from user input\nQ: Sore throat on awakening\nA: Snoring\nQ: Excessive daytime sleepiness\nA: Snoring\nQ:I have fever\nA: Not a sleep disorder\nQ: Mood Swings\nA: Sleep Apnea\nQ: Difficulty staying asleep \nA: Insomnia \nQ:{user_input}\n",
+    max_tokens=TOKENS,
+    temperature=0.0,
+    )
+    return response.choices[0].text.strip().replace("A: ","")
 
 def get_products(row,query_type,user_input,bot_response):
     debug_steps(row,f"{query_type}",level=3)
@@ -175,59 +185,24 @@ def resmed_chatbot(user_input,message_log,db=True):
     elif PRODUCT_QUERY==query_type:
             bot_response+=get_products(row,query_type,user_input,bot_response)
     elif(SYMPTOM_QUERY==query_type):
-            # Save embedding vector of the input
-            input_embedding_vector = get_embedding(user_input)
-            # Calculate similarity between the input and "facts" from companies_embeddings.csv file which we created before
-            df = pd.read_csv('resmed_embeddings_final.csv')
-            debug_steps(row,f"Not a general query & reading embeddings - {query_type}",level=3)
-            if 'similarity' in df.columns:
-                df['embedding'] = df['embedding'].apply(np.array)
-            else:
-                df['embedding'] = df['embedding'].apply(eval).apply(np.array)
-        
-            df['similarity'] = df['embedding'].apply(lambda x: cosine_similarity(x, input_embedding_vector))
-        
-            # Find the highest similarity value in the dataframe column 'similarity'
-            highest_similarity = df['similarity'].max()
-            debug_attribute("similarity - ",highest_similarity)
-                    
-            if(highest_similarity >= EXPECTED_SIMILARITY and query_type!=""):
-                debug_steps(row,f"Found highest similarity - {highest_similarity}",level=4)
-                probability = highest_similarity
-                fact_with_highest_similarity = df.loc[df['similarity'] == highest_similarity, 'completion']
-                db_input_or_bot_response = fact_with_highest_similarity.iloc[0]
-                debug_attribute("embedding response - ",db_input_or_bot_response)
-                
-                
-                found_symptom = db_input_or_bot_response=="Sleep Apnea" or db_input_or_bot_response=="Insomnia" or db_input_or_bot_response=="Snoring"
-                if (SYMPTOM_QUERY in query_type):
-                    if(found_symptom):
-                        source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
-                        debug_steps(row,f"{SYMPTOM_QUERY},found symptom & suggest products",level=5)
-                        MSG = f"This appears to be a condition called {db_input_or_bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor."
-                        pr_bot_response(MSG)
-                        SLEEP_ASSESSMENT_INFO="For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'"
-                        pr_cyan(SLEEP_ASSESSMENT_INFO)
-                        bot_response= f"{MSG}\n{SLEEP_ASSESSMENT_INFO}"
-                        output = product(row,db_input_or_bot_response,level=6)
-                        bot_response += show_products(output)
-                    elif(db_input_or_bot_response=="common"):
-                        debug_steps(row,f"{SYMPTOM_QUERY}, Symptoms are common",level=5)
-                        bot_response = "Your symptoms are more common to define the exact syndrome. can you please provide more detail:"
-                        pr_bot_response(bot_response)
-                else:                   
-                    show_embedding_answer_to_user = identify_answer(row, user_input, db_input_or_bot_response,level=5)
-                    debug_attribute("embedded_bot_response - ",db_input_or_bot_response)
-                    debug_attribute("show_embedding_answer_to_user - ",show_embedding_answer_to_user)
-                
-                    if show_embedding_answer_to_user=="yes":
-                        debug_steps(row,f"Show embedding answer to user",level=6)
-                        source = df.loc[df['similarity'] == highest_similarity, 'prompt'].iloc[0]
-                        bot_response = db_input_or_bot_response
-                    else:
-                        source = "" 
-                        debug("Level 5 - Don't show embedding answer")                
-            
+        db_input_or_bot_response = identify_symptom(user_input)
+        found_symptom = db_input_or_bot_response=="Sleep Apnea" or db_input_or_bot_response=="Insomnia" or db_input_or_bot_response=="Snoring"
+        if (SYMPTOM_QUERY in query_type):
+            if(found_symptom):
+                source = ""
+                debug_steps(row,f"{SYMPTOM_QUERY},found symptom & suggest products",level=5)
+                MSG = f"This appears to be a condition called {db_input_or_bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor."
+                pr_bot_response(MSG)
+                SLEEP_ASSESSMENT_INFO="For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'"
+                pr_cyan(SLEEP_ASSESSMENT_INFO)
+                bot_response= f"{MSG}\n{SLEEP_ASSESSMENT_INFO}"
+                output = product(row,db_input_or_bot_response,level=6)
+                bot_response += show_products(output)
+            elif(db_input_or_bot_response=="common"):
+                debug_steps(row,f"{SYMPTOM_QUERY}, Symptoms are common",level=5)
+                bot_response = "Your symptoms are more common to define the exact syndrome. can you please provide more detail:"
+                pr_bot_response(bot_response)                
+    
     if((not bot_response or len(bot_response)<10) and bot_response!=RESPONSE_FOR_INVALID_QUERY):
         bot_response = response_from_resmed
         pr_bot_response(bot_response)
