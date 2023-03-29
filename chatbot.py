@@ -12,7 +12,7 @@ from openai.embeddings_utils import cosine_similarity
 
 from colors import pr_cyan,pr_bot_response
 from debug_utils import debug_steps,debug, debug_attribute
-from constants import GENERAL_QUERY,SYMPTOM_QUERY,PRODUCT_QUERY,PROGRAM_QUERY,GENERAL_PRODUCT_QUERY,davinci,turbo,babbage
+from constants import GENERAL_QUERY,SYMPTOM_QUERY,PRODUCT_QUERY,PROGRAM_QUERY,GENERAL_PRODUCT_QUERY,davinci,turbo,babbage,SEPARATORS
 from utils import get_db_connection
 from openai_utils import get_embedding
 # Insert your API key
@@ -61,6 +61,22 @@ def call_chat_completion_api(row,message_log,level):
     debug_steps(row,f'{level} - {call_chat_completion_api.__name__} - {response}, Additional information: Model-{MODEL}, Tokens-{TOKENS}, TEMPERATURE-{TEMPERATURE}, PROMPT-{PROMPT}"',level)
     return response.choices[0].message.content.strip()
 
+def get_answer_from_gpt(row,prompt,level):
+    # Multi shot learning
+    TOKENS,TEMPERATURE,MODEL,STOP = 200,0,davinci,[" Human:", " AI:"]
+    response = openai.Completion.create(
+    model=MODEL,
+    prompt=prompt,
+    temperature=TEMPERATURE,
+    max_tokens=TOKENS,
+    stop=STOP
+    )
+    
+    debug_steps(row,f"{level} - {get_answer_from_gpt.__name__} - {response}, Additional information: Model-{MODEL},Tokens-{TOKENS}, TEMPERATURE-{TEMPERATURE},STOP-{STOP},PROMPT-{prompt}",level)
+    
+    return response.choices[0].text.strip()
+
+
 def find_what_user_expects(row,user_input,level):
     # Multi shot learning
     PROMPT,TOKENS,TEMPERATURE,MODEL,STOP = f"Find what user expects from the chatbot system Expected Responses are {GENERAL_QUERY},{SYMPTOM_QUERY},{GENERAL_PRODUCT_QUERY},{PRODUCT_QUERY},{PROGRAM_QUERY} \nH:do you sell mask\A:{GENERAL_QUERY},{GENERAL_PRODUCT_QUERY},\nH: I forget a lot and not able to concentrate \nA:{SYMPTOM_QUERY}\nH: Does resmed provide CPAP Products\nA:{GENERAL_QUERY}\nH: I have Mood disruptions, especially anxiety, depression and irritability\nA:{SYMPTOM_QUERY}\nH: How many hours should i sleep daily\nA:{GENERAL_QUERY}\nH:What is the price of CPAP mask\nAI:{PRODUCT_QUERY}\nH:Write a program\nA:{PROGRAM_QUERY}\nH:do you also sell cushion\nA:{GENERAL_PRODUCT_QUERY}\H:{user_input}\nA:",10,0,davinci,[" H:", " A:"]
@@ -71,6 +87,7 @@ def find_what_user_expects(row,user_input,level):
     max_tokens=TOKENS,
     stop=STOP
     )
+    
     debug_steps(row,f"{level} - {find_what_user_expects.__name__} - {response}, Additional information: Model-{MODEL},Tokens-{TOKENS}, TEMPERATURE-{TEMPERATURE},STOP-{STOP},PROMPT-{PROMPT}",level)
     
     return response.choices[0].text.strip()
@@ -133,7 +150,8 @@ def resmed_chatbot(user_input,message_log,db=True):
         MODE='a'
     
     # Append user_input 
-    message_log.append({"role": "user", "content": user_input})
+    prompt=f"""{message_log}Human:{user_input}AI:"""
+    prompt = prompt.replace(SEPARATORS,'')
     
     # Append question mark at end of user_input
     user_input += "?"
@@ -153,14 +171,12 @@ def resmed_chatbot(user_input,message_log,db=True):
     start_time = time.time()
         
 
-    response_from_resmed = call_chat_completion_api(row,message_log,level=1)
+    response_from_resmed = get_answer_from_gpt(row,prompt,level=1)
     query_type = find_what_user_expects(row,user_input,level=2).strip() 
     debug_attribute("query_type - ",query_type)  
-        
-    if(query_type==PROGRAM_QUERY):
-            debug_steps(row,f"Found program query - {query_type}",level=3)
-            bot_response = RESPONSE_FOR_INVALID_QUERY
-    elif("sorry" in response_from_resmed and query_type!=SYMPTOM_QUERY and query_type!=PRODUCT_QUERY and query_type!=GENERAL_PRODUCT_QUERY):
+    debug_steps(row,f"Resmed response - {response_from_resmed}",level=7)
+    
+    if("sorry" in response_from_resmed and query_type!=SYMPTOM_QUERY and query_type!=PRODUCT_QUERY and query_type!=GENERAL_PRODUCT_QUERY):
         bot_response=response_from_resmed
     elif(query_type == GENERAL_PRODUCT_QUERY):
             bot_response = response_from_resmed
@@ -169,7 +185,9 @@ def resmed_chatbot(user_input,message_log,db=True):
     elif PRODUCT_QUERY==query_type:
             bot_response=get_products(row,query_type,user_input,bot_response)
     elif(SYMPTOM_QUERY==query_type):
+        
         db_input_or_bot_response = identify_symptom(user_input)
+        debug_attribute("Identify symptom",db_input_or_bot_response)
         found_symptom = db_input_or_bot_response=="Sleep Apnea" or db_input_or_bot_response=="Insomnia" or db_input_or_bot_response=="Snoring"
         if (SYMPTOM_QUERY in query_type):
             if(found_symptom):
@@ -229,11 +247,9 @@ def resmed_chatbot(user_input,message_log,db=True):
             csvwriter.writerows([row])
     
     # Add the chatbot's response to the conversation history and print it to the console
-    if "sorry" in bot_response or bot_response==RESPONSE_FOR_INVALID_QUERY or bot_response==UNABLE_TO_FIND_PRODUCTS_IN_DB:
+    if  response_from_resmed!=RESPONSE_FOR_INVALID_QUERY or response_from_resmed!=UNABLE_TO_FIND_PRODUCTS_IN_DB:
         # User asked an invalid query to our system so, let's remove their query from message logs
-        message_log=message_log[:-1]
-    else:
-        message_log.append({"role": "assistant", "content": bot_response})
-    
+        message_log+=f"Human:{user_input}AI:{bot_response}{SEPARATORS}"
+
     pr_bot_response(bot_response)
     return bot_response,message_log
