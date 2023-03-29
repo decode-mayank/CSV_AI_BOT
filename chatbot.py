@@ -23,6 +23,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 DEBUG_CSV = "debug.csv"
 
 RESPONSE_FOR_INVALID_QUERY = "I am a Resmed chatbot, I can't help with that"
+UNABLE_TO_FIND_PRODUCTS_IN_DB = "Unable to find products in DB"
 
 YES = "Yes"
 NO = "No"
@@ -90,7 +91,7 @@ def show_products(output):
 def product_query(row,user_input, bot_response,level):
     output = general_product(row,user_input,level)
     if len(output) == 0:
-        bot_response = "Unable to find products in DB"
+        bot_response = UNABLE_TO_FIND_PRODUCTS_IN_DB
     else:
         bot_response += show_products(output)
     return bot_response
@@ -228,7 +229,7 @@ def resmed_chatbot(user_input,message_log,db=True):
             csvwriter.writerows([row])
     
     # Add the chatbot's response to the conversation history and print it to the console
-    if "sorry" in bot_response or bot_response==RESPONSE_FOR_INVALID_QUERY:
+    if "sorry" in bot_response or bot_response==RESPONSE_FOR_INVALID_QUERY or bot_response==UNABLE_TO_FIND_PRODUCTS_IN_DB:
         # User asked an invalid query to our system so, let's remove their query from message logs
         message_log=message_log[:-1]
     else:

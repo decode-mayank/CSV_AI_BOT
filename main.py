@@ -2,7 +2,7 @@
 from chatbot import resmed_chatbot
 from colors import pr_bot_response,pr_red
 from constants import MESSAGE_LOG
-
+from debug_utils import debug_attribute
 
 if __name__ == '__main__':
     """
@@ -13,7 +13,7 @@ if __name__ == '__main__':
  
     pr_bot_response("Hello! I'm Resmed Chatbot, a virtual assistant designed to help you with any questions or concerns you may have about Resmed products or services. Resmed is a global leader in sleep apnea treatment, and we're committed to improving the quality of life for people who suffer from sleep-disordered breathing.")
     
-    message_log = MESSAGE_LOG
+    message_log = MESSAGE_LOG.copy()
 
 
     while True:
@@ -23,18 +23,17 @@ if __name__ == '__main__':
             pr_red(response)
         else:
             # Send the conversation history to the chatbot and get its response
-            # Only pass last 5 messages to chat completion API
-            '''
-            1 -> passed -> system -> 1
-            2 -> passed -> system, user_input,assistant -> 3
-            3 -> passed -> system, user_input,assistant,user_input, assistant -> 5
-            Formula: 1+(n-1)*2
-            5 -> passed -> system - 1+4*2 = 9 items in message log
-            6 -> passed -> system - 1+5*2 = 11 items in message log
-            7-> passed -> system - 1+6*2 = 13 items in message log -> 1
-            '''
-            if len(message_log) > 10:
-                message_log = MESSAGE_LOG + message_log[-10:]
-
+            # Only pass last 3 messages to chat completion API
+            
+            debug_attribute("Current Message_log Length",len(message_log))
+            if len(message_log) > 2:
+                debug_attribute("Message_log - Length - If",len(message_log))
+                debug_attribute("Message_log ",MESSAGE_LOG)
+                debug_attribute("Message_log Slice",message_log[-2:])
+                message_log = MESSAGE_LOG + message_log[-2:]
+                debug_attribute("Message_log Slice",message_log)
+                debug_attribute("Message_log length after slice",len(message_log))
+                
+            debug_attribute("Message_log - Length",len(message_log))
             response,message_log = resmed_chatbot(input_text,message_log)
 
