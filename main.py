@@ -56,5 +56,6 @@ if __name__ == '__main__':
             
             
             response,message_log = resmed_chatbot(input_text,message_log)
-            print("->>>>>>>",response,message_log)
+            print("->>>>>>>",response)
+            print("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>",message_log)
 

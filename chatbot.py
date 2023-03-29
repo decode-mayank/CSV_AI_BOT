@@ -179,9 +179,8 @@ def resmed_chatbot(user_input,message_log,db=True):
     if("sorry" in response_from_resmed and query_type!=SYMPTOM_QUERY and query_type!=PRODUCT_QUERY and query_type!=GENERAL_PRODUCT_QUERY):
         bot_response=response_from_resmed
     elif(query_type == GENERAL_PRODUCT_QUERY):
-            bot_response = response_from_resmed
             prod_response=get_products(row,query_type,user_input,bot_response)
-            bot_response +=prod_response
+            bot_response = response_from_resmed + prod_response
     elif PRODUCT_QUERY==query_type:
             bot_response=get_products(row,query_type,user_input,bot_response)
     elif(SYMPTOM_QUERY==query_type):
