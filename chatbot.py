@@ -66,6 +66,20 @@ def get_answer_from_gpt(row,prompt,level):
     TOKENS,TEMPERATURE,MODEL,STOP = 200,0,davinci,[" Human:", " AI:"]
     response = openai.Completion.create(
     model=MODEL,
+    # prompt="""
+    # ResMed is a global leader in developing and manufacturing medical devices and software solutions for the diagnosis, treatment, and management of sleep apnea, chronic obstructive pulmonary disease (COPD), and other respiratory conditions. ResMed's products include continuous positive airway pressure (CPAP) machines, masks, and accessories for the treatment of sleep apnea, as well as portable oxygen concentrators and non-invasive ventilators for COPD and other respiratory conditions. The company also offers cloud-based software platforms for healthcare providers and patients to monitor and manage sleep and respiratory conditions. More about resmed at https://www.resmed.co.in/
+    # You are resmed intelligent chatbot designed to identify the intent and most likely cause of their symptoms and help individuals with information on Resmed's services and products, providing them advice on how to improve their sleep quality. 
+
+    # Instructions: 
+    # - Only answer questions related to sleep, sleep medicine, mask, snoring, sleep apnea, insomnia, ResMed products, sleep health, and ResMed sleep tests and trackers.  Along with the answers provide intent, entity and suggest resmed products
+    # - If you're unsure of an answer, you can say I am a Resmed chatbot, I can't help with that
+
+    # Human: is CPAP safe to use
+    # AI: Yes, CPAP is a safe and effective treatment for sleep apnea. It is designed to provide a steady stream of air pressure to keep your airway open while you sleep. The air pressure is adjusted to your individual needs and monitored by your doctor. ResMed offers a range of CPAP masks and machines to help you get the best possible sleep. Intent: CPAP Safe, Entity: CPAP, Suggested Product: ResMed CPAP masks and machines.
+
+    # Human: what is python
+    # AI:
+    # """,
     prompt=prompt,
     temperature=TEMPERATURE,
     max_tokens=TOKENS,
@@ -150,11 +164,11 @@ def resmed_chatbot(user_input,message_log,db=True):
         MODE='a'
     
     # Append user_input 
-    prompt=f"""{message_log}Human:{user_input}AI:"""
+    prompt=f"{message_log}Human:{user_input}\nAI:"
     prompt = prompt.replace(SEPARATORS,'')
     
     # Append question mark at end of user_input
-    user_input += "?"
+    # user_input += "?"
     # If user types single word input then system gets confused so adding what is as a prefix
     if (len(user_input.split(' '))==1):
         user_input = f"What is {user_input}"
@@ -247,8 +261,9 @@ def resmed_chatbot(user_input,message_log,db=True):
     
     # Add the chatbot's response to the conversation history and print it to the console
     if  response_from_resmed!=RESPONSE_FOR_INVALID_QUERY or response_from_resmed!=UNABLE_TO_FIND_PRODUCTS_IN_DB:
+        print("Inside if")
         # User asked an invalid query to our system so, let's remove their query from message logs
-        message_log+=f"Human:{user_input}AI:{bot_response}{SEPARATORS}"
+        message_log+=f"Human:{user_input}\nAI:{bot_response}{SEPARATORS}"
 
     pr_bot_response(bot_response)
     return bot_response,message_log
