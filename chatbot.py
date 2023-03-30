@@ -63,7 +63,7 @@ def call_chat_completion_api(row,message_log,level):
 
 def get_answer_from_gpt(row,prompt,level):
     # Multi shot learning
-    TOKENS,TEMPERATURE,MODEL,STOP = 200,0,davinci,[" Human:", " AI:"]
+    TOKENS,TEMPERATURE,MODEL,STOP = 200,0,davinci,[" Human:", " Bot:"]
     response = openai.Completion.create(
     model=MODEL,
     # prompt="""
@@ -93,7 +93,7 @@ def get_answer_from_gpt(row,prompt,level):
 
 def find_what_user_expects(row,user_input,level):
     # Multi shot learning
-    PROMPT,TOKENS,TEMPERATURE,MODEL,STOP = f"Find what user expects from the chatbot system Expected Responses are {GENERAL_QUERY},{SYMPTOM_QUERY},{GENERAL_PRODUCT_QUERY},{PRODUCT_QUERY},{PROGRAM_QUERY} H:do you sell mask A:{GENERAL_QUERY},{GENERAL_PRODUCT_QUERY},H: I forget a lot and not able to concentrate A:{SYMPTOM_QUERY} H: Does resmed provide CPAP Products A:{GENERAL_QUERY} H: I have Mood disruptions, especially anxiety, depression and irritability A:{SYMPTOM_QUERY} H: How many hours should i sleep daily A:{GENERAL_QUERY} H:What is the price of CPAP mask AI:{PRODUCT_QUERY} H:Write a program A:{PROGRAM_QUERY} H:do you also sell cushion A:{GENERAL_PRODUCT_QUERY} H:{user_input} A:",10,0,davinci,[" H:", " A:"]
+    PROMPT,TOKENS,TEMPERATURE,MODEL,STOP = f"Find what user expects from the chatbot system Expected Responses are {GENERAL_QUERY},{SYMPTOM_QUERY},{GENERAL_PRODUCT_QUERY},{PRODUCT_QUERY},{PROGRAM_QUERY} H:do you sell mask A:{GENERAL_QUERY},{GENERAL_PRODUCT_QUERY},H: I forget a lot and not able to concentrate A:{SYMPTOM_QUERY} H: Does resmed provide CPAP Products A:{GENERAL_QUERY} H: I have Mood disruptions, especially anxiety, depression and irritability A:{SYMPTOM_QUERY} H: How many hours should i sleep daily A:{GENERAL_QUERY} H:What is the price of CPAP mask A:{PRODUCT_QUERY} H:Write a program A:{PROGRAM_QUERY} H:do you also sell cushion A:{GENERAL_PRODUCT_QUERY} H:{user_input} A:",10,0,davinci,[" H:", " A:"]
     response = openai.Completion.create(
     model=MODEL,
     prompt=PROMPT,
@@ -260,10 +260,10 @@ def resmed_chatbot(user_input,message_log,db=True):
             csvwriter.writerows([row])
     
     # Add the chatbot's response to the conversation history and print it to the console
-    if  response_from_resmed!=RESPONSE_FOR_INVALID_QUERY or response_from_resmed!=UNABLE_TO_FIND_PRODUCTS_IN_DB:
+    if  response_from_resmed!=RESPONSE_FOR_INVALID_QUERY or response_from_resmed!=UNABLE_TO_FIND_PRODUCTS_IN_DB or "sorry" in response_from_resmed:
         print("Inside if")
         # User asked an invalid query to our system so, let's remove their query from message logs
-        message_log+=f"Human:{user_input}\nAI:{bot_response}{SEPARATORS}"
+        message_log+=f"Human:{user_input}\nBot:{bot_response}{SEPARATORS}"
 
     pr_bot_response(bot_response)
     return bot_response,message_log
