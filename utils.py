@@ -20,13 +20,18 @@ def add_seperators(message):
     message+=SEPARATORS
     return message
 
+def extract_data(pattern,message):
+    results = re.search(pattern, message)
+    return results.group(1) if results else ""
+
 def get_props_from_message(message):
     response = message.split("Intent")[0]
+    intent,entity,product_suggestion="","",""
     # Extracting the Intent
-    intent = re.search(r'Intent: (.*), Entity', message).group(1)
+    intent = extract_data(r'Intent: (.*), Entity', message)
     # Extracting the Entity
-    entity = re.search(r'Entity:\s*(.*),', message).group(1)
+    entity = extract_data(r'Entity:\s*(.*),', message)
     # Extracting the Product Suggestion
-    product_suggestion = re.search(r'Product Suggestion:\s*(.*)', message).group(1)
+    product_suggestion = extract_data(r'Product Suggestion:\s*(.*)', message)
     
     return response,intent,entity,product_suggestion

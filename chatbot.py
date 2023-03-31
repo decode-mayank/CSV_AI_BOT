@@ -141,7 +141,8 @@ def get_products(row,query_type,user_input):
 
 def query_to_resmed(row,query_type,user_input,response_from_gpt):
     response,intent,entity,product_suggestion = get_props_from_message(response_from_gpt)
-    product_suggestion=product_suggestion.replace("ResMed","")
+    product_suggestion=product_suggestion.lower().replace("resmed","")
+        
     debug_attribute("Response",response)
     debug_attribute("intent",intent)
     debug_attribute("entity",entity)
@@ -169,8 +170,8 @@ def query_to_resmed(row,query_type,user_input,response_from_gpt):
             elif(symptom=="common"):
                 debug_steps(row,f"{SYMPTOM_QUERY}, Symptoms are common",level=5)
                 bot_response = "Your symptoms are more common to define the exact syndrome. can you please provide more detail:"
-            else:
-                bot_response = response
+    else:
+        bot_response = response
     return bot_response
   
 def write_to_db(db,user_input,bot_response,probability,response_accepted,response_time,time_stamp,source):
