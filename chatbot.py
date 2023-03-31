@@ -105,8 +105,8 @@ def show_products(output):
                 prod_response += products + "\n"
     return prod_response
 
-def product_query(row,user_input,level):
-    output = general_product(row,user_input,level)
+def product_query(row,entity,user_input,level):
+    output = general_product(row,entity,user_input,level)
     if len(output) == 0:
         bot_response = UNABLE_TO_FIND_PRODUCTS_IN_DB
     else:
@@ -125,7 +125,7 @@ def identify_symptom(user_input):
     print("->>>>>>",response)
     return response.choices[0].text.strip()
 
-def get_products(row,query_type,user_input):
+def get_products(row,query_type,user_input,entity):
     prod_response=""
     debug_steps(row,f"{query_type}",level=3)
     if "cheap" in user_input or "cheapest" in user_input:
@@ -135,7 +135,7 @@ def get_products(row,query_type,user_input):
             output = cheap_products(row,outputs[-1],level=3)
         prod_response += show_products(output)
     else:
-        prod_response += product_query(row,user_input,level=3)
+        prod_response += product_query(row,entity,user_input,level=3)
     return prod_response
 
 
@@ -150,7 +150,7 @@ def query_to_resmed(row,query_type,user_input,response_from_gpt):
     bot_response = ""
     
     if PRODUCT_QUERY==query_type:
-        prod_response=get_products(row,query_type,product_suggestion)
+        prod_response=get_products(row,query_type,user_input,entity)
         print("->>>>>> Check here",prod_response)
         bot_response = response + prod_response
     elif(SYMPTOM_QUERY==query_type):
