@@ -20,7 +20,7 @@ load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # constants
-DEBUG_CSV = "debug_4.csv"
+DEBUG_CSV = "debug.csv"
 
 RESPONSE_FOR_INVALID_QUERY = "I am a Resmed chatbot, I can't help with that"
 UNABLE_TO_FIND_PRODUCTS_IN_DB = "Unable to find products in DB"
@@ -289,17 +289,12 @@ def resmed_chatbot(user_input,message_log,db=True):
     
     write_to_db(db,user_input,bot_response,probability,response_accepted,response_time,time_stamp,source)
 
-    #symptom,response_token_cost = identify_symptom(user_input)
     token_calculation = gpt_tokens + find_what_user_tokens  + query_to_resmed_tokens
     cost_of_davinci = 0.0200
     cost = (token_calculation * cost_of_davinci) / 1000
-    
     debug_steps(row,f"total cost - {cost}",level="cost")
-    #debug(f"cost - {cost}")
 
     debug(f"Response time in seconds - {response_time}")
-
-    
 
     write_logs_to_csv(MODE,fields,row,MAX_COLUMNS,bot_response)
     
