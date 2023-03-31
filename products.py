@@ -26,7 +26,8 @@ def call_text_completion(prompt):
         max_tokens=TOKENS,
         stop=";"
     )
-    return response
+    response_token_product = response.usage['total_tokens']
+    return response, response_token_product
 
 def execute_query(prompt,row,response,level,fn_name):
     debug_attribute("DB response",response)
@@ -53,20 +54,20 @@ def product(row,text,level):
     prompt=generate_prompt(text,"Use Order_by command to order the rating in Descending order and list top 3 items")
     response = call_text_completion(prompt)
     output = execute_query(prompt,row,response,level,product.__name__)
-    return(output)
+    return(output, response_token_product)
 
 def other_products(row,text,level):
     prompt=generate_prompt(text,"Use Order_by command to order the rating in Ascending order and list top 3 items")
     response = call_text_completion(prompt)
     output = execute_query(prompt,row,response,level,other_products.__name__)
-    return(output)
+    return(output, response_token_product)
 
 
 def cheap_products(row,text,level):
     prompt=generate_prompt(text,"Use Order_by command to order the price in Ascending order and list top 1 items")
     response = call_text_completion(prompt)
     output = execute_query(prompt,row,response,level,cheap_products.__name__)
-    return(output)
+    return(output, response_token_product)
 
 
 def general_product(row,text,user_input,level):  
@@ -76,4 +77,4 @@ def general_product(row,text,user_input,level):
         prompt=generate_prompt(text,"Suggest any 2 product as per user Query. Write an SQL query that retrieves data from table based on a specified condition. Use only tags in condition if there is any product OR category mentioned in user input and if Multiple conditions go only with OR command. Use atmost three conditions in where clause")
     response = call_text_completion(prompt)
     output = execute_query(prompt,row,response,level,general_product.__name__)
-    return(output)
+    return(output, response_token_product)

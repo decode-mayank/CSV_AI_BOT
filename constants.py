@@ -62,6 +62,6 @@ turbo="gpt-3.5-turbo"
 ada="text-embedding-ada-002"
 
 
-fields_dict = {1:2,2:3,3:4,4:5,5:6,6:7,7:8,8:9}
+fields_dict = {1:2,2:3,3:4,4:5,5:6,6:7,7:8,8:9,"cost":10}
 
 SEPARATORS = f"{'*' * 12}\n"

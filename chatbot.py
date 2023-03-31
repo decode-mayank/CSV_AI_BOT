@@ -20,7 +20,7 @@ load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # constants
-DEBUG_CSV = "debug.csv"
+DEBUG_CSV = "debug_4.csv"
 
 RESPONSE_FOR_INVALID_QUERY = "I am a Resmed chatbot, I can't help with that"
 UNABLE_TO_FIND_PRODUCTS_IN_DB = "Unable to find products in DB"
@@ -49,6 +49,7 @@ def call_chat_completion_api(row,message_log,level):
             # stream=True
         )
     
+
     # TODO: Once everything works fine then switch back to stream
     # pr_bot_response("",end="")
     # for chunk in response:
@@ -59,7 +60,9 @@ def call_chat_completion_api(row,message_log,level):
     
     # Query type is {query_type} / similarity {highest_similarity*100} less than {EXPECTED_SIMILARITY*100}
     debug_steps(row,f'{level} - {call_chat_completion_api.__name__} - {response}, Additional information: Model-{MODEL}, Tokens-{TOKENS}, TEMPERATURE-{TEMPERATURE}, PROMPT-{PROMPT}"',level)
-    return response.choices[0].message.content.strip()
+    response_text = response.choices[0].message.content.strip()
+    response_tokens = response.usage['total_tokens']
+    return response_text, response_tokens
 
 def get_answer_from_gpt(row,prompt,level):
     # Multi shot learning
@@ -71,11 +74,13 @@ def get_answer_from_gpt(row,prompt,level):
     max_tokens=TOKENS,
     stop=STOP
     )
+
     
     debug_steps(row,f"{level} - {get_answer_from_gpt.__name__} - {response}, Additional information: Model-{MODEL},Tokens-{TOKENS}, TEMPERATURE-{TEMPERATURE},STOP-{STOP},PROMPT-{prompt}",level)
     
-    return response.choices[0].text.strip()
-
+    response_text = response.choices[0].text.strip()
+    response_token = response.usage['total_tokens']
+    return response_text, response_token
 
 def find_what_user_expects(row,user_input,level):
     # Multi shot learning
@@ -90,7 +95,9 @@ def find_what_user_expects(row,user_input,level):
     
     debug_steps(row,f"{level} - {find_what_user_expects.__name__} - {response}, Additional information: Model-{MODEL},Tokens-{TOKENS}, TEMPERATURE-{TEMPERATURE},STOP-{STOP},PROMPT-{PROMPT}",level)
     
-    return response.choices[0].text.strip()
+    response_text = response.choices[0].text.strip()
+    response_tokens = response.usage['total_tokens']
+    return response_text, response_tokens
 
 def show_products(output):
     prod_response = '\n'
@@ -106,7 +113,8 @@ def show_products(output):
     return prod_response
 
 def product_query(row,entity,user_input,level):
-    output = general_product(row,entity,user_input,level)
+    output, response_token_product = general_product(row,entity,user_input,level)
+
     if len(output) == 0:
         bot_response = UNABLE_TO_FIND_PRODUCTS_IN_DB
     else:
@@ -123,18 +131,23 @@ def identify_symptom(user_input):
     temperature=0,
     )
     print("->>>>>>",response)
-    return response.choices[0].text.strip()
+    response_text = response.choices[0].text.strip()
+    response_token_symptom = response.usage['total_tokens']
+    return response_text, response_token_symptom
+    
+
 
 def get_products(row,query_type,user_input,entity):
     prod_response=""
     debug_steps(row,f"{query_type}",level=3)
     if "cheap" in user_input or "cheapest" in user_input:
         if len(outputs)==0:
-            output = cheap_products(row,user_input,level=3)
+            output,response_token_product = cheap_products(row,user_input,level=3)
         else:
-            output = cheap_products(row,outputs[-1],level=3)
+            output,response_token_product = cheap_products(row,outputs[-1],level=3)
         prod_response += show_products(output)
     else:
+
         prod_response += product_query(row,entity,user_input,level=3)
     return prod_response
 
@@ -142,7 +155,6 @@ def get_products(row,query_type,user_input,entity):
 def query_to_resmed(row,query_type,user_input,response_from_gpt):
     response,intent,entity,product_suggestion = get_props_from_message(response_from_gpt)
     product_suggestion=product_suggestion.lower().replace("resmed","")
-        
     debug_attribute("Response",response)
     debug_attribute("intent",intent)
     debug_attribute("entity",entity)
@@ -150,7 +162,7 @@ def query_to_resmed(row,query_type,user_input,response_from_gpt):
     bot_response = ""
     
     if PRODUCT_QUERY==query_type:
-        prod_response=get_products(row,query_type,user_input,entity)
+        prod_response, response_token_product=get_products(row,query_type,user_input,entity)
         print("->>>>>> Check here",prod_response)
         bot_response = response + prod_response
     elif(SYMPTOM_QUERY==query_type):
@@ -205,7 +217,7 @@ def write_logs_to_csv(mode,fields,row,max_columns,bot_response):
   
 def resmed_chatbot(user_input,message_log,db=True):
     MODE = 'w'
-    fields = ["user_input","bot_response","level1","level2","level3","level4","level5","level6","level7","level8"]
+    fields = ["user_input","bot_response","level1","level2","level3","level4","level5","level6","level7","level8","cost"]
     MAX_COLUMNS = len(fields)
     row = [""] * MAX_COLUMNS
     row[0] = user_input
@@ -238,9 +250,10 @@ def resmed_chatbot(user_input,message_log,db=True):
 
     start_time = time.time()
         
-
-    response_from_gpt = get_answer_from_gpt(row,prompt,level=1)
-    query_type = find_what_user_expects(row,user_input,level=2).strip() 
+    
+    response_from_gpt, response_token = get_answer_from_gpt(row,prompt,level=1)
+    query_type,response_tokens = find_what_user_expects(row,user_input,level=2)
+    query_type = query_type.strip()
     debug_attribute("query_type - ",query_type)  
     debug_steps(row,f"Resmed response - {response_from_gpt}",level=7)
     
@@ -265,9 +278,19 @@ def resmed_chatbot(user_input,message_log,db=True):
     source = source.replace("'", "''")
     
     write_to_db(db,user_input,bot_response,probability,response_accepted,response_time,time_stamp,source)
+
+    #symptom,response_token_cost = identify_symptom(user_input)
+    token_calculation = response_token + response_tokens + response_token_symptom + response_token_product
+    cost_of_davinci = 0.024
+    cost = (token_calculation * cost_of_davinci) / 1000
     
+    debug_steps(row,f"total cost - {cost}",level="cost")
+    #debug(f"cost - {cost}")
+
     debug(f"Response time in seconds - {response_time}")
+
     
+
     write_logs_to_csv(MODE,fields,row,MAX_COLUMNS,bot_response)
     
     # Add the chatbot's response to the conversation history and print it to the console
