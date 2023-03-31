@@ -1,4 +1,5 @@
 import os
+import re
 
 import psycopg2  
 
@@ -18,3 +19,14 @@ def get_db_connection():
 def add_seperators(message):
     message+=SEPARATORS
     return message
+
+def get_props_from_message(message):
+    response = message.split("Intent")[0]
+    # Extracting the Intent
+    intent = re.search(r'Intent: (.*), Entity', message).group(1)
+    # Extracting the Entity
+    entity = re.search(r'Entity:\s*(.*),', message).group(1)
+    # Extracting the Product Suggestion
+    product_suggestion = re.search(r'Product Suggestion:\s*(.*)', message).group(1)
+    
+    return response,intent,entity,product_suggestion

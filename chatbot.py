@@ -12,9 +12,9 @@ from openai.embeddings_utils import cosine_similarity
 
 from colors import pr_cyan,pr_bot_response
 from debug_utils import debug_steps,debug, debug_attribute
-from constants import GENERAL_QUERY,SYMPTOM_QUERY,PRODUCT_QUERY,PROGRAM_QUERY,GENERAL_PRODUCT_QUERY,davinci,turbo,babbage,SEPARATORS
-from utils import get_db_connection
-from openai_utils import get_embedding
+from constants import GENERAL_QUERY,SYMPTOM_QUERY,PRODUCT_QUERY,PROGRAM_QUERY,GENERAL_PRODUCT_QUERY,davinci,turbo,SEPARATORS
+from utils import get_db_connection,get_props_from_message
+
 # Insert your API key
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -66,20 +66,6 @@ def get_answer_from_gpt(row,prompt,level):
     TOKENS,TEMPERATURE,MODEL,STOP = 200,0,davinci,[" Human:", " Bot:"]
     response = openai.Completion.create(
     model=MODEL,
-    # prompt="""
-    # ResMed is a global leader in developing and manufacturing medical devices and software solutions for the diagnosis, treatment, and management of sleep apnea, chronic obstructive pulmonary disease (COPD), and other respiratory conditions. ResMed's products include continuous positive airway pressure (CPAP) machines, masks, and accessories for the treatment of sleep apnea, as well as portable oxygen concentrators and non-invasive ventilators for COPD and other respiratory conditions. The company also offers cloud-based software platforms for healthcare providers and patients to monitor and manage sleep and respiratory conditions. More about resmed at https://www.resmed.co.in/
-    # You are resmed intelligent chatbot designed to identify the intent and most likely cause of their symptoms and help individuals with information on Resmed's services and products, providing them advice on how to improve their sleep quality. 
-
-    # Instructions: 
-    # - Only answer questions related to sleep, sleep medicine, mask, snoring, sleep apnea, insomnia, ResMed products, sleep health, and ResMed sleep tests and trackers.  Along with the answers provide intent, entity and suggest resmed products
-    # - If you're unsure of an answer, you can say I am a Resmed chatbot, I can't help with that
-
-    # Human: is CPAP safe to use
-    # AI: Yes, CPAP is a safe and effective treatment for sleep apnea. It is designed to provide a steady stream of air pressure to keep your airway open while you sleep. The air pressure is adjusted to your individual needs and monitored by your doctor. ResMed offers a range of CPAP masks and machines to help you get the best possible sleep. Intent: CPAP Safe, Entity: CPAP, Suggested Product: ResMed CPAP masks and machines.
-
-    # Human: what is python
-    # AI:
-    # """,
     prompt=prompt,
     temperature=TEMPERATURE,
     max_tokens=TOKENS,
@@ -93,7 +79,7 @@ def get_answer_from_gpt(row,prompt,level):
 
 def find_what_user_expects(row,user_input,level):
     # Multi shot learning
-    PROMPT,TOKENS,TEMPERATURE,MODEL,STOP = f"Find what user expects from the chatbot system Expected Responses are {GENERAL_QUERY},{SYMPTOM_QUERY},{GENERAL_PRODUCT_QUERY},{PRODUCT_QUERY},{PROGRAM_QUERY} H:do you sell mask A:{GENERAL_QUERY},{GENERAL_PRODUCT_QUERY},H: I forget a lot and not able to concentrate A:{SYMPTOM_QUERY} H: Does resmed provide CPAP Products A:{GENERAL_QUERY} H: I have Mood disruptions, especially anxiety, depression and irritability A:{SYMPTOM_QUERY} H: How many hours should i sleep daily A:{GENERAL_QUERY} H:What is the price of CPAP mask A:{PRODUCT_QUERY} H:Write a program A:{PROGRAM_QUERY} H:do you also sell cushion A:{GENERAL_PRODUCT_QUERY} H:{user_input} A:",10,0,davinci,[" H:", " A:"]
+    PROMPT,TOKENS,TEMPERATURE,MODEL,STOP = f"Find what user expects from the chatbot system Expected Responses are {SYMPTOM_QUERY},{PRODUCT_QUERY} H: I forget a lot and not able to concentrate A:{SYMPTOM_QUERY} H: I have Mood disruptions, especially anxiety, depression and irritability A:{SYMPTOM_QUERY} H:What is the price of CPAP mask A:{PRODUCT_QUERY} H:{user_input} A:",10,0,davinci,[" H:", " A:"]
     response = openai.Completion.create(
     model=MODEL,
     prompt=PROMPT,
@@ -119,12 +105,12 @@ def show_products(output):
                 prod_response += products + "\n"
     return prod_response
 
-def product_query(row,user_input, bot_response,level):
+def product_query(row,user_input,level):
     output = general_product(row,user_input,level)
     if len(output) == 0:
         bot_response = UNABLE_TO_FIND_PRODUCTS_IN_DB
     else:
-        bot_response += show_products(output)
+        bot_response = show_products(output)
     return bot_response
 
 def identify_symptom(user_input):
@@ -132,13 +118,14 @@ def identify_symptom(user_input):
     # Multi shot learning
     response = openai.Completion.create(
     model="text-davinci-003",
-    prompt=f"Snoring, sleep apnea, and insomnia are all different sleep disorders with distinct symptoms and causes. Here are some differences that may help you differentiate between the three:Snoring:Characterized by loud, rhythmic breathing sounds during sleep,Usually harmless, although it can still disrupt your sleep or your partner's sleep Typically caused by a partial obstruction in the airway, often due to relaxed muscles in the throat or nasal congestion,Usually associated with pauses in breathing or gasping sensations during sleep,Change in the level of attention, concentration, or memory.Sleep apnea:Characterized by pauses in breathing or shallow breaths during sleep,Often accompanied by loud snoring and gasping or choking sensations during sleep,Can lead to excessive daytime sleepiness,Being Overweight(adds fat around the neck and airway),Having inflamed tonsils and adenoids,Having blocked nose due to allergy or cold,Structural problem with shape of the nose, neck or jaw,Frequently urinating at night,Waking up with night sweats,High blood pressure,Mood swings,Impotence and reduced sex drive.Insomnia:A sleep disorder characterized by difficulty falling asleep,staying asleep,or waking up too early in the morning,Often associated with anxiety, stress, or other psychological factors, as well as medical conditions or medications,Can lead to excessive daytime sleepiness, fatigue, irritability, difficulty concentrating, and other health problems,Making more mistakes or having accidents,Feel tired or sleepy during the day.Extract Sleep disorder from user input.Q: Sore throat on awakening A: Snoring Q: Excessive daytime sleepiness A: Snoring Q:I have fever A: Not a sleep disorder Q: Mood Swings A: Sleep Apnea Q: Difficulty staying asleep A: Insomnia Q:{user_input}",
+    prompt=f"Snoring, sleep apnea, and insomnia are all different sleep disorders with distinct symptoms and causes. Here are some differences that may help you differentiate between the three:Snoring:Characterized by loud, rhythmic breathing sounds during sleep,Usually harmless, although it can still disrupt your sleep or your partner's sleep Typically caused by a partial obstruction in the airway, often due to relaxed muscles in the throat or nasal congestion,Usually associated with pauses in breathing or gasping sensations during sleep,Change in the level of attention, concentration, or memory.Sleep apnea:Characterized by pauses in breathing or shallow breaths during sleep,Often accompanied by loud snoring and gasping or choking sensations during sleep,Can lead to excessive daytime sleepiness,Being Overweight(adds fat around the neck and airway),Having inflamed tonsils and adenoids,Having blocked nose due to allergy or cold,Structural problem with shape of the nose, neck or jaw,Frequently urinating at night,Waking up with night sweats,High blood pressure,Mood swings,Impotence and reduced sex drive.Insomnia:A sleep disorder characterized by difficulty falling asleep,staying asleep,or waking up too early in the morning,Often associated with anxiety, stress, or other psychological factors, as well as medical conditions or medications,Can lead to excessive daytime sleepiness, fatigue, irritability, difficulty concentrating, and other health problems,Making more mistakes or having accidents,Feel tired or sleepy during the day.Extract Sleep disorder from user input.Q: Sore throat on awakening A: Snoring Q: Excessive daytime sleepiness A: Snoring Q:I have fever A: Not a sleep disorder Q: Mood Swings A: Sleep Apnea Q: Difficulty staying asleep A: Insomnia Q:{user_input} A:",
     max_tokens=TOKENS,
     temperature=0,
     )
-    return response.choices[0].text.strip().replace("A: ","")
+    print("->>>>>>",response)
+    return response.choices[0].text.strip()
 
-def get_products(row,query_type,user_input,bot_response):
+def get_products(row,query_type,user_input):
     prod_response=""
     debug_steps(row,f"{query_type}",level=3)
     if "cheap" in user_input or "cheapest" in user_input:
@@ -148,12 +135,76 @@ def get_products(row,query_type,user_input,bot_response):
             output = cheap_products(row,outputs[-1],level=3)
         prod_response += show_products(output)
     else:
-        prod_response += product_query(row,user_input, bot_response,level=3)
+        prod_response += product_query(row,user_input,level=3)
     return prod_response
+
+
+def query_to_resmed(row,query_type,user_input,response_from_gpt):
+    response,intent,entity,product_suggestion = get_props_from_message(response_from_gpt)
+    product_suggestion=product_suggestion.replace("ResMed","")
+    debug_attribute("Response",response)
+    debug_attribute("intent",intent)
+    debug_attribute("entity",entity)
+    debug_attribute("product_suggestion",product_suggestion)
+    bot_response = ""
     
+    if PRODUCT_QUERY==query_type:
+        prod_response=get_products(row,query_type,product_suggestion)
+        print("->>>>>> Check here",prod_response)
+        bot_response = response + prod_response
+    elif(SYMPTOM_QUERY==query_type):
+        symptom = identify_symptom(user_input)
+        debug_attribute("Identify symptom",symptom)
+        found_symptom = symptom=="Sleep Apnea" or symptom=="Insomnia" or symptom=="Snoring"
+        if (SYMPTOM_QUERY in query_type):
+            if(found_symptom):
+                debug_steps(row,f"{SYMPTOM_QUERY},found symptom & suggest products",level=5)
+                MSG = f"This appears to be a condition called {symptom}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor."
+                SLEEP_ASSESSMENT_INFO="For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'"
+                pr_cyan(SLEEP_ASSESSMENT_INFO)
+                bot_response= f"{MSG}\n{SLEEP_ASSESSMENT_INFO}"
+                output = product(row,symptom,level=6)
+                prod_response = show_products(output)
+                bot_response += prod_response
+            elif(symptom=="common"):
+                debug_steps(row,f"{SYMPTOM_QUERY}, Symptoms are common",level=5)
+                bot_response = "Your symptoms are more common to define the exact syndrome. can you please provide more detail:"
+            else:
+                bot_response = response
+    return bot_response
+  
+def write_to_db(db,user_input,bot_response,probability,response_accepted,response_time,time_stamp,source):
+    if db:
+        query = f"INSERT INTO chatbot_datas (prompt,completion,probability,response_accepted,response_time,time_stamp,source) VALUES('{user_input}','{bot_response}','{probability}','{response_accepted}',{response_time},'{time_stamp}','{source}');"
+        debug(f"Query to execute - {query}")
+        cur.execute(query)
+        conn.commit()
+        debug("Data added successfully")
+    else:
+        debug("DB insert is disabled")
+     
+def write_logs_to_csv(mode,fields,row,max_columns,bot_response):
+    if VERBOSE=="True":
+        debug(f"Writing the logs in {DEBUG_CSV}")
+        with open(DEBUG_CSV, mode) as csvfile: 
+            # creating a csv writer object 
+            csvwriter = csv.writer(csvfile) 
+                
+            if mode=='w':
+                # writing the fields 
+                csvwriter.writerow(fields) 
+                
+            row_length = len(row)
+            if(row_length!=max_columns-1):
+                dummy_rows_to_add = max_columns-row_length-2
+                row.extend(('-'*dummy_rows_to_add).split('-'))
+            # writing the data rows 
+            row[1] = bot_response
+            csvwriter.writerows([row])
+  
 def resmed_chatbot(user_input,message_log,db=True):
     MODE = 'w'
-    fields = ["user_input","bot_response","level1","level2","level3","level4","level5","level6","level7"]
+    fields = ["user_input","bot_response","level1","level2","level3","level4","level5","level6","level7","level8"]
     MAX_COLUMNS = len(fields)
     row = [""] * MAX_COLUMNS
     row[0] = user_input
@@ -166,6 +217,8 @@ def resmed_chatbot(user_input,message_log,db=True):
     # Append user_input 
     prompt=f"{message_log}Human:{user_input}\nAI:"
     prompt = prompt.replace(SEPARATORS,'')
+    
+    debug_steps(row,f"Prompt - {prompt}",level=8)
     
     # Append question mark at end of user_input
     # user_input += "?"
@@ -185,40 +238,19 @@ def resmed_chatbot(user_input,message_log,db=True):
     start_time = time.time()
         
 
-    response_from_resmed = get_answer_from_gpt(row,prompt,level=1)
+    response_from_gpt = get_answer_from_gpt(row,prompt,level=1)
     query_type = find_what_user_expects(row,user_input,level=2).strip() 
     debug_attribute("query_type - ",query_type)  
-    debug_steps(row,f"Resmed response - {response_from_resmed}",level=7)
+    debug_steps(row,f"Resmed response - {response_from_gpt}",level=7)
     
-    if("sorry" in response_from_resmed and query_type!=SYMPTOM_QUERY and query_type!=PRODUCT_QUERY and query_type!=GENERAL_PRODUCT_QUERY):
-        bot_response=response_from_resmed
-    elif(query_type == GENERAL_PRODUCT_QUERY):
-            prod_response=get_products(row,query_type,user_input,bot_response)
-            bot_response = response_from_resmed + prod_response
-    elif PRODUCT_QUERY==query_type:
-            bot_response=get_products(row,query_type,user_input,bot_response)
-    elif(SYMPTOM_QUERY==query_type):
-        
-        db_input_or_bot_response = identify_symptom(user_input)
-        debug_attribute("Identify symptom",db_input_or_bot_response)
-        found_symptom = db_input_or_bot_response=="Sleep Apnea" or db_input_or_bot_response=="Insomnia" or db_input_or_bot_response=="Snoring"
-        if (SYMPTOM_QUERY in query_type):
-            if(found_symptom):
-                source = ""
-                debug_steps(row,f"{SYMPTOM_QUERY},found symptom & suggest products",level=5)
-                MSG = f"This appears to be a condition called {db_input_or_bot_response}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor."
-                SLEEP_ASSESSMENT_INFO="For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'"
-                pr_cyan(SLEEP_ASSESSMENT_INFO)
-                bot_response= f"{MSG}\n{SLEEP_ASSESSMENT_INFO}"
-                output = product(row,db_input_or_bot_response,level=6)
-                prod_response = show_products(output)
-                bot_response += prod_response
-            elif(db_input_or_bot_response=="common"):
-                debug_steps(row,f"{SYMPTOM_QUERY}, Symptoms are common",level=5)
-                bot_response = "Your symptoms are more common to define the exact syndrome. can you please provide more detail:"
+    # and query_type!=PRODUCT_QUERY and query_type!=GENERAL_PRODUCT_QUERY 
+    if("sorry" in response_from_gpt and query_type!="" and "Resmed chatbot" in response_from_gpt):
+        bot_response=response_from_gpt
+    else:
+        bot_response = query_to_resmed(row,query_type,user_input,response_from_gpt)
     
     if((not bot_response or len(bot_response)<10) and bot_response!=RESPONSE_FOR_INVALID_QUERY):
-        bot_response = response_from_resmed
+        bot_response = response_from_gpt
 
         
     response_time = time.time() - start_time
@@ -231,39 +263,20 @@ def resmed_chatbot(user_input,message_log,db=True):
     bot_response = bot_response.replace("'", "''")[:999]
     source = source.replace("'", "''")
     
-    if db:
-        query = f"INSERT INTO chatbot_datas (prompt,completion,probability,response_accepted,response_time,time_stamp,source) VALUES('{user_input}','{bot_response}','{probability}','{response_accepted}',{response_time},'{time_stamp}','{source}');"
-        debug(f"Query to execute - {query}")
-        cur.execute(query)
-        conn.commit()
-        debug("Data added successfully")
-    else:
-        debug("DB insert is disabled")
+    write_to_db(db,user_input,bot_response,probability,response_accepted,response_time,time_stamp,source)
+    
     debug(f"Response time in seconds - {response_time}")
     
-    if VERBOSE=="True":
-        debug(f"Writing the logs in {DEBUG_CSV}")
-        with open(DEBUG_CSV, MODE) as csvfile: 
-            # creating a csv writer object 
-            csvwriter = csv.writer(csvfile) 
-                
-            if MODE=='w':
-                # writing the fields 
-                csvwriter.writerow(fields) 
-                
-            row_length = len(row)
-            if(row_length!=MAX_COLUMNS-1):
-                dummy_rows_to_add = MAX_COLUMNS-row_length-2
-                row.extend(('-'*dummy_rows_to_add).split('-'))
-            # writing the data rows 
-            row[1] = bot_response
-            csvwriter.writerows([row])
+    write_logs_to_csv(MODE,fields,row,MAX_COLUMNS,bot_response)
     
     # Add the chatbot's response to the conversation history and print it to the console
-    if  response_from_resmed!=RESPONSE_FOR_INVALID_QUERY or response_from_resmed!=UNABLE_TO_FIND_PRODUCTS_IN_DB or "sorry" in response_from_resmed:
+    if response_from_gpt!=RESPONSE_FOR_INVALID_QUERY and response_from_gpt!=UNABLE_TO_FIND_PRODUCTS_IN_DB and "sorry" not in response_from_gpt and "Resmed chatbot" not in response_from_gpt:
         print("Inside if")
         # User asked an invalid query to our system so, let's remove their query from message logs
         message_log+=f"Human:{user_input}\nBot:{bot_response}{SEPARATORS}"
+    else:
+        print("Inside else ->>>>>>>>>")
+        pr_cyan(response_from_gpt)
 
     pr_bot_response(bot_response)
     return bot_response,message_log
