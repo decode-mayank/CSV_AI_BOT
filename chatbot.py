@@ -112,14 +112,14 @@ def show_products(output):
                 prod_response += products + "\n"
     return prod_response
 
-def product_query(row,entity,user_input,level):
+def get_general_product(row,entity,user_input,level):
     output, response_token_product = general_product(row,entity,user_input,level)
 
     if len(output) == 0:
         bot_response = UNABLE_TO_FIND_PRODUCTS_IN_DB
     else:
         bot_response = show_products(output)
-    return bot_response
+    return bot_response,response_token_product
 
 def identify_symptom(user_input):
     TOKENS = 100
@@ -148,8 +148,9 @@ def get_products(row,query_type,user_input,entity):
         prod_response += show_products(output)
     else:
 
-        prod_response += product_query(row,entity,user_input,level=3)
-    return prod_response
+        response,response_token_product = get_general_product(row,entity,user_input,level=3)
+        prod_response += response
+    return prod_response,response_token_product
 
 
 def query_to_resmed(row,query_type,user_input,response_from_gpt):
@@ -160,14 +161,17 @@ def query_to_resmed(row,query_type,user_input,response_from_gpt):
     debug_attribute("entity",entity)
     debug_attribute("product_suggestion",product_suggestion)
     bot_response = ""
+    tokens = 0
     
     if PRODUCT_QUERY==query_type:
         prod_response, response_token_product=get_products(row,query_type,user_input,entity)
         print("->>>>>> Check here",prod_response)
+        tokens = response_token_product
         bot_response = response + prod_response
     elif(SYMPTOM_QUERY==query_type):
-        symptom = identify_symptom(user_input)
+        symptom,symptom_tokens = identify_symptom(user_input)
         debug_attribute("Identify symptom",symptom)
+        tokens = symptom_tokens
         found_symptom = symptom=="Sleep Apnea" or symptom=="Insomnia" or symptom=="Snoring"
         if (SYMPTOM_QUERY in query_type):
             if(found_symptom):
@@ -176,15 +180,16 @@ def query_to_resmed(row,query_type,user_input,response_from_gpt):
                 SLEEP_ASSESSMENT_INFO="For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'"
                 pr_cyan(SLEEP_ASSESSMENT_INFO)
                 bot_response= f"{MSG}\n{SLEEP_ASSESSMENT_INFO}"
-                output = product(row,symptom,level=6)
+                output,prod_tokens = product(row,symptom,level=6)
                 prod_response = show_products(output)
                 bot_response += prod_response
+                tokens += prod_tokens
             elif(symptom=="common"):
                 debug_steps(row,f"{SYMPTOM_QUERY}, Symptoms are common",level=5)
                 bot_response = "Your symptoms are more common to define the exact syndrome. can you please provide more detail:"
     else:
         bot_response = response
-    return bot_response
+    return bot_response,tokens
   
 def write_to_db(db,user_input,bot_response,probability,response_accepted,response_time,time_stamp,source):
     if db:
@@ -251,22 +256,27 @@ def resmed_chatbot(user_input,message_log,db=True):
     start_time = time.time()
         
     
-    response_from_gpt, response_token = get_answer_from_gpt(row,prompt,level=1)
-    query_type,response_tokens = find_what_user_expects(row,user_input,level=2)
+    response_from_gpt, gpt_tokens = get_answer_from_gpt(row,prompt,level=1)
+    query_type,find_what_user_tokens = find_what_user_expects(row,user_input,level=2)
     query_type = query_type.strip()
+    debug_attribute("gpt_tokens - ",gpt_tokens)  
+    debug_attribute("find_what_user_tokens - ",find_what_user_tokens)  
     debug_attribute("query_type - ",query_type)  
     debug_steps(row,f"Resmed response - {response_from_gpt}",level=7)
+    
+    query_to_resmed_tokens = 0
     
     # and query_type!=PRODUCT_QUERY and query_type!=GENERAL_PRODUCT_QUERY 
     if("sorry" in response_from_gpt and query_type!="" and "Resmed chatbot" in response_from_gpt):
         bot_response=response_from_gpt
     else:
-        bot_response = query_to_resmed(row,query_type,user_input,response_from_gpt)
+        bot_response,tokens = query_to_resmed(row,query_type,user_input,response_from_gpt)
+        query_to_resmed_tokens = tokens
     
     if((not bot_response or len(bot_response)<10) and bot_response!=RESPONSE_FOR_INVALID_QUERY):
         bot_response = response_from_gpt
 
-        
+    debug_attribute("query_to_resmed_tokens - ",query_to_resmed_tokens)   
     response_time = time.time() - start_time
     
     # Bot response may include single quotes when we pass that with conn.execute will return syntax error
@@ -280,8 +290,8 @@ def resmed_chatbot(user_input,message_log,db=True):
     write_to_db(db,user_input,bot_response,probability,response_accepted,response_time,time_stamp,source)
 
     #symptom,response_token_cost = identify_symptom(user_input)
-    token_calculation = response_token + response_tokens + response_token_symptom + response_token_product
-    cost_of_davinci = 0.024
+    token_calculation = gpt_tokens + find_what_user_tokens  + query_to_resmed_tokens
+    cost_of_davinci = 0.0200
     cost = (token_calculation * cost_of_davinci) / 1000
     
     debug_steps(row,f"total cost - {cost}",level="cost")
