@@ -187,6 +187,9 @@ def query_to_resmed(row,query_type,user_input,response_from_gpt):
             elif(symptom=="common"):
                 debug_steps(row,f"{SYMPTOM_QUERY}, Symptoms are common",level=5)
                 bot_response = "Your symptoms are more common to define the exact syndrome. can you please provide more detail:"
+            else:
+                # We will reach this block when we ask the question like Is diabetes a disease?
+                bot_response = response
     else:
         bot_response = response
     return bot_response,tokens
@@ -267,7 +270,8 @@ def resmed_chatbot(user_input,message_log,db=True):
     query_to_resmed_tokens = 0
     
     # and query_type!=PRODUCT_QUERY and query_type!=GENERAL_PRODUCT_QUERY 
-    if("sorry" in response_from_gpt and query_type!="" and "Resmed chatbot" in response_from_gpt):
+    response_in_lower_case = response_from_gpt.lower()
+    if("sorry" in response_in_lower_case and query_type!="" and "resmed chatbot" in response_in_lower_case):
         bot_response=response_from_gpt
     else:
         bot_response,tokens = query_to_resmed(row,query_type,user_input,response_from_gpt)
