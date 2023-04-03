@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
      - how to stop snoring
      - what can i do when i can't sleep
   d) Removed unnecessary levels
+  e) User input should be less than or equal to 300 characters 
+     (Took reference from bing chat)
 
 
 ### Added 

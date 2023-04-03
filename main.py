@@ -43,8 +43,8 @@ if __name__ == '__main__':
 
     while True:
         input_text = input("User: ").strip()
-        if len(input_text) > 100:
-            response = ("Please type a message that is less than 100 characters.")
+        if len(input_text) > 300:
+            response = ("Please type a message that is less than 300 characters.")
             pr_red(response)
         else:                       
             # Store only last 2 conversation and prompt conversation
