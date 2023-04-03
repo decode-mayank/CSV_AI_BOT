@@ -46,15 +46,7 @@ if __name__ == '__main__':
         if len(input_text) > 100:
             response = ("Please type a message that is less than 100 characters.")
             pr_red(response)
-        else:            
-            debug_attribute("Current Message_log Length",len(message_log))
-              
-            if message_log.find(SEPARATORS) >= 4:
-                messages = message_log.split(SEPARATORS)
-                last_two_messages = messages[-3:]
-                message_log = messages[0] + SEPARATORS + last_two_messages[0] + SEPARATORS+ last_two_messages[1]+SEPARATORS+ last_two_messages[2]
-                
-                
+        else:                       
             # Store only last 2 conversation and prompt conversation
             message_log = get_last_n_message_log(message_log,2)
             

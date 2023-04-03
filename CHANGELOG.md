@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+### Changed
+- V4 Changes
+  a) Drop find_what_user_expects prompt and rely on identify_symptom prompt
+  b) Added sleep assessment link in base prompt
+  c) Improve identify_symptom prompt - So, that it should not detect below questions as symptom
+     - How long does it take to treat insomnia?
+     - how to stop snoring
+     - what can i do when i can't sleep
+  d) Removed unnecessary levels
+
+
 ### Added 
 - Calculate the price for each response
 

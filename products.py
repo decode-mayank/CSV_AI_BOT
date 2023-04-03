@@ -3,6 +3,7 @@ import os
 
 import openai
 import sqlparse
+import psycopg2
 from dotenv import load_dotenv
 
 from debug_utils import debug_steps,debug_attribute
@@ -14,7 +15,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # constants
 DEFAULT_RESPONSE_WHEN_NO_QUERY_FOUND= "Please rephrase your query"
-MODEL,TEMPERATURE,TOKENS = davinci,0,100
+MODEL,TEMPERATURE,TOKENS = davinci,0,200
 
 conn,cur = get_db_connection()
 
@@ -30,11 +31,12 @@ def call_text_completion(prompt):
     return response, response_token_product
 
 def execute_query(prompt,row,response,level,fn_name):
+    results = []
     debug_attribute("DB response",response)
     query = response['choices'][0]['text']
     start = "SELECT"
     start_pos = query.find(start)
-    query = query[(start_pos-1):].strip().replace("AND", "OR")
+    query = query[(start_pos-1):].strip()
     query = sqlparse.format(query, reindent=True, keyword_case='upper')
     debug_steps(row,f"{fn_name} - {response}, Additional information: Query-{query},Model-{MODEL},Tokens-{TOKENS}, TEMPERATURE-{TEMPERATURE},PROMPT-{prompt}",level=level)
     if(query):
@@ -42,7 +44,12 @@ def execute_query(prompt,row,response,level,fn_name):
             cur.execute(query)
         except:
             pass
-        return cur.fetchall()
+        try:
+            results = cur.fetchall()
+        except psycopg2.ProgrammingError:
+            # If query is invalid then we will get ProgrammingError
+            pass
+        return results
     else:
         return DEFAULT_RESPONSE_WHEN_NO_QUERY_FOUND
 
@@ -70,11 +77,10 @@ def cheap_products(row,text,level):
     return(output, response_token_product)
 
 
-def general_product(row,text,user_input,level):  
-    if text=="" or "Product" in text:
-        prompt=generate_prompt(user_input,"Suggest any 2 product as per user Query. Write an SQL query that retrieves data from table based on a specified condition. Use only tags in condition if there is any product OR category mentioned in user input and if Multiple conditions go only with OR command. Use atmost three conditions in where clause")
-    else:
-        prompt=generate_prompt(text,"Suggest any 2 product as per user Query. Write an SQL query that retrieves data from table based on a specified condition. Use only tags in condition if there is any product OR category mentioned in user input and if Multiple conditions go only with OR command. Use atmost three conditions in where clause")
+def general_product(row,user_input,level): 
+    debug_attribute("User input for sql query",user_input) 
+    # Use only tags in condition if there is any product OR category mentioned in user input and
+    prompt=generate_prompt(user_input,"Suggest any 2 product as per user Query. Write an SQL query that retrieves data from table based on a specified condition. Use only tags in condition if there is any product OR category mentioned in user input and if Multiple conditions go only with OR command. Use atmost three conditions in where clause")
     response,response_token_product = call_text_completion(prompt)
     output = execute_query(prompt,row,response,level,general_product.__name__)
     return(output, response_token_product)
