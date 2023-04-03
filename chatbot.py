@@ -198,10 +198,10 @@ def query_to_resmed(row,user_input,response_from_gpt):
     else:
         # We will reach this block when we ask the question like Is diabetes a disease?
         query_to_db = ""
-        if "None" in price_range:
-            query_to_db=f"{entity},{product_suggestion}"
-        else:
-            query_to_db=f"{price_range}"
+        # if "None" in price_range:
+        query_to_db=f"{entity},{product_suggestion}"
+        # else:
+        #     query_to_db=f"{price_range}"
         debug_attribute("query_to_db",query_to_db)
         prod_response, response_token_product=get_products(row,user_input,query_to_db)
         print("->>>>>> Check here",prod_response)
