@@ -206,6 +206,10 @@ def query_to_resmed(row,user_input,response_from_gpt):
         prod_response, response_token_product=get_products(row,user_input,query_to_db)
         print("->>>>>> Check here",prod_response)
         tokens = response_token_product
+        if "$" in response:
+            # What is the price of BongoRx Starter Kit
+            response = ""
+            raw_response=""
         bot_response = response + prod_response
         raw_response = raw_response + prod_response
         
