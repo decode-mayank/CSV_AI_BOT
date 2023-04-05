@@ -23,7 +23,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 DEBUG_CSV = "debug.csv"
 
 RESPONSE_FOR_INVALID_QUERY = "I am a Resmed chatbot, I can't help with that"
-UNABLE_TO_FIND_PRODUCTS_IN_DB = "Unable to find products in DB"
+UNABLE_TO_FIND_PRODUCTS_IN_DB = "Unable to find products in DB" if os.getenv("VERBOSE") == "True" else "" 
 
 YES = "Yes"
 NO = "No"
@@ -106,7 +106,7 @@ def identify_symptom(row,user_input,level):
     Insomnia:A sleep disorder characterized by difficulty falling asleep,staying asleep,or waking up too early in the morning,Often associated with anxiety, stress, or other psychological factors, as well as medical conditions or medications,Can lead to excessive daytime sleepiness, fatigue, irritability, difficulty concentrating, and other health problems,Making more mistakes or having accidents,Feel tired or sleepy during the day.
     Extract intent from user input.
     Intent can be Sleep Apnea, Insomnia, Snoring, Not a sleep disorder, Question
-    Q: Sore throat on awakening A: Snoring Q: Excessive daytime sleepiness A: Snoring Q: I have fever A: Not a sleep disorder Q: Mood Swings A: Sleep Apnea Q: Difficulty staying asleep A: Insomnia Q: I have insomnia A: Not a sleep disorder Q: Find symptom sleep apnea A: Not a sleep disorder  Q: what should I do when not getting sleep in middle of the night A: Question Q: {user_input} A: """,100,0,davinci,["Q: ", "A: "]
+    Q: Sore throat on awakening A: Snoring Q: Excessive daytime sleepiness A: Snoring Q: I have fever A: Not a sleep disorder Q: Mood Swings A: Sleep Apnea Q: Difficulty staying asleep A: Insomnia Q: I have insomnia A: Not a sleep disorder Q: Find symptom sleep apnea A: Not a sleep disorder  Q: what should I do when not getting sleep in middle of the night A: Question Q: Find {user_input}? A: """,100,0,davinci,["Q: ", "A: "]
     # Multi shot learning
     response = openai.Completion.create(
     model=MODEL,
@@ -128,7 +128,6 @@ def show_products(output):
         output = output if len(output)==1 else output[0:2]
         debug_attribute("DB Output",output)
         if(len(items)==3):
-            pr_cyan(f"Here are some products, which matches your search {output}")
             for prod, url,price in output:
                 products = prod + " - " + url + " - $" + str(price)
                 prod_response += products + "\n"
@@ -182,7 +181,6 @@ def query_to_resmed(row,user_input,response_from_gpt):
         debug_steps(row,f"{SYMPTOM_QUERY},found symptom & suggest products",level=4)
         MSG = f"This appears to be a condition called {symptom}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor."
         SLEEP_ASSESSMENT_INFO="For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'"
-        pr_cyan(SLEEP_ASSESSMENT_INFO)
         
         # We found out symptom of the user. So, let's override the response came from chatgpt
         bot_response= f"{MSG}\n{SLEEP_ASSESSMENT_INFO}"
@@ -327,9 +325,7 @@ def resmed_chatbot(user_input,message_log,db=True):
     debug(f"Response time in seconds - {response_time}")
 
     write_logs_to_csv(MODE,fields,row,MAX_COLUMNS,bot_response)
-    
-    print(f"->>>>> {raw_gpt_response} {UNABLE_TO_FIND_PRODUCTS_IN_DB}")
-    
+        
     # Add the chatbot's response to the conversation history and print it to the console
     if raw_gpt_response not in UNABLE_TO_FIND_PRODUCTS_IN_DB and valid_query and raw_gpt_response not in RESPONSE_FOR_INVALID_QUERY:
         # User asked an invalid query to our system so, let's remove their query from message logs
@@ -337,4 +333,5 @@ def resmed_chatbot(user_input,message_log,db=True):
 
 
     pr_bot_response(bot_response)
+    print(f"Total cost - {cost}")
     return bot_response,message_log
