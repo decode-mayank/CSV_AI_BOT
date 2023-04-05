@@ -6,7 +6,7 @@ import gradio as gr
 import pandas as pd
 import numpy as np
 
-from main import resmed_chatbot
+from Resmed.file import webpage_chatbot
 
 
 # Insert your API key
@@ -27,7 +27,7 @@ def chatgpt_clone(input, history):
     s = list(sum(history, ()))
     s.append(input)
     message_log.append({"role": "user", "content": input})
-    output = resmed_chatbot(input, message_log)
+    output = webpage_chatbot(input, message_log)
     message_log.append({"role": "assistant", "content": output})
     history.append((input, output))
     return history, history 

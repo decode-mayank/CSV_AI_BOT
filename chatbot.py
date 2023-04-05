@@ -2,18 +2,17 @@ from datetime import datetime
 import time
 import os
 import csv 
-
 import openai
 import pandas as pd
 import numpy as np
 from products import product, other_products, cheap_products, general_product
 from dotenv import load_dotenv
 from openai.embeddings_utils import cosine_similarity
-
 from colors import pr_cyan,pr_bot_response
 from debug_utils import debug_steps,debug, debug_attribute
 from constants import SYMPTOM_QUERY,PRODUCT_QUERY,davinci,turbo,SEPARATORS,LOG,INITIAL_PROMPT,INITIAL_RESPONSE,COST
-from utils import get_db_connection,get_props_from_message
+from utils import get_db_connection,get_props_from_message, write_to_db, write_logs_to_csv
+from Resmed.file import RESPONSE_FOR_INVALID_QUERY, SLEEP_ASSESSMENT_INFO, chatbot
 
 # Insert your API key
 load_dotenv()
@@ -22,8 +21,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 # constants
 DEBUG_CSV = "debug.csv"
 
-RESPONSE_FOR_INVALID_QUERY = "I am a Resmed chatbot, I can't help with that"
-UNABLE_TO_FIND_PRODUCTS_IN_DB = "Unable to find products in DB" if os.getenv("VERBOSE") == "True" else "" 
+UNABLE_TO_FIND_PRODUCTS_IN_DB = "Unable to find products in DB"
 
 YES = "Yes"
 NO = "No"
@@ -157,7 +155,7 @@ def get_products(row,user_input,query_to_db):
     return prod_response,response_token_product
 
 
-def query_to_resmed(row,user_input,response_from_gpt):
+def query_to_webpage(row,user_input,response_from_gpt):
     raw_response = response_from_gpt
     response,intent,entity,product_suggestion,price_range = get_props_from_message(response_from_gpt)
     product_suggestion=product_suggestion.lower().replace("resmed","")
@@ -181,6 +179,7 @@ def query_to_resmed(row,user_input,response_from_gpt):
         debug_steps(row,f"{SYMPTOM_QUERY},found symptom & suggest products",level=4)
         MSG = f"This appears to be a condition called {symptom}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor."
         SLEEP_ASSESSMENT_INFO="For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'"
+        pr_cyan(SLEEP_ASSESSMENT_INFO)
         
         # We found out symptom of the user. So, let's override the response came from chatgpt
         bot_response= f"{MSG}\n{SLEEP_ASSESSMENT_INFO}"
@@ -212,37 +211,8 @@ def query_to_resmed(row,user_input,response_from_gpt):
         raw_response = raw_response + prod_response
         
     return bot_response,raw_response,tokens
-  
-def write_to_db(db,user_input,bot_response,probability,response_accepted,response_time,time_stamp,source):
-    if db:
-        query = f"INSERT INTO chatbot_datas (prompt,completion,probability,response_accepted,response_time,time_stamp,source) VALUES('{user_input}','{bot_response}','{probability}','{response_accepted}',{response_time},'{time_stamp}','{source}');"
-        debug(f"Query to execute - {query}")
-        cur.execute(query)
-        conn.commit()
-        debug("Data added successfully")
-    else:
-        debug("DB insert is disabled")
-     
-def write_logs_to_csv(mode,fields,row,max_columns,bot_response):
-    if VERBOSE=="True":
-        debug(f"Writing the logs in {DEBUG_CSV}")
-        with open(DEBUG_CSV, mode) as csvfile: 
-            # creating a csv writer object 
-            csvwriter = csv.writer(csvfile) 
-                
-            if mode=='w':
-                # writing the fields 
-                csvwriter.writerow(fields) 
-                
-            row_length = len(row)
-            if(row_length!=max_columns-1):
-                dummy_rows_to_add = max_columns-row_length-2
-                row.extend(('-'*dummy_rows_to_add).split('-'))
-            # writing the data rows 
-            row[1] = bot_response
-            csvwriter.writerows([row])
-  
-def resmed_chatbot(user_input,message_log,db=True):
+    
+def webpage_chatbot(user_input,message_log,db=True):
     MODE = 'w'
     fields = ["user_input","bot_response","level1","level2","level3","level4",
               INITIAL_PROMPT,INITIAL_RESPONSE,COST,LOG]
@@ -282,14 +252,14 @@ def resmed_chatbot(user_input,message_log,db=True):
         
     raw_gpt_response, gpt_tokens = get_answer_from_gpt(row,prompt,level=1)
     debug_attribute("gpt_tokens - ",gpt_tokens)  
-    debug_steps(row,f"Resmed response - {raw_gpt_response}",level=INITIAL_RESPONSE)
+    debug_steps(row,f"webpage response - {raw_gpt_response}",level=INITIAL_RESPONSE)
     
-    query_to_resmed_tokens = 0
+    query_to_tokens = 0
     
     # and query_type!=PRODUCT_QUERY and query_type!=GENERAL_PRODUCT_QUERY 
     response_in_lower_case = raw_gpt_response.lower()
     
-    if("sorry" in response_in_lower_case or "resmed chatbot" in response_in_lower_case):
+    if("sorry" in response_in_lower_case or chatbot in response_in_lower_case):
         '''
         We will reach this if query in this order
         i) Suggest me good songs which I can listen before sleep 
@@ -298,13 +268,13 @@ def resmed_chatbot(user_input,message_log,db=True):
         bot_response = raw_gpt_response
         valid_query = False
     else:
-        bot_response,raw_response,tokens = query_to_resmed(row,user_input,raw_gpt_response)
-        query_to_resmed_tokens = tokens
+        bot_response,raw_response,tokens = query_to_webpage(row,user_input,raw_gpt_response)
+        query_to_tokens = tokens
     
     if((not bot_response or len(bot_response)<10) and bot_response!=RESPONSE_FOR_INVALID_QUERY):
         bot_response = raw_gpt_response
 
-    debug_attribute("query_to_resmed_tokens - ",query_to_resmed_tokens)   
+    debug_attribute("query_to_tokens - ",query_to_tokens)   
     response_time = time.time() - start_time
     
     # Bot response may include single quotes when we pass that with conn.execute will return syntax error
@@ -317,7 +287,7 @@ def resmed_chatbot(user_input,message_log,db=True):
     
     write_to_db(db,user_input,bot_response,probability,response_accepted,response_time,time_stamp,source)
 
-    token_calculation = gpt_tokens + query_to_resmed_tokens
+    token_calculation = gpt_tokens + query_to_tokens
     cost_of_davinci = 0.0200
     cost = (token_calculation * cost_of_davinci) / 1000
     debug_steps(row,f"total cost - {cost}",level=COST)

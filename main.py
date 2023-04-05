@@ -1,7 +1,8 @@
 # Imports
-from chatbot import resmed_chatbot
+from Resmed.file import SYSTEM_PROMPT, initial_conversation
 from colors import pr_bot_response,pr_red
-from constants import SYSTEM_PROMPT,SEPARATORS
+from constants import SEPARATORS
+from chatbot import webpage_chatbot
 from debug_utils import debug_attribute
 from utils import add_seperators
 
@@ -34,14 +35,15 @@ if __name__ == '__main__':
     user input - White
     Bot output - Cyan(Normal)
     """
- 
-    pr_bot_response("Hello! I'm Resmed Chatbot, a virtual assistant designed to help you with any questions or concerns you may have about Resmed products or services. Resmed is a global leader in sleep apnea treatment, and we're committed to improving the quality of life for people who suffer from sleep-disordered breathing.")
+    
+    pr_bot_response(initial_conversation)
     
     
     message_log = SYSTEM_PROMPT
 
 
     while True:
+
         input_text = input("User: ").strip()
         if len(input_text) > 300:
             response = ("Please type a message that is less than 300 characters.")
@@ -50,7 +52,7 @@ if __name__ == '__main__':
             # Store only last 2 conversation and prompt conversation
             message_log = get_last_n_message_log(message_log,2)
             
-            response,message_log = resmed_chatbot(input_text,message_log)
+            response,message_log = webpage_chatbot(input_text,message_log)
             print("->>>>>>>",response)
             print("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>",message_log)
 
