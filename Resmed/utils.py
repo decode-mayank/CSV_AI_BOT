@@ -75,45 +75,46 @@ def chatbot_logic(row,user_input,response_from_gpt):
     bot_response = ""
     tokens = 0
     
-    # elif(intent=="None" or entity=="" or product_suggestion is None):
-    #     # We will reach this elif on this query - Is diabetes a disease?
-    #     bot_response = RESPONSE_FOR_INVALID_QUERY
-    #     raw_response = RESPONSE_FOR_INVALID_QUERY
-    symptom,symptom_tokens = identify_symptom(row,user_input,level=2)
-    found_symptom = symptom=="Sleep Apnea" or symptom=="Insomnia" or symptom=="Snoring"
-    if found_symptom:
-        debug_attribute("Identify symptom",symptom)
-        tokens = symptom_tokens
-        debug_steps(row,"Found symptom & suggest products",level=4)
-        MSG = f"This appears to be a condition called {symptom}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor."        
-        # We found out symptom of the user. So, let's override the response came from chatgpt
-        bot_response= f"{MSG}\n{SLEEP_ASSESSMENT_INFO}"
+    response_in_lower_case = response.lower()
+    if "insomnia" in response_in_lower_case or "sleep apnea" in response_in_lower_case or "snoring" in response_in_lower_case:
+        bot_response = response
         raw_response = bot_response
-        
-        output,prod_tokens = product(row,symptom,level=3)
-        prod_response = show_products(output)
-        
-        # Add product response to bot_response, raw_response
-        bot_response += prod_response
-        raw_response = raw_response + prod_response
-        tokens += prod_tokens
     else:
-        # We will reach this block when we ask the question like Is diabetes a disease?
-        query_to_db = ""
-        # if "None" in price_range:
-        query_to_db=f"{entity},{product_suggestion}"
-        # else:
-        #     query_to_db=f"{price_range}"
-        debug_attribute("query_to_db",query_to_db)
-        prod_response, response_token_product=get_products(row,user_input,query_to_db)
-        print("->>>>>> Check here",prod_response)
-        tokens = response_token_product
-        if "$" in response:
-            # What is the price of BongoRx Starter Kit
-            response = ""
-            raw_response=""
-        bot_response = response + prod_response
-        raw_response = raw_response + prod_response
+        symptom,symptom_tokens = identify_symptom(row,user_input,level=2)
+        found_symptom = symptom=="Sleep Apnea" or symptom=="Insomnia" or symptom=="Snoring"
+        if found_symptom:
+            debug_attribute("Identify symptom",symptom)
+            tokens = symptom_tokens
+            debug_steps(row,"Found symptom & suggest products",level=4)
+            MSG = f"This appears to be a condition called {symptom}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor."        
+            # We found out symptom of the user. So, let's override the response came from chatgpt
+            bot_response= f"{MSG}\n{SLEEP_ASSESSMENT_INFO}"
+            raw_response = bot_response
+            
+            output,prod_tokens = product(row,symptom,level=3)
+            prod_response = show_products(output)
+            
+            # Add product response to bot_response, raw_response
+            bot_response += prod_response
+            raw_response = raw_response + prod_response
+            tokens += prod_tokens
+        else:
+            # We will reach this block when we ask the question like Is diabetes a disease?
+            query_to_db = ""
+            # if "None" in price_range:
+            query_to_db=f"{entity},{product_suggestion}"
+            # else:
+            #     query_to_db=f"{price_range}"
+            debug_attribute("query_to_db",query_to_db)
+            prod_response, response_token_product=get_products(row,user_input,query_to_db)
+            print("->>>>>> Check here",prod_response)
+            tokens = response_token_product
+            if "$" in response:
+                # What is the price of BongoRx Starter Kit
+                response = ""
+                raw_response=""
+            bot_response = response + prod_response
+            raw_response = raw_response + prod_response
         
     return bot_response,raw_response,tokens
     

@@ -77,13 +77,8 @@ def chatbot(user_input,message_log,db=True):
     query_to_tokens = 0
     
     response_in_lower_case = raw_gpt_response.lower()
-    user_input_in_lower_case = user_input.lower()
     
-    if "Intent" in raw_gpt_response or "insomnia" in user_input_in_lower_case or "sleep apnea" in user_input_in_lower_case or "snoring" in user_input_in_lower_case:
-            bot_response = get_props_from_message(raw_gpt_response)[0]
-            raw_response = bot_response
-            valid_query=True
-    elif("sorry" in response_in_lower_case or CHATBOT_NAME in response_in_lower_case):
+    if("sorry" in response_in_lower_case or CHATBOT_NAME in response_in_lower_case):
         '''
         We will reach this if query in this order
         i) Suggest me good songs which I can listen before sleep 
