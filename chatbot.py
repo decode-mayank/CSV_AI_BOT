@@ -178,7 +178,6 @@ def query_to_webpage(row,user_input,response_from_gpt):
         tokens = symptom_tokens
         debug_steps(row,f"{SYMPTOM_QUERY},found symptom & suggest products",level=4)
         MSG = f"This appears to be a condition called {symptom}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor."
-        SLEEP_ASSESSMENT_INFO="For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'"
         pr_cyan(SLEEP_ASSESSMENT_INFO)
         
         # We found out symptom of the user. So, let's override the response came from chatgpt
