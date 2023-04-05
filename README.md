@@ -94,7 +94,7 @@
 
 #### 9. Scrape resmed products ####
     cd resmed
-    scrapy runspider 2scrape_resmed_products.py -O resmed_products.csv
+    scrapy runspider scrape_resmed_products.py -O resmed_products.csv
 
 #### 10. Add products to db ####
      python add_products_to_db.py

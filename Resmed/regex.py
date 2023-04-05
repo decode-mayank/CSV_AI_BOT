@@ -1,7 +1,7 @@
 import pandas as pd 
 import re
 
-df = pd.read_csv("resmed_products_1.csv")
+df = pd.read_csv("resmed_products.csv")
 
 keyword_patterns = [r'\bSleep Apnea\b', r'\bInsomnia\b', r'\bCPAP\b',r'\bSD card\b',
                     r'\bsnoring\b',r'\bMask frame\b',r'\bMask\b',r'\bbattery\b',
