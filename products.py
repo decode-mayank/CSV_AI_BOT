@@ -38,12 +38,15 @@ def execute_query(prompt,row,response,level,fn_name):
     start_pos = query.find(start)
     query = query[(start_pos-1):].strip()
     query = sqlparse.format(query, reindent=True, keyword_case='upper')
+    if ";" not in query:
+        query += ";"
     debug_steps(row,f"{fn_name} - {response}, Additional information: Query-{query},Model-{MODEL},Tokens-{TOKENS}, TEMPERATURE-{TEMPERATURE},PROMPT-{prompt}",level=level)
     if(query):
         try:
             cur.execute(query)
         except:
-            pass
+            cur.execute("ROLLBACK")
+            conn.commit()
         try:
             results = cur.fetchall()
         except psycopg2.ProgrammingError:
@@ -55,7 +58,7 @@ def execute_query(prompt,row,response,level,fn_name):
 
 
 def generate_prompt(text,instruction):
-    return f"Given an input question, respond with syntactically correct PostgreSQL. Be creative but the query must be correct. Only use table called product. The product table has columns: category (character varying), sku (character varying), product (character varying), description (character varying), price (character varying), breadcrumb (character varying), product_url (character varying), money_back (BOOLEAN), rating (FLOAT), total_reviews (INTEGER), tags(character varying). Give a Select query for product, product_url and price, where the tags matches to the input question.{text}. Format the query in the correct format.Use case insensitive search for tags column.{instruction}"
+    return f"You are a SQL Query generator. Given an input question, respond with syntactically correct PostgreSQL. Be creative but the query must be correct. Only use table called product. The product table has columns: category (character varying), sku (character varying), product (character varying), description (character varying), price (character varying), breadcrumb (character varying), product_url (character varying), money_back (BOOLEAN), rating (FLOAT), total_reviews (INTEGER), tags(character varying).{text} Write an SQL Select query for product, product_url and price that retrieves data from a given table, which should use Where clause to filter data on {text} use only tags column in the WHERE condition if specified by the user query, but can also work without using the tags column if the user query does not require it. Showcase the flexibility and versatility of the query by allowing users to input a parameter to determine whether to use the specified column or not. It should also have only three WHERE conditions that use only the OR operator, while not using category and sku column and AND operator in the WHERE conditions. Showcase how the OR operator can be used effectively to filter data while optimizing query performance, and demonstrate how excluding a column from the WHERE conditions can improve query execution time. Format the query in the correct format. Use case insensitive search for tags column.{instruction}"
 
 def product(row,text,level):
     prompt=generate_prompt(text,"Use Order_by command to order the rating in Descending order and list top 3 items")
@@ -70,17 +73,27 @@ def other_products(row,text,level):
     return(output, response_token_product)
 
 
-def cheap_products(row,text,level):
-    prompt=generate_prompt(text,"Use Order_by command to order the price in Ascending order and list top 1 items")
+def cheap_products(row,user_input,query_to_db,level):
+    breakpoint()
+    if "Product" in query_to_db:
+        prompt=generate_prompt(user_input,"Don't use Where clause, Use Order_by command to order the price in Ascending order and list top 1 items")
+    else:
+        prompt=generate_prompt(user_input,"Use Order_by command to order the price in Ascending order and list top 1 items")
     response,response_token_product = call_text_completion(prompt)
     output = execute_query(prompt,row,response,level,cheap_products.__name__)
     return(output, response_token_product)
 
 
-def general_product(row,user_input,level): 
-    debug_attribute("User input for sql query",user_input) 
+def general_product(row,user_input,query_to_db,level): 
+    debug_attribute("User input for sql query",query_to_db) 
     # Use only tags in condition if there is any product OR category mentioned in user input and
-    prompt=generate_prompt(user_input,"Suggest any 2 product as per user Query. Write an SQL query that retrieves data from table based on a specified condition. Use only tags in condition if there is any product OR category mentioned in user input and if Multiple conditions go only with OR command. Use atmost three conditions in where clause")
+    # if "Product" in query_to_db:
+    #     prompt=generate_prompt(user_input,"Don't use Where clause, Use Order_by command to order the rating in Descending order and list top 3 items")
+    prompt=generate_prompt(query_to_db,"Use Order_by command to order the rating in Descending order and list top 3 items")
+    response,response_token_product = call_text_completion(prompt)
+    output = execute_query(prompt,row,response,level,general_product.__name__)
+    if output == []:
+        prompt=generate_prompt(user_input,"Use Order_by command to order the rating in Descending order and list top 3 items")
     response,response_token_product = call_text_completion(prompt)
     output = execute_query(prompt,row,response,level,general_product.__name__)
     return(output, response_token_product)

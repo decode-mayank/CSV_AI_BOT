@@ -133,8 +133,8 @@ def show_products(output):
                 prod_response += products + "\n"
     return prod_response
 
-def get_general_product(row,user_input,level):
-    output, response_token_product = general_product(row,user_input,level)
+def get_general_product(row,user_input,query_to_db,level):
+    output, response_token_product = general_product(row,user_input,query_to_db,level)
 
     if len(output) == 0:
         bot_response = UNABLE_TO_FIND_PRODUCTS_IN_DB
@@ -147,12 +147,12 @@ def get_products(row,user_input,query_to_db):
     prod_response=""
     if "cheap" in user_input or "cheapest" in user_input:
         if len(outputs)==0:
-            output,response_token_product = cheap_products(row,user_input,level=3)
+            output,response_token_product = cheap_products(row,user_input,query_to_db,level=3)
         else:
-            output,response_token_product = cheap_products(row,outputs[-1],level=3)
+            output,response_token_product = cheap_products(row,outputs[-2],query_to_db,level=3)
         prod_response += show_products(output)
     else:
-        response,response_token_product = get_general_product(row,query_to_db,level=3)
+        response,response_token_product = get_general_product(row,user_input,query_to_db,level=3)
         prod_response += response
     return prod_response,response_token_product
 
@@ -168,6 +168,7 @@ def query_to_resmed(row,user_input,response_from_gpt):
     debug_attribute("price_range",price_range)
     bot_response = ""
     tokens = 0
+    outputs.append(entity)
     
     # elif(intent=="None" or entity=="" or product_suggestion is None):
     #     # We will reach this elif on this query - Is diabetes a disease?
@@ -196,10 +197,11 @@ def query_to_resmed(row,user_input,response_from_gpt):
     else:
         # We will reach this block when we ask the question like Is diabetes a disease?
         query_to_db = ""
-        # if "None" in price_range:
-        query_to_db=f"{entity},{product_suggestion}"
-        # else:
-        #     query_to_db=f"{price_range}"
+        if "None" in price_range:
+            query_to_db=f"{entity}"
+        else:
+            price_range = price_range.replace("$","")
+            query_to_db=f"{entity},{product_suggestion},{price_range}"
         debug_attribute("query_to_db",query_to_db)
         prod_response, response_token_product=get_products(row,user_input,query_to_db)
         print("->>>>>> Check here",prod_response)
