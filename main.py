@@ -1,5 +1,5 @@
 # Imports
-from resmed.constants import SYSTEM_PROMPT, INITIAL_MESSAGE
+from app.constants import SYSTEM_PROMPT, INITIAL_MESSAGE
 from colors import pr_bot_response,pr_red
 from chatbot import chatbot
 from utils import get_last_n_message_log

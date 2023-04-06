@@ -9,8 +9,8 @@ from colors import pr_bot_response
 from debug_utils import debug_steps,debug, debug_attribute
 from constants import davinci,HUMAN,BOT,SEPARATORS,INITIAL_PROMPT,INITIAL_RESPONSE,COST
 from utils import get_db_connection, write_to_db, write_logs_to_csv
-from resmed.utils import chatbot_logic,get_props_from_message
-from resmed.constants import RESPONSE_FOR_INVALID_QUERY, UNABLE_TO_FIND_PRODUCTS_IN_DB, CHATBOT_NAME
+from app.utils import chatbot_logic,get_props_from_message
+from app.constants import RESPONSE_FOR_INVALID_QUERY, UNABLE_TO_FIND_PRODUCTS_IN_DB, CHATBOT_NAME
 
 # Insert your API key
 load_dotenv()
