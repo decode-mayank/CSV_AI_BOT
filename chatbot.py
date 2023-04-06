@@ -125,7 +125,7 @@ def show_products(output):
     prod_response = '\n'
     if(len(output)>0):
         items = output[0]
-        output = output if len(output)==1 else output[0:2]
+        output = output if len(output)==1 else output[0:4]
         debug_attribute("DB Output",output)
         if(len(items)==3):
             for prod, url,price in output:
@@ -146,11 +146,17 @@ def get_general_product(row,user_input,query_to_db,level):
 def get_products(row,user_input,query_to_db):
     prod_response=""
     if "cheap" in user_input or "cheapest" in user_input:
-        if len(outputs)==0:
-            output,response_token_product = cheap_products(row,user_input,query_to_db,level=3)
-        else:
+        if "Product" in query_to_db and outputs != []:
             output,response_token_product = cheap_products(row,outputs[-2],query_to_db,level=3)
+        else:
+            output,response_token_product = cheap_products(row,user_input,query_to_db,level=3)
         prod_response += show_products(output)
+    elif "Load More" in query_to_db:
+        output,response_token_product = other_products(row,outputs[-2],level=3)
+        prod_response += show_products(output)
+    # elif "All" in query_to_db:
+    #     output,response_token_product = product(row,user_input,level=3)
+    #     prod_response += show_products(output)
     else:
         response,response_token_product = get_general_product(row,user_input,query_to_db,level=3)
         prod_response += response
