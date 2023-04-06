@@ -1,4 +1,4 @@
-# Resmed-Chatbot-for-knowledge-hub
+# Chatbot
 
 ## Prerequisites:
 ####  1. If you don’t have Python installed, [install it from here](https://www.python.org/downloads/)
@@ -89,21 +89,17 @@
       $ psql postgres -c "CREATE DATABASE bitcotai"
     ```
 
-#### 8. Run 0init_db.py - This will create table in bitcotai database ####
-        python 0init_db.py
+#### 8. Run init_db.py - This will create table in database ####
+        python init_db.py
 
-#### 9. Scrape knowledge hub site ####
-    scrapy runspider 1scrape_knowledge_hub.py -O knowledge_hub.csv
+#### 9. Scrape products ####
+    cd app
+    scrapy runspider scrape_products.py -O products.csv
 
-#### 10. Scrape resmed products ####
-    scrapy runspider 2scrape_resmed_products.py -O resmed_products.csv
+#### 10. Add products to db ####
+     python add_products_to_db.py
 
-#### 11. Change CSV to spreadsheet and create each sheet for type ####  
- 
-#### 12. Generate embedding file ####  
-python 3get_all_embeddings.py
-
-#### 13. Run the chatbot ####
+#### 11. Run the chatbot ####
 a) To run chatbot as script - Run main file 
 python main.py
 
@@ -115,7 +111,7 @@ To use other ports
 uvicorn api:app --port 8001
 
 c) To launch chabot UI - Run output.py
-python output.py
+python app/ui.py
 
 
 ### Tests ###
@@ -123,8 +119,8 @@ python output.py
 1. We use pytest to run automated test
    Test file should have prefix test_
 
-   To run test: pytest
-   To run test with print messages: pytest -s
+   To run test: cd app && pytest
+   To run test with print messages: cd app && pytest -s
 
    If you face any error with pytest:
    Example: 
@@ -158,6 +154,12 @@ python output.py
   '''
   Solution: https://stackoverflow.com/questions/35045038/how-do-i-use-pytest-with-virtualenv#:~:text=The%20reason%20is%20that%20the,installed%20within%20your%20virtual%20environment.
 
+#### Tips ####
+1. Connect to database in psql
+psql postgres -U syed -d bitcotai
+
+2. To export the table in CSV format:
+copy (SELECT * FROM chatbot_datas) to '/Users/bitcot/Downloads/VSCodeProjects/chatgpt/bitcot.ai/a.csv' with csv;
 
 #### References ####
 1. Completion - https://platform.openai.com/docs/api-reference/completions 
