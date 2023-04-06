@@ -158,3 +158,7 @@ python output.py
   '''
   Solution: https://stackoverflow.com/questions/35045038/how-do-i-use-pytest-with-virtualenv#:~:text=The%20reason%20is%20that%20the,installed%20within%20your%20virtual%20environment.
 
+
+#### References ####
+1. Completion - https://platform.openai.com/docs/api-reference/completions 
+2. Chat Completion - https://platform.openai.com/docs/api-reference/chat/create
