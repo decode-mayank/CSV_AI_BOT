@@ -89,7 +89,7 @@
       $ psql postgres -c "CREATE DATABASE bitcotai"
     ```
 
-#### 8. Run 0init_db.py - This will create table in database ####
+#### 8. Run init_db.py - This will create table in database ####
         python init_db.py
 
 #### 9. Scrape resmed products ####

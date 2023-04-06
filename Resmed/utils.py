@@ -63,8 +63,24 @@ def identify_symptom(row,user_input,level):
     return response_text, response_token_symptom
 
 
+def search_product(row,user_input,response_from_gpt):
+    response,_,entity,product_suggestion,_ = get_props_from_message(response_from_gpt)
+    query_to_db = ""
+    query_to_db=f"{entity},{product_suggestion}"
+    debug_attribute("query_to_db",query_to_db)
+    prod_response, response_token_product=get_products(row,user_input,query_to_db)
+    tokens = response_token_product
+    if "$" in response:
+        # What is the price of BongoRx Starter Kit
+        response = ""
+        raw_response=""
+    bot_response = response + prod_response
+    raw_response = response_from_gpt + prod_response
+    
+    return bot_response,raw_response,tokens
+    
+
 def chatbot_logic(row,user_input,response_from_gpt):
-    raw_response = response_from_gpt
     response,intent,entity,product_suggestion,price_range = get_props_from_message(response_from_gpt)
     product_suggestion=product_suggestion.lower().replace("resmed","")
     debug_attribute("Response",response)
@@ -72,13 +88,13 @@ def chatbot_logic(row,user_input,response_from_gpt):
     debug_attribute("entity",entity)
     debug_attribute("product_suggestion",product_suggestion)
     debug_attribute("price_range",price_range)
+    raw_response = ""
     bot_response = ""
     tokens = 0
     
     response_in_lower_case = response.lower()
     if "insomnia" in response_in_lower_case or "sleep apnea" in response_in_lower_case or "snoring" in response_in_lower_case:
-        bot_response = response
-        raw_response = bot_response
+          bot_response,raw_response,tokens = search_product(row,user_input,response_from_gpt)
     else:
         symptom,symptom_tokens = identify_symptom(row,user_input,level=2)
         found_symptom = symptom=="Sleep Apnea" or symptom=="Insomnia" or symptom=="Snoring"
@@ -99,22 +115,7 @@ def chatbot_logic(row,user_input,response_from_gpt):
             raw_response = raw_response + prod_response
             tokens += prod_tokens
         else:
-            # We will reach this block when we ask the question like Is diabetes a disease?
-            query_to_db = ""
-            # if "None" in price_range:
-            query_to_db=f"{entity},{product_suggestion}"
-            # else:
-            #     query_to_db=f"{price_range}"
-            debug_attribute("query_to_db",query_to_db)
-            prod_response, response_token_product=get_products(row,user_input,query_to_db)
-            print("->>>>>> Check here",prod_response)
-            tokens = response_token_product
-            if "$" in response:
-                # What is the price of BongoRx Starter Kit
-                response = ""
-                raw_response=""
-            bot_response = response + prod_response
-            raw_response = raw_response + prod_response
+            bot_response,raw_response,tokens = search_product(row,user_input,response_from_gpt)
         
     return bot_response,raw_response,tokens
     
