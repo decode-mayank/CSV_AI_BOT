@@ -12,7 +12,6 @@ from utils import get_db_connection, write_to_db, write_logs_to_csv
 from app.utils import chatbot_logic,get_props_from_message
 from app.constants import RESPONSE_FOR_INVALID_QUERY, UNABLE_TO_FIND_PRODUCTS_IN_DB, CHATBOT_NAME
 
-# Insert your API key
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 

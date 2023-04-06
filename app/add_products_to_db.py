@@ -29,7 +29,7 @@ def create_product_table():
     print(f"Table product already exist - If you want to drop this table then run DROP TABLE IF EXISTS product;")
 
 def add_csv_to_db():
-  with open('app_products.csv', 'r') as f:
+  with open('products.csv', 'r') as f:
     reader = csv.reader(f)
     next(reader) # Skip the header row.
     for row in reader:

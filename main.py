@@ -4,6 +4,9 @@ from colors import pr_bot_response,pr_red
 from chatbot import chatbot
 from utils import get_last_n_message_log
 
+from dotenv import load_dotenv
+load_dotenv()
+
 if __name__ == '__main__':
     
     pr_bot_response(INITIAL_MESSAGE)

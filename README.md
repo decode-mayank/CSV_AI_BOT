@@ -1,4 +1,4 @@
-# Resmed-Chatbot-for-knowledge-hub
+# Chatbot
 
 ## Prerequisites:
 ####  1. If you don’t have Python installed, [install it from here](https://www.python.org/downloads/)
@@ -92,9 +92,9 @@
 #### 8. Run init_db.py - This will create table in database ####
         python init_db.py
 
-#### 9. Scrape resmed products ####
-    cd resmed
-    scrapy runspider scrape_resmed_products.py -O resmed_products.csv
+#### 9. Scrape products ####
+    cd app
+    scrapy runspider scrape_products.py -O products.csv
 
 #### 10. Add products to db ####
      python add_products_to_db.py
@@ -111,7 +111,7 @@ To use other ports
 uvicorn api:app --port 8001
 
 c) To launch chabot UI - Run output.py
-python resmed/ui.py
+python app/ui.py
 
 
 ### Tests ###
@@ -119,8 +119,8 @@ python resmed/ui.py
 1. We use pytest to run automated test
    Test file should have prefix test_
 
-   To run test: cd resmed && pytest
-   To run test with print messages: cd resmed && pytest -s
+   To run test: cd app && pytest
+   To run test with print messages: cd app && pytest -s
 
    If you face any error with pytest:
    Example: 

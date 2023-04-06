@@ -13,8 +13,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
 
-class Resmed(scrapy.Spider):
-    name = "sec_resmed"
+class App(scrapy.Spider):
+    name = "app"
     start_urls = [
         "https://shop.resmed.com.au/",
     ]
