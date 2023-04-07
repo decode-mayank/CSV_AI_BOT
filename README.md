@@ -96,3 +96,7 @@
 
   * On Windows:
     If you get python command not found then run with py command
+
+## Example 3 - Chatbot framework
+   Please check the readme at examples/chatbot-framework/README.md
+ 
