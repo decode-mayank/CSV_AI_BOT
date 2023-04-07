@@ -98,11 +98,5 @@
     If you get python command not found then run with py command
 
 ## Example 3 - Chatbot framework
- * On Linux/Mac: 
-
-  ``` bash
-    $ python examples/chatbot-framework/main.py
-  ```
-
-  * On Windows:
-    If you get python command not found then run with py command
+   Please check the readme at examples/chatbot-framework/README.md
+ 

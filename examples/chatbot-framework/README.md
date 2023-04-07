@@ -81,12 +81,12 @@
 #### 7. Create database ####
     * On Linux/Ubuntu: 
     ``` bash
-      $ sudo -u postgres psql -c "CREATE DATABASE bitcotai"
+      $ sudo -u postgres psql -c "CREATE DATABASE ai"
     ```
 
     * On Mac: 
     ``` bash
-      $ psql postgres -c "CREATE DATABASE bitcotai"
+      $ psql postgres -c "CREATE DATABASE ai"
     ```
 
 #### 8. Run init_db.py - This will create table in database ####
@@ -156,7 +156,7 @@ python app/ui.py
 
 #### Tips ####
 1. Connect to database in psql
-psql postgres -U syed -d bitcotai
+psql postgres -U syed -d ai
 
 2. To export the table in CSV format:
 copy (SELECT * FROM chatbot_datas) to '/Users/bitcot/Downloads/VSCodeProjects/chatgpt/bitcot.ai/a.csv' with csv;
