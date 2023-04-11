@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed identify_symptom function
 - Return sleep assessment link for this question -> can you provide me link for home sleep test
 
+### Added
+- Added discord integration
+
 ### Added 
 - Added Chatbot Framework
 
