@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - Fixed identify_symptom function
 - Return sleep assessment link for this question -> can you provide me link for home sleep test
+- For outside scope queries, Don't include intent, entity etc in bot response
 
 ### Added
 - Added discord integration
