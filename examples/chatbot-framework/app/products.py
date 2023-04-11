@@ -44,14 +44,10 @@ def execute_query(prompt,row,response,level,fn_name):
     if(query):
         try:
             cur.execute(query)
+            results = cur.fetchall()
         except:
             cur.execute("ROLLBACK")
             conn.commit()
-        try:
-            results = cur.fetchall()
-        except psycopg2.ProgrammingError:
-            # If query is invalid then we will get ProgrammingError
-            pass
         return results
     else:
         return DEFAULT_RESPONSE_WHEN_NO_QUERY_FOUND
