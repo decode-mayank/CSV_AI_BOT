@@ -3,7 +3,6 @@ import re
 import openai
 
 from debug_utils import debug_attribute,debug_steps
-from colors import pr_cyan
 from constants import davinci
 from app.constants import SLEEP_ASSESSMENT_INFO,UNABLE_TO_FIND_PRODUCTS_IN_DB
 from app.products import product, cheap_products, general_product
@@ -41,7 +40,7 @@ def get_products(row,user_input,query_to_db):
     return prod_response,response_token_product
 
 def identify_symptom(row,user_input,level): 
-    PROMPT,TOKENS,TEMPERATURE,MODEL,STOP = """Snoring, sleep apnea, and insomnia are all different sleep disorders with distinct symptoms and causes. Here are some differences that may help you differentiate between the three:
+    PROMPT,TOKENS,TEMPERATURE,MODEL,STOP = f"""Snoring, sleep apnea, and insomnia are all different sleep disorders with distinct symptoms and causes. Here are some differences that may help you differentiate between the three:
     Snoring:Characterized by loud, rhythmic breathing sounds during sleep,Usually harmless, although it can still disrupt your sleep or your partner's sleep Typically caused by a partial obstruction in the airway, often due to relaxed muscles in the throat or nasal congestion,Usually associated with pauses in breathing or gasping sensations during sleep,Change in the level of attention, concentration, or memory.
     Sleep apnea:Characterized by pauses in breathing or shallow breaths during sleep,Often accompanied by loud snoring and gasping or choking sensations during sleep,Can lead to excessive daytime sleepiness,Being Overweight(adds fat around the neck and airway),Having inflamed tonsils and adenoids,Having blocked nose due to allergy or cold,Structural problem with shape of the nose, neck or jaw,Frequently urinating at night,Waking up with night sweats,High blood pressure,Mood swings,Impotence and reduced sex drive.
     Insomnia:A sleep disorder characterized by difficulty falling asleep,staying asleep,or waking up too early in the morning,Often associated with anxiety, stress, or other psychological factors, as well as medical conditions or medications,Can lead to excessive daytime sleepiness, fatigue, irritability, difficulty concentrating, and other health problems,Making more mistakes or having accidents,Feel tired or sleepy during the day.
@@ -92,8 +91,8 @@ def chatbot_logic(row,user_input,response_from_gpt):
     bot_response = ""
     tokens = 0
     
-    response_in_lower_case = response.lower()
-    if "insomnia" in response_in_lower_case or "sleep apnea" in response_in_lower_case or "snoring" in response_in_lower_case:
+    user_input_in_lower_case = user_input.lower()
+    if "insomnia" in user_input_in_lower_case or "sleep apnea" in user_input_in_lower_case or "snoring" in user_input_in_lower_case:
           bot_response,raw_response,tokens = search_product(row,user_input,response_from_gpt)
     else:
         symptom,symptom_tokens = identify_symptom(row,user_input,level=2)
@@ -125,8 +124,23 @@ def extract_data(pattern,message):
     return results.group(1) if results else ""
 
 def get_props_from_message(message):
+    '''
+    Sample Input:
+    Here are some tips to help you get a good night's sleep: 
+    1. Stick to a regular sleep schedule - go to bed and wake up at the same time every day. 
+    2. Avoid caffeine, nicotine, and alcohol before bed. 
+    3. Exercise regularly, but not too close to bedtime. 
+    4. Avoid large meals and beverages late at night. 
+    5. Relax before bed by taking a warm bath or reading a book. 
+    6. Make sure your bedroom is dark, quiet, and comfortable. 
+    7. If you can't sleep, get out of bed and do something relaxing until you feel tired. 
+    Intent: Healthy Sleep Tips, Entity: Healthy Sleep Tips, Product Suggestion: Resme
+    
+    Sample Output:
+    ("Here are some tips to help you get a good night's sleep: \n1. Stick to a regular sleep schedule - go to bed and wake up at the same time every day. \n2. Avoid caffeine, nicotine, and alcohol before bed. \n3. Exercise regularly, but not too close to bedtime. \n4. Avoid large meals and beverages late at night. \n5. Relax before bed by taking a warm bath or reading a book. \n6. Make sure your bedroom is dark, quiet, and comfortable. \n7. If you can't sleep, get out of bed and do something relaxing until you feel tired. \n", 'Healthy Sleep Tips', 'Healthy Sleep Tips', 'Resmed')
+    '''
     response = message.split("Intent")[0]
-    intent,entity,product_suggestion="","",""
+    intent,entity,product_suggestion,price_range="","","",""
     # Extracting the Intent
     intent = extract_data(r'Intent: (.*), Entity', message)
     # Extracting the Entity
@@ -135,15 +149,4 @@ def get_props_from_message(message):
     product_suggestion = extract_data(r'Product Suggestion: (.*), Price Range', message)
     # Extract price range
     price_range = extract_data(r'Price Range:\s*(.*)', message)
-    
     return response,intent,entity,product_suggestion,price_range
-
-# print(get_props_from_message("""Here are some tips to help you get a good night's sleep: 
-# 1. Stick to a regular sleep schedule - go to bed and wake up at the same time every day. 
-# 2. Avoid caffeine, nicotine, and alcohol before bed. 
-# 3. Exercise regularly, but not too close to bedtime. 
-# 4. Avoid large meals and beverages late at night. 
-# 5. Relax before bed by taking a warm bath or reading a book. 
-# 6. Make sure your bedroom is dark, quiet, and comfortable. 
-# 7. If you can't sleep, get out of bed and do something relaxing until you feel tired. 
-# Intent: Healthy Sleep Tips, Entity: Healthy Sleep Tips, Product Suggestion: Resmed, Price Range: None."""))
