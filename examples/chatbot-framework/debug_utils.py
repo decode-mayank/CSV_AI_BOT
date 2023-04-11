@@ -9,7 +9,7 @@ def debug_steps(row,msg,level):
         LOG = f"[DEBUG] - Level {level} - {msg}"
         current_message = row[fields_dict[level]]
         row[fields_dict[level]] = f"{current_message}\n{LOG}"
-        pr_red(LOG) 
+        pr_green(LOG) 
         print("="*20)
         
 def debug(msg):
@@ -20,3 +20,6 @@ def debug_attribute(attribute,value):
     if VERBOSE=="True":
         pr_light_purple(attribute,end="")
         pr_yellow(value,end="\n")
+        
+def debug_error(msg):
+    pr_red(f"[ERROR] - {msg}")  

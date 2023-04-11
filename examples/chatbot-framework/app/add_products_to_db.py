@@ -1,13 +1,18 @@
 import csv
+import os
 
+from psycopg2 import connect
 from dotenv import load_dotenv
 from psycopg2.errors import DuplicateTable
 
-from utils import get_db_connection
 
 load_dotenv()
 
-conn,cur = get_db_connection()
+conn = connect(host='localhost',
+               database=os.getenv('DB'),
+               user=os.getenv('DB_USERNAME'),
+               password=os.getenv('DB_PASSWORD'))
+cur = conn.cursor()
 
 def create_product_table():
   try:
