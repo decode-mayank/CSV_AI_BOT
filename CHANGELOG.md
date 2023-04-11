@@ -1,67 +1,18 @@
-# Resmed Chatbot
+# Bitcot AI Cookbook
 # Changelog
 
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-### Changed
-- V4 Changes
-  a) Drop find_what_user_expects prompt and rely on identify_symptom prompt
-  b) Added sleep assessment link in base prompt
-  c) Improve identify_symptom prompt - So, that it should not detect below questions as symptom
-     - How long does it take to treat insomnia?
-     - how to stop snoring
-     - what can i do when i can't sleep
-  d) Removed unnecessary levels
-  e) User input should be less than or equal to 300 characters 
-     (Took reference from bing chat)
-
+### Added 
+- Added Chatbot Framework
 
 ### Added 
-- Calculate the price for each response
-
-### Changed
-- Optimized chatbot code
-- Include completion payload and response information in debug csv
-- For product search, Include breadcrumb, product in tags 
-- Added logs for the product response
+- Chatbot for bitcot website
 
 ### Added 
-- Added an option to write logs in csv
-
-### Added 
-- pip install pytest ( To test our pytest code)
-
-### Changed
-- In resmed embeddings, we use completion column to find symptom - It should be always in lowercase - eg: sleep apnea, snoring, insomnia
-- In resmed products, we use category column to match symptom - It should be always in lowercase - eg: sleep apnea, snoring, insomnia
-
-### Removed
-- Dropped colorama use default color ANSI
-
-### Added 
-- pip install sqlparse (Used to parse sql statement returned by chatgpt)
-- pip install openai --upgrade (Upgraded openai)
-- pip install discord (To connect to discord)
-
-### Added 
-- [BITCOTAI-42] - Added new column "source" in DB
-- cur.execute('ALTER TABLE chatbot_datas ADD COLUMN "source" text;')
-
-### Changed
-- [BITCOTAI-43] - Updated prompt with resmed domain to stop to suggest product outside of ResMed
-
-### Changed
-- When we answer query with help of embedding then use EmbeddedBot: as prefix otherwise Bot:
-
-### Changed
-- [BITCOTAI-44] - Embed entire knowledge hub records
-
-### Added
-- [BITCOTAI-43] - Don't answer to the outside context queries(outside ResMed products)
-
-### Added
-- [BITCOTAI-35] - Created UI for resmed chatbot using gradio
-- pip install gradio
-
+- Install openai, dotenv 
+  * pip install openai - https://pypi.org/project/openai/
+  * pip install python-dotenv - https://pypi.org/project/python-dotenv/
+- Added chatbot using gpt3.5 turbo example

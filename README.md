@@ -1,4 +1,4 @@
-# Resmed-Chatbot-for-knowledge-hub
+# Bitcot AI Cookbook
 
 ## Prerequisites:
 ####  1. If you don’t have Python installed, [install it from here](https://www.python.org/downloads/)
@@ -6,10 +6,6 @@
    * Note : 
      - Atleast Python >= 3.7.1 version is required to work with open ai
        - Reference - https://github.com/openai/openai-python#requirements
-
-#### 2. Install postgresql ####
-    * Reference - https://www.postgresql.org/download/
-  
 
 ## Setup
 
@@ -78,87 +74,29 @@
     
     Login to https://openai.com/ and get API key from https://beta.openai.com/account/api-keys
     
-#### 7. Create database ####
-    * On Linux/Ubuntu: 
-    ``` bash
-      $ sudo -u postgres psql -c "CREATE DATABASE bitcotai"
-    ```
+#### 7. Open .env and Update OPENAI_API_KEY
 
-    * On Mac: 
-    ``` bash
-      $ psql postgres -c "CREATE DATABASE bitcotai"
-    ```
 
-#### 8. Run 0init_db.py - This will create table in bitcotai database ####
-        python 0init_db.py
+## Example 1 - Chatbot using gpt 3.5 turbo
+ * On Linux/Mac: 
 
-#### 9. Scrape knowledge hub site ####
-    scrapy runspider 1scrape_knowledge_hub.py -O knowledge_hub.csv
+  ``` bash
+    $ python examples/chatbot-using-gpt3.5-turbo/main.py
+  ```
 
-#### 10. Scrape resmed products ####
-    scrapy runspider 2scrape_resmed_products.py -O resmed_products.csv
+  * On Windows:
+    If you get python command not found then run with py command
 
-#### 11. Change CSV to spreadsheet and create each sheet for type ####  
+## Example 2 - Chatbot for bitcot website
+ * On Linux/Mac: 
+
+  ``` bash
+    $ python examples/chatbot-for-bitcot-website/bot.py
+  ```
+
+  * On Windows:
+    If you get python command not found then run with py command
+
+## Example 3 - Chatbot framework
+   Please check the readme at examples/chatbot-framework/README.md
  
-#### 12. Generate embedding file ####  
-python 3get_all_embeddings.py
-
-#### 13. Run the chatbot ####
-a) To run chatbot as script - Run main file 
-python main.py
-
-b) To run chatbot as API - Run api file
-uvicorn api:app
-Default port is 8000
-
-To use other ports
-uvicorn api:app --port 8001
-
-c) To launch chabot UI - Run output.py
-python output.py
-
-
-### Tests ###
-
-1. We use pytest to run automated test
-   Test file should have prefix test_
-
-   To run test: pytest
-   To run test with print messages: pytest -s
-
-   If you face any error with pytest:
-   Example: 
-   '''
-    Sample log
-    (venv) bitcot@bitcots-MacBook-Pro bitcot.ai % pytest                  
-    ===================================================== test session starts =====================================================
-    platform darwin -- Python 3.10.4, pytest-7.1.2, pluggy-1.0.0
-    rootdir: /Users/bitcot/Downloads/VSCodeProjects/chatgpt/bitcot.ai
-    plugins: anyio-3.6.1, Faker-14.2.0, workflow-1.6.0
-    collecting ... 
-    collected 0 items / 1 error                                                                                                   
-
-    =========================================================== ERRORS ============================================================
-    _______________________________________________ ERROR collecting test_utils.py ________________________________________________
-    ImportError while importing test module '/Users/bitcot/Downloads/VSCodeProjects/chatgpt/bitcot.ai/test_utils.py'.
-    Hint: make sure your test modules/packages have valid Python names.
-    Traceback:
-    /Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/importlib/__init__.py:126: in import_module
-        return _bootstrap._gcd_import(name[level:], package, level)
-    test_utils.py:1: in <module>
-        from utils import  find_whether_user_query_is_valid, find_what_user_expects
-    utils.py:6: in <module>
-        import openai
-    E   ModuleNotFoundError: No module named 'openai'
-    =================================================== short test summary info ===================================================
-    ERROR test_utils.py
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ====================================================== 1 error in 0.53s =======================================================
-    (venv) bitcot@bitcots-MacBook-Pro bitcot.ai % deactivate
-  '''
-  Solution: https://stackoverflow.com/questions/35045038/how-do-i-use-pytest-with-virtualenv#:~:text=The%20reason%20is%20that%20the,installed%20within%20your%20virtual%20environment.
-
-
-#### References ####
-1. Completion - https://platform.openai.com/docs/api-reference/completions 
-2. Chat Completion - https://platform.openai.com/docs/api-reference/chat/create
