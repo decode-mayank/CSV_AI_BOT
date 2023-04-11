@@ -10,7 +10,7 @@ from colors import pr_bot_response
 from debug_utils import debug_steps,debug, debug_attribute
 from constants import davinci,HUMAN,BOT,SEPARATORS,INITIAL_PROMPT,INITIAL_RESPONSE,COST,fields_dict
 from utils import get_db_connection, replace_quotes,write_to_db, write_logs_to_csv
-from app.utils import chatbot_logic
+from app.utils import chatbot_logic,get_props_from_message
 from app.constants import RESPONSE_FOR_INVALID_QUERY, UNABLE_TO_FIND_PRODUCTS_IN_DB, CHATBOT_NAME
 
 # Insert your API key
@@ -83,7 +83,8 @@ def chatbot(user_input,message_log,discord_id="",db=True):
         i) Suggest me good songs which I can listen before sleep 
         ii) Write a poem for sleep
         '''
-        bot_response = raw_gpt_response
+        response,*_ = get_props_from_message(raw_gpt_response)
+        bot_response = response
         valid_query = False
     else:
         bot_response,raw_response,tokens = chatbot_logic(row,user_input,raw_gpt_response)
@@ -109,9 +110,8 @@ def chatbot(user_input,message_log,discord_id="",db=True):
 
     write_logs_to_csv(MODE,fields,row,MAX_COLUMNS,bot_response)
         
-    # Add the chatbot's response to the conversation history and print it to the console
+    # Add the chatbot's response to the conversation history
     if raw_gpt_response not in UNABLE_TO_FIND_PRODUCTS_IN_DB and valid_query and raw_gpt_response not in RESPONSE_FOR_INVALID_QUERY:
-        # User asked an invalid query to our system so, let's remove their query from message logs
         message_log+=f"{HUMAN}{user_input}\n{BOT}{raw_response}{SEPARATORS}"
 
 
