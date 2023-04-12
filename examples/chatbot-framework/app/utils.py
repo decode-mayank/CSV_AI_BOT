@@ -4,14 +4,14 @@ import openai
 
 from debug_utils import debug_attribute,debug_steps
 from constants import davinci
-from app.constants import SLEEP_ASSESSMENT_INFO,UNABLE_TO_FIND_PRODUCTS_IN_DB
-from app.products import product, cheap_products, general_product
+from app.constants import SLEEP_ASSESSMENT_INFO,UNABLE_TO_FIND_PRODUCTS_IN_DB, OUTPUTS
+from app.products import product, cheap_products, general_product, other_products
 
 def show_products(output):
     prod_response = '\n'
     if(len(output)>0):
         items = output[0]
-        output = output if len(output)==1 else output[0:2]
+        output = output if len(output)==1 else output[0:4]
         debug_attribute("DB Output",output)
         if(len(items)==3):
             for prod, url,price in output:
@@ -19,8 +19,8 @@ def show_products(output):
                 prod_response += products + "\n"
     return prod_response
 
-def get_general_product(row,user_input,level):
-    output, response_token_product = general_product(row,user_input,level)
+def get_general_product(row,user_input,query_to_db,level):
+    output, response_token_product = general_product(row,user_input,query_to_db,level)
 
     if len(output) == 0:
         bot_response = UNABLE_TO_FIND_PRODUCTS_IN_DB
@@ -32,10 +32,16 @@ def get_general_product(row,user_input,level):
 def get_products(row,user_input,query_to_db):
     prod_response=""
     if "cheap" in user_input or "cheapest" in user_input:
-        output,response_token_product = cheap_products(row,user_input,level=3)
+        if "Product" in query_to_db and OUTPUTS != []:
+            output,response_token_product = cheap_products(row,OUTPUTS[-2],query_to_db,level=3)
+        else:
+            output,response_token_product = cheap_products(row,user_input,query_to_db,level=3)
+        prod_response += show_products(output)
+    elif "Load More" in query_to_db:
+        output,response_token_product = other_products(row,OUTPUTS[-2],level=3)
         prod_response += show_products(output)
     else:
-        response,response_token_product = get_general_product(row,query_to_db,level=3)
+        response,response_token_product = get_general_product(row,user_input,query_to_db,level=3)
         prod_response += response
     return prod_response,response_token_product
 
@@ -63,9 +69,13 @@ def identify_symptom(row,user_input,level):
 
 
 def search_product(row,user_input,response_from_gpt):
-    response,_,entity,product_suggestion,_ = get_props_from_message(response_from_gpt)
+    response,_,entity,product_suggestion,price_range= get_props_from_message(response_from_gpt)
     query_to_db = ""
-    query_to_db=f"{entity},{product_suggestion}"
+    if "None" in price_range:
+        query_to_db=f"{entity}"
+    else:
+        price_range = price_range.replace("$","")
+        query_to_db=f"{entity},{product_suggestion},{price_range}"
     debug_attribute("query_to_db",query_to_db)
     prod_response, response_token_product=get_products(row,user_input,query_to_db)
     tokens = response_token_product
@@ -90,6 +100,7 @@ def chatbot_logic(row,user_input,response_from_gpt):
     raw_response = ""
     bot_response = ""
     tokens = 0
+    OUTPUTS.append(entity)
     
     user_input_in_lower_case = user_input.lower()
     if "insomnia" in user_input_in_lower_case or "sleep apnea" in user_input_in_lower_case or "snoring" in user_input_in_lower_case:
