@@ -4,29 +4,32 @@ from constants import MESSAGE_LOG, GENERAL_QUERY, SYMPTOM_QUERY, PROGRAM_QUERY
 message_log = MESSAGE_LOG
 
 # For General Query
+
+
 def test_general():
     breakpoint()
     user_input = "Do I need a referral for a Medicare-rebated sleep test?"
-    product_response = find_what_user_expects(None,user_input,None)
+    product_response = find_what_user_expects(None, user_input, None)
     print(product_response[0])
-    debug_attribute("product_response",product_response)
+    debug_attribute("product_response", product_response)
     assert product_response[0].strip() in GENERAL_QUERY
+
 
 def test_symptom():
     user_input = "I have fever and cold"
-    product_response = find_what_user_expects(None,user_input,None)
+    product_response = find_what_user_expects(None, user_input, None)
     print(product_response[0])
-    debug_attribute("product_response",product_response)
+    debug_attribute("product_response", product_response)
     assert product_response[0].strip() in SYMPTOM_QUERY
+
 
 def test_program():
     breakpoint()
     user_input = "factorial program"
-    product_response = find_what_user_expects(None,user_input,None)
+    product_response = find_what_user_expects(None, user_input, None)
     print(product_response[0])
-    debug_attribute("product_response",product_response)
+    debug_attribute("product_response", product_response)
     assert product_response[0].strip() in PROGRAM_QUERY
-
 
 
 # For Symptom Query
@@ -49,4 +52,3 @@ def test_program():
 #     response,_ = resmed_chatbot(user_input,message_log,False)
 #     debug_attribute("test_insomnia",response)
 #     assert "Sleep apnea is a sleep disorder" in response
-    

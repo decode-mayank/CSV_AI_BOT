@@ -1,7 +1,7 @@
 RESPONSE_FOR_INVALID_QUERY = "I am a Resmed chatbot, I can't help with that"
 
 # Link for sleep assessment
-SLEEP_ASSESSMENT_INFO="For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'"
+SLEEP_ASSESSMENT_INFO = "For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'"
 
 
 '''
@@ -28,10 +28,10 @@ Human: Suggest any other product, any other product, other product
 Bot: Here are some other products as per your search Intent: Products, Entity: Load More, Product Suggestion: Products, Price Range: None
 """
 
-#initial conversation from chatbot
+# initial conversation from chatbot
 INITIAL_MESSAGE = "Hello! I'm Resmed Chatbot, a virtual assistant designed to help you with any questions or concerns you may have about Resmed products or services. Resmed is a global leader in sleep apnea treatment, and we're committed to improving the quality of life for people who suffer from sleep-disordered breathing."
 
-# used in webpage_chatbot if condition 
+# used in webpage_chatbot if condition
 CHATBOT_NAME = "resmed chatbot"
 
 UNABLE_TO_FIND_PRODUCTS_IN_DB = ""

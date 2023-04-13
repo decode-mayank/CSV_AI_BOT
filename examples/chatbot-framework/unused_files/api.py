@@ -1,5 +1,5 @@
 # Third party package imports
-from fastapi import FastAPI, Request,status
+from fastapi import FastAPI, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
@@ -21,6 +21,8 @@ app.add_middleware(
 )
 
 # Reference - https://stackoverflow.com/questions/58642528/displaying-of-fastapi-validation-errors-to-end-users
+
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     return JSONResponse(
