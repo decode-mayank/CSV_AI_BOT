@@ -1,102 +1,116 @@
 # Bitcot AI Cookbook
 
 ## Prerequisites:
-####  1. If you don’t have Python installed, [install it from here](https://www.python.org/downloads/)
 
-   * Note : 
-     - Atleast Python >= 3.7.1 version is required to work with open ai
-       - Reference - https://github.com/openai/openai-python#requirements
+#### 1. If you don’t have Python installed, [install it from here](https://www.python.org/downloads/)
+
+- Note :
+  - Atleast Python >= 3.7.1 version is required to work with open ai
+    - Reference - https://github.com/openai/openai-python#requirements
 
 ## Setup
 
-#### 1. Clone this Repository ####
+#### 1. Clone this Repository
 
-  ``` bash
-    git clone https://bitbucket.org/bitcot/bitcot.ai.git
-  ```
-    
-#### 2. Navigate into the Project Directory ####
+```bash
+  git clone https://bitbucket.org/bitcot/bitcot.ai.git
+```
 
-  ``` bash
-     cd bitcot.ai
-  ```
+#### 2. Navigate into the Project Directory
 
-#### 3. Install and configure virtualenv - Run below command ####
+```bash
+   cd bitcot.ai
+```
 
-  ``` bash
-      pip install virtualenv
-  ```
+#### 3. Install and configure virtualenv - Run below command
 
-   * For Linux/Mac
-   
-     a) Create virtual env:
-       ``` bash
-        python3 -m venv venv
-       ```
+```bash
+    pip install virtualenv
+```
 
-     b) Activate the environment:
-       ``` bash
-        bash source venv/bin/activate
-       ```
+- For Linux/Mac
 
-   * For Windows
+  a) Create virtual env:
 
-     a) Create Virtual env:
-       ``` bash
-        py -m venv venv 
-       ```
-
-     b) Activate the environment:
-       ``` bash
-        .\env\Scripts\activate 
-       ```
-
-#### 4. To install the requirements ####
-  ``` bash
-    pip install -r requirements.txt
+  ```bash
+   python3 -m venv venv
   ```
 
-#### 5. Make a copy of the example environment variables file ####
+  b) Activate the environment:
 
-  * On Linux/Mac: 
-
-  ``` bash
-    $ cp .env.example .env
+  ```bash
+   bash source venv/bin/activate
   ```
 
-  * On Windows:
+- For Windows
 
-  ``` powershell
-    $ copy .env.example .env
+  a) Create Virtual env:
+
+  ```bash
+   py -m venv venv
   ```
 
-#### 6. Follow below steps to get secret key from openai, open .env then assign that key to OPENAI_API_KEY 
-    
+  b) Activate the environment:
+
+  ```bash
+   .\env\Scripts\activate
+  ```
+
+#### 4. To install the requirements
+
+```bash
+  pip install -r requirements.txt
+```
+
+#### 5. Make a copy of the example environment variables file
+
+- On Linux/Mac:
+
+```bash
+  $ cp .env.example .env
+```
+
+- On Windows:
+
+```powershell
+  $ copy .env.example .env
+```
+
+#### 6. Follow below steps to get secret key from openai, open .env then assign that key to OPENAI_API_KEY
+
     Login to https://openai.com/ and get API key from https://beta.openai.com/account/api-keys
-    
+
 #### 7. Open .env and Update OPENAI_API_KEY
 
+### Format
+
+- To format the code - Use below command
+  ```bash
+  $ find . -name '*.py' | tqdm --unit='file' --total=$(find . -name '*.py' | wc -l) | xargs -I{} autopep8 --in-place {}
+  ```
 
 ## Example 1 - Chatbot using gpt 3.5 turbo
- * On Linux/Mac: 
 
-  ``` bash
-    $ python examples/chatbot-using-gpt3.5-turbo/main.py
-  ```
+- On Linux/Mac:
 
-  * On Windows:
-    If you get python command not found then run with py command
+```bash
+  $ python examples/chatbot-using-gpt3.5-turbo/main.py
+```
+
+- On Windows:
+  If you get python command not found then run with py command
 
 ## Example 2 - Chatbot for bitcot website
- * On Linux/Mac: 
 
-  ``` bash
-    $ python examples/chatbot-for-bitcot-website/bot.py
-  ```
+- On Linux/Mac:
 
-  * On Windows:
-    If you get python command not found then run with py command
+```bash
+  $ python examples/chatbot-for-bitcot-website/bot.py
+```
+
+- On Windows:
+  If you get python command not found then run with py command
 
 ## Example 3 - Chatbot framework
-   Please check the readme at examples/chatbot-framework/README.md
- 
+
+Please check the readme at examples/chatbot-framework/README.md

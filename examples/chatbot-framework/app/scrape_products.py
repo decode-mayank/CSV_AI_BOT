@@ -1,3 +1,5 @@
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 import time
 import re
 
@@ -8,9 +10,6 @@ from selenium.webdriver.common.by import By
 import chromedriver_autoinstaller
 
 chromedriver_autoinstaller.install()
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
 
 
 class App(scrapy.Spider):
@@ -25,7 +24,8 @@ class App(scrapy.Spider):
     driver = webdriver.Chrome(options=options)
 
     def parse(self, response):
-        links = response.css('.parent-menu::attr(href),.navPages-item:nth-child(7) a::attr(href)').getall()
+        links = response.css(
+            '.parent-menu::attr(href),.navPages-item:nth-child(7) a::attr(href)').getall()
         for link in links:
             yield response.follow(
                 link,
@@ -41,7 +41,8 @@ class App(scrapy.Spider):
             li = self.driver.find_element(By.XPATH,
                                           '//li[@class="pagination-item pagination-item--next"]/a').get_attribute(
                 'href')
-            dd = self.driver.find_element(By.XPATH, '//a[contains(text(),"Next")]')
+            dd = self.driver.find_element(
+                By.XPATH, '//a[contains(text(),"Next")]')
             self.driver.execute_script("arguments[0].click();", dd)
             time.sleep(5)
             pagination.append(li)
@@ -87,12 +88,12 @@ class App(scrapy.Spider):
             (By.CSS_SELECTOR, "div#trustpilotReviewsWidget iframe[title='Customer reviews powered by Trustpilot']")))
         try:
             rating = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located((By.CSS_SELECTOR,
-                 "div.tp-widget-summary__information div.tp-widget-summary__rating > span.rating"))).text
+                                                                                            "div.tp-widget-summary__information div.tp-widget-summary__rating > span.rating"))).text
         except:
             rating = 0
         try:
             reviews = WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located((By.CSS_SELECTOR,
-            "div.tp-widget-summary__information div.tp-widget-summary__rating > span.tp-widget-summary__count > strong"))).text
+                                                                                             "div.tp-widget-summary__information div.tp-widget-summary__rating > span.tp-widget-summary__count > strong"))).text
         except:
             reviews = 0
         try:
@@ -101,18 +102,18 @@ class App(scrapy.Spider):
             sku = sku1 + sku2
         except:
             sku = ''
-        description = response.css('.custom-message-area p::text').get().replace('\n', '').replace('\r', '').strip()
+        description = response.css(
+            '.custom-message-area p::text').get().replace('\n', '').replace('\r', '').strip()
 
         yield {
             'category': category,
             "sku": sku,
             "product": product,
             "description": f'{description}\n{"".join(meta_description) if len(meta_description) > 0 else ""}',
-            "price": price.replace("$",""),
+            "price": price.replace("$", ""),
             "breadcrumb": breadcrumb,
             "product_url": product_url,
             "money_back": True if len(money_back) > 0 else False,
             "rating": rating,
             "total_reviews": reviews
         }
-
