@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Updated the Token to 300 for GPT response -> as the response was getting truncated
 - Add proper env variables in our script
 
+### Added
+- [BITCOTAI-81] - GPT prompt to generate user inputs
+
 ### Removed
 - Dropped unused files,references and tests
 
