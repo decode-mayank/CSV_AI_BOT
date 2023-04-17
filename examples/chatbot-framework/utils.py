@@ -13,9 +13,9 @@ DEBUG_CSV = os.getenv("DEBUG_CSV")
 
 def get_db_connection():
     conn = psycopg2.connect(host='localhost',
-                            database=os.getenv('DB'),
-                            user=os.getenv('DB_USERNAME'),
-                            password=os.getenv('DB_PASSWORD'))
+                            database=os.getenv('DATABASE_NAME'),
+                            user=os.getenv('DATABASE_USER'),
+                            password=os.getenv('DATABASE_PASSWORD'))
     cur = conn.cursor()
     return conn, cur
 

@@ -27,7 +27,7 @@ conn, cur = get_db_connection()
 
 def get_answer_from_gpt(row, prompt, level):
     # Multi shot learning
-    TOKENS, TEMPERATURE, MODEL, STOP = 200, 0, davinci, [HUMAN, BOT]
+    TOKENS, TEMPERATURE, MODEL, STOP = 300, 0, davinci, [HUMAN, BOT]
     response = openai.Completion.create(
         model=MODEL,
         prompt=prompt,
