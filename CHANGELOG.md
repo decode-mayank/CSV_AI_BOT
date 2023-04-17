@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+### Removed
+- Dropped unused files,references and tests
+
+### Added
+- Added autopep8 for code formatting 
+
 ### Fixed
 - Fixed identify_symptom function
 - Return sleep assessment link for this question -> can you provide me link for home sleep test

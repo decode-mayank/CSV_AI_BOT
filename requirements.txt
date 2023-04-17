@@ -7,6 +7,7 @@ async-generator==1.10
 async-timeout==4.0.2
 attrs==22.2.0
 Automat==22.10.0
+autopep8==2.0.2
 certifi==2022.12.7
 cffi==1.15.1
 charset-normalizer==2.1.1
@@ -67,6 +68,7 @@ Protego==0.2.1
 psycopg2-binary==2.9.5
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
+pycodestyle==2.10.0
 pycparser==2.21
 pycryptodome==3.17
 pydantic==1.10.5

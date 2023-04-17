@@ -17,9 +17,10 @@ my_model = 'text-embedding-ada-002'
 inputs, outputs = [], []
 
 message_log = [
-        {"role": "system", "content": "Answer the question only related to the topics of sleep,health,mask,sleep disorders from the website https://www.resmed.com.au/knowledge-hub if they ask queries outside of this topics sleep,health,mask,sleep disorders, say That I have been trained to answer only sleep and health related queries"},
-        {"role": "assistant", "content": "You are a helpful assistant."}
-    ] 
+    {"role": "system", "content": "Answer the question only related to the topics of sleep,health,mask,sleep disorders from the website https://www.resmed.com.au/knowledge-hub if they ask queries outside of this topics sleep,health,mask,sleep disorders, say That I have been trained to answer only sleep and health related queries"},
+    {"role": "assistant", "content": "You are a helpful assistant."}
+]
+
 
 def chatgpt_clone(input, history):
     history = history or []
@@ -29,7 +30,7 @@ def chatgpt_clone(input, history):
     output = chatbot(input, message_log)
     message_log.append({"role": "assistant", "content": output})
     history.append((input, output))
-    return history, history 
+    return history, history
 
 
 block = gr.Blocks()
@@ -39,6 +40,7 @@ with block:
     message = gr.Textbox(placeholder="Text Here")
     state = gr.State()
     submit = gr.Button("SEND")
-    submit.click(chatgpt_clone, inputs=[message, state], outputs=[chatbot, state])
+    submit.click(chatgpt_clone, inputs=[
+                 message, state], outputs=[chatbot, state])
 
 block.launch(debug=True)

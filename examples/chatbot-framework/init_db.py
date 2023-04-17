@@ -4,12 +4,12 @@ from utils import get_db_connection
 
 load_dotenv()
 
-conn,cur = get_db_connection()
+conn, cur = get_db_connection()
 
 
 def create_response_table():
-  try:
-    cur.execute("""CREATE TABLE chatbot_datas (
+    try:
+        cur.execute("""CREATE TABLE chatbot_datas (
       id SERIAL PRIMARY KEY,
       user_input TEXT,
       bot_response TEXT,
@@ -28,14 +28,15 @@ def create_response_table():
       updated_at TIMESTAMP DEFAULT NOW()
     );""")
 
-  except DuplicateTable:
-    print(f"Table chatbot_datas already exist - If you want to drop this table then run DROP TABLE IF EXISTS chatbot_datas;")
+    except DuplicateTable:
+        print(f"Table chatbot_datas already exist - If you want to drop this table then run DROP TABLE IF EXISTS chatbot_datas;")
+
 
 if __name__ == '__main__':
 
-  # Open a cursor to perform database operations
-  cur = conn.cursor()
-  create_response_table()
-  conn.commit()
-  cur.close()
-  conn.close()
+    # Open a cursor to perform database operations
+    cur = conn.cursor()
+    create_response_table()
+    conn.commit()
+    cur.close()
+    conn.close()
