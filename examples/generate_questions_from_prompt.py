@@ -6,9 +6,9 @@ import csv
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-def chatbot(num_responses):
+def chatbot(num_of_sets):
     response_list = []
-    for i in range(num_responses):
+    for _ in range(num_of_sets):
         response = openai.Completion.create(
         model="text-davinci-003",
         prompt="As a question provider, your task is to generate questions that users may ask ResMed chatbot from their perspective. These questions do not necessarily have to be professional and can be about random or tricky topics.Each time don't repeat the same questions. Please focus on sleep apnea, snoring, and insomnia and encourage users to share their symptoms. For example, a user may ask: 'I often feel very tired, Why do I wake up feeling exhausted, even if I've slept for a full eight hours?",
@@ -29,5 +29,6 @@ def chatbot(num_responses):
             writer.writerow(['Response'])
         for response in response_list:
             writer.writerow([response])
+            writer.writerow(["*"*15])
+            
 chatbot(5)
-

@@ -99,9 +99,3 @@
 
 ## Example 3 - Chatbot framework
    Please check the readme at examples/chatbot-framework/README.md
- 
-### To navigate to cookbook
-
-   [cookbook](docs/cookbook)
-
-   To navigate to common documentation [documentation](docs/documentation.md)
