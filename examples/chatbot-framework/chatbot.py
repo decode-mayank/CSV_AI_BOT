@@ -11,7 +11,7 @@ from debug_utils import debug_steps,debug, debug_attribute
 from constants import davinci,HUMAN,BOT,SEPARATORS,INITIAL_PROMPT,INITIAL_RESPONSE,COST,fields_dict
 from utils import get_db_connection, replace_quotes,write_to_db, write_logs_to_csv
 from app.utils import chatbot_logic
-from app.constants import RESPONSE_FOR_INVALID_QUERY, UNABLE_TO_FIND_PRODUCTS_IN_DB, CHATBOT_NAME
+from app.constants import RESPONSE_FOR_INVALID_QUERY, UNABLE_TO_FIND_PRODUCTS_IN_DB, CHATBOT_NAME, SLEEP_ASSESSMENT_INFO
 
 # Insert your API key
 load_dotenv()

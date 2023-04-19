@@ -1,8 +1,7 @@
 RESPONSE_FOR_INVALID_QUERY = "I am a Resmed chatbot, I can't help with that"
 
 # Link for sleep assessment
-SLEEP_ASSESSMENT_INFO="For more information please visit'\033]8;;https://info.resmed.co.in/free-sleep-assessment\aSleep Assessment\033]8;;\a'"
-
+SLEEP_ASSESSMENT_INFO = "For more information please visit [Sleep Assessment](https://info.resmed.co.in/free-sleep-assessment)"
 
 '''
 Sleep assessment link would be shown in below scenario

@@ -47,7 +47,7 @@ def identify_symptom(row,user_input,level):
     Insomnia:A sleep disorder characterized by difficulty falling asleep,staying asleep,or waking up too early in the morning,Often associated with anxiety, stress, or other psychological factors, as well as medical conditions or medications,Can lead to excessive daytime sleepiness, fatigue, irritability, difficulty concentrating, and other health problems,Making more mistakes or having accidents,Feel tired or sleepy during the day.
     Extract intent from user input.
     Intent can be Sleep Apnea, Insomnia, Snoring, Not a sleep disorder, Question
-    Q: Sore throat on awakening A: Snoring Q: Excessive daytime sleepiness A: Snoring Q: I have fever A: Not a sleep disorder Q: Mood Swings A: Sleep Apnea Q: Difficulty staying asleep A: Insomnia Q: I have insomnia A: Not a sleep disorder Q: Find symptom sleep apnea A: Not a sleep disorder  Q: what should I do when not getting sleep in middle of the night A: Question Q: Find symptom {user_input}? A: """,100,0,davinci,["Q: ", "A: "]
+    Q: Sore throat on awakening A: Snoring Q: Excessive daytime sleepiness A: Snoring Q: I have fever A: Not a sleep disorder Q: Why exactly would I need a full face mask? What condition is that for? A: Not a sleep disorder Q: Are there any natural remedies that can help with my sleep apnea? A: Not a sleep disorder Q: Mood Swings A: Sleep Apnea Q: Difficulty staying asleep A: Insomnia Q: I have insomnia A: Not a sleep disorder Q: Find symptom sleep apnea A: Not a sleep disorder  Q: what should I do when not getting sleep in middle of the night A: Question Q: Find symptom {user_input}? A: """, 100, 0, davinci, ["Q: ", "A: "]
     # Multi shot learning
     response = openai.Completion.create(
     model=MODEL,
@@ -126,6 +126,8 @@ def extract_data(pattern,message):
 
 def get_props_from_message(message):
     response = message.split("Intent")[0]
+    if 'sleep assessment' in response or 'sleep test' in response:
+        response += SLEEP_ASSESSMENT_INFO
     intent,entity,product_suggestion="","",""
     # Extracting the Intent
     intent = extract_data(r'Intent: (.*), Entity', message)
