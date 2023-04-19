@@ -51,9 +51,27 @@ def get_last_n_message_log(message_log, n):
 
 @client.event
 async def on_message(message):
-    if message.author == client.user:
+    if message.author == client.user:       
         return
+    
+    if "Health-Check-Bot" in message.author.name and message.content == "ping":
+        # Health check condition
+        await message.channel.send('online')
+        return
+    
+    if message.content=="/clear":
+        channel = message.channel
+        if isinstance(channel, discord.TextChannel):
+            message_ids = []
+            async for message in channel.history(limit=None):
+                message_ids.append(message)
 
+            await channel.delete_messages(message_ids)
+        else:
+            await channel.send("I can't delete messages in a DM channel.")
+        
+        return
+    
     if message.reference is not None:
         await message.reply(REPLY_MESSAGE)
     elif message.content:
