@@ -15,6 +15,6 @@ RUN virtualenv venv
 
 RUN /bin/bash -c "source venv/bin/activate"
 
-EXPOSE 8001
+EXPOSE 8000
 
 CMD ["python3", "examples/chatbot-framework/discord_bot.py", "0.0.0.0:8000"]
