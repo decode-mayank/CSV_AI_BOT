@@ -4,7 +4,6 @@ from chatbot import chatbot
 from app.constants import SYSTEM_PROMPT
 from constants import SEPARATORS
 from utils import add_seperators, update_feedback
-from discord.ext import commands
 
 # Reference - https://www.pragnakalp.com/create-discord-bot-using-python-tutorial-with-examples/
 

@@ -167,7 +167,9 @@ def get_props_from_message(message):
     ("Here are some tips to help you get a good night's sleep: \n1. Stick to a regular sleep schedule - go to bed and wake up at the same time every day. \n2. Avoid caffeine, nicotine, and alcohol before bed. \n3. Exercise regularly, but not too close to bedtime. \n4. Avoid large meals and beverages late at night. \n5. Relax before bed by taking a warm bath or reading a book. \n6. Make sure your bedroom is dark, quiet, and comfortable. \n7. If you can't sleep, get out of bed and do something relaxing until you feel tired. \n", 'Healthy Sleep Tips', 'Healthy Sleep Tips', 'Resmed')
     '''
     response = message.split("Intent")[0]
-    intent, entity, product_suggestion, price_range = "", "", "", ""
+    if 'sleep assessment' in response or 'sleep test' in response:
+        response += SLEEP_ASSESSMENT_INFO
+    intent,entity,product_suggestion="","",""
     # Extracting the Intent
     intent = extract_data(r'Intent: (.*), Entity', message)
     # Extracting the Entity
