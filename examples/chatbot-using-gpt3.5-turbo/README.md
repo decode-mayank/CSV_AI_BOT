@@ -2,7 +2,7 @@ Sample Output when we run main.py
 
 Features:
 a) Chatbot
-b) Remembers the conversation 
+b) Remembers the conversation
 eg: First i asked what is python then I asked show me the features of it it answered for both of the questions
 
 You: what is python
@@ -25,4 +25,4 @@ AI assistant: Sure, here are some of the key features of Python:
 7. Dynamic typing: Python is dynamically typed, which means that variable types are determined at runtime rather than at compile time. This makes it easier to write code quickly, but can also lead to more errors if not used carefully.
 
 Overall, Python's simplicity, versatility, and large community of developers make it a popular choice for a wide range of applications.
-You: 
+You:

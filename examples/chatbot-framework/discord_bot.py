@@ -3,7 +3,7 @@ import discord
 from chatbot import chatbot
 from app.constants import SYSTEM_PROMPT
 from constants import SEPARATORS
-from utils import add_seperators,update_feedback
+from utils import add_seperators, update_feedback
 
 # Reference - https://www.pragnakalp.com/create-discord-bot-using-python-tutorial-with-examples/
 
@@ -20,12 +20,13 @@ THUMBS_DOWN = "👎"
 VALID_REACTION = f"Valid reaction are {THUMBS_UP} or {THUMBS_DOWN}"
 REPLY_MESSAGE = "Not handling reply message for now"
 
+
 @client.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
 
 
-def get_last_n_message_log(message_log,n):
+def get_last_n_message_log(message_log, n):
     '''
         system
         ***
@@ -39,8 +40,8 @@ def get_last_n_message_log(message_log,n):
     if message_log.find(SEPARATORS) >= n+1:
         messages = message_log.split(SEPARATORS)
         last_n_messages = messages[-n:]
-        
-        message_log = messages[0] + SEPARATORS 
+
+        message_log = messages[0] + SEPARATORS
         for message in last_n_messages:
             message_log += f"{message}{SEPARATORS}"
     else:
@@ -58,29 +59,30 @@ async def on_message(message):
     elif message.content:
         # Reference: https://www.youtube.com/watch?v=XL6ABuJ0XO0
         await message.add_reaction(EYES)
-        
+
         num_messages = 10
         channel = message.channel
         messages = []
-        
+
         message_log = add_seperators(SYSTEM_PROMPT)
-        
+
         async for msg in channel.history(limit=num_messages):
             if VALID_REACTION not in msg.content and REPLY_MESSAGE not in msg.content:
                 author = msg.author.name
                 if "Bot" in author:
                     messages.append(f" Bot: {msg.content}")
-                elif len(messages)>0:
-                        messages[-1] = f"Human: {msg.content}" + messages[-1]
+                elif len(messages) > 0:
+                    messages[-1] = f"Human: {msg.content}" + messages[-1]
                 else:
                     print("Got message which sent recently. So, skipping it")
 
         # Store only last 2 conversation and prompt conversation
         messages = messages[::-1]
         message_log = message_log + SEPARATORS.join(messages)
-        message_log = get_last_n_message_log(message_log,2)
-        response,_ = chatbot(message.content,message_log,message.id)
+        message_log = get_last_n_message_log(message_log, 2)
+        response, _ = chatbot(message.content, message_log, message.id)
         await message.reply(response)
+
 
 @client.event
 async def on_reaction_add(reaction, user):
@@ -89,12 +91,12 @@ async def on_reaction_add(reaction, user):
 
     if parent_id:
         if reaction.emoji == THUMBS_UP:
-            update_feedback(parent_id,True)
+            update_feedback(parent_id, True)
             # await reaction.message.reply(f'Hey {user}! you reacted {reaction.emoji} for the message {message}')
         elif reaction.emoji == THUMBS_DOWN:
             # await reaction.message.reply(f'Hey {user}! you reacted {reaction.emoji} for the message {message}')
-            update_feedback(parent_id,False)
-        else:  
+            update_feedback(parent_id, False)
+        else:
             await reaction.message.reply(f'Hey {user}! you reacted with {reaction.emoji} - {VALID_REACTION}')
-            
+
 client.run(os.getenv("DISCORD_TOKEN"))
