@@ -9,7 +9,7 @@
         "logDriver": "awslogs",
         "secretOptions": null,
         "options": {
-          "awslogs-group": "/ecs/Python-Django",
+          "awslogs-group": "/ecs/Python-features-discord",
           "awslogs-region": "us-west-2",
           "awslogs-stream-prefix": "ecs"
         }
@@ -19,7 +19,7 @@
         {
           "hostPort": 0,
           "protocol": "tcp",
-          "containerPort": 8000
+          "containerPort": 8001
         }
       ],
       "command": [],
@@ -37,7 +37,7 @@
       "memoryReservation": null,
       "volumesFrom": [],
       "stopTimeout": null,
-      "image": "<IMAGE_NAME>",
+      "image": <IMAGE_NAME>,
       "startTimeout": null,
       "firelensConfiguration": null,
       "dependsOn": null,
@@ -54,7 +54,7 @@
       "dockerLabels": null,
       "systemControls": null,
       "privileged": null,
-      "name": "Python-Django"
+      "name": "Python-features-discord"
     }
   ],
   "placementConstraints": [],
@@ -64,8 +64,8 @@
     "EXTERNAL",
     "EC2"
   ],
-  "taskDefinitionArn": "arn:aws:ecs:us-west-2:686878367233:task-definition/Python-Django:12",
-  "family": "Python-Django",
+  "taskDefinitionArn": "arn:aws:ecs:us-west-2:686878367233:task-definition/Python-features-discord:2",
+  "family": "Python-features-discord",
   "requiresAttributes": [
     {
       "targetId": null,
@@ -108,10 +108,10 @@
   "requiresCompatibilities": [
     "EC2"
   ],
-  "networkMode": null,
+  "networkMode": "bridge",
   "runtimePlatform": null,
   "cpu": null,
-  "revision": 12,
+  "revision": 2,
   "status": "ACTIVE",
   "inferenceAccelerators": null,
   "proxyConfiguration": null,
