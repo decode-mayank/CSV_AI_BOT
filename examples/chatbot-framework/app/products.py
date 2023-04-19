@@ -61,7 +61,7 @@ def generate_prompt(text, instruction):
 
 def product(row, text, level):
     prompt = generate_prompt(
-        text, "Don't use Where clause at all, Use Order_by command to order the rating OR price in Descending order and list top 4 items")
+        text, "Don't use Where clause at all, Use Order_by command to order the rating OR price in Descending order and list top 2 items")
     response, response_token_product = call_text_completion(prompt)
     output = execute_query(prompt, row, response, level, product.__name__)
     return (output, response_token_product)
@@ -69,7 +69,7 @@ def product(row, text, level):
 
 def other_products(row, text, level):
     prompt = generate_prompt(
-        text, "Use Order_by command to order the rating in Ascending order and list top 4 items")
+        text, "Use Order_by command to order the rating in Ascending order and list top 2 items")
     response, response_token_product = call_text_completion(prompt)
     output = execute_query(prompt, row, response, level,
                            other_products.__name__)
@@ -79,10 +79,10 @@ def other_products(row, text, level):
 def cheap_products(row, user_input, query_to_db, level):
     if "Product" in query_to_db:
         prompt = generate_prompt(
-            user_input, "Don't use Where clause, Use Order_by command to order the price in Ascending order and list top 4 items")
+            user_input, "Don't use Where clause, Use Order_by command to order the price in Ascending order and list top 2 items")
     else:
         prompt = generate_prompt(
-            user_input, "Use Order_by command to order the price in Ascending order and list top 4 items")
+            user_input, "Use Order_by command to order the price in Ascending order and list top 2 items")
     response, response_token_product = call_text_completion(prompt)
     output = execute_query(prompt, row, response, level,
                            cheap_products.__name__)
@@ -93,13 +93,13 @@ def general_product(row, user_input, query_to_db, level):
     debug_attribute("User input for sql query", query_to_db)
     # Use only tags in condition if there is any product OR category mentioned in user input and
     prompt = generate_prompt(
-        query_to_db, "Use Order_by command to order the rating in Descending order and list top 4 items")
+        query_to_db, "Use Order_by command to order the rating in Descending order and list top 2 items")
     response, response_token_product = call_text_completion(prompt)
     output = execute_query(prompt, row, response, level,
                            general_product.__name__)
     if output == []:
         prompt = generate_prompt(
-            user_input, "Use Order_by command to order the rating in Descending order and list top 4 items")
+            user_input, "Use Order_by command to order the rating in Descending order and list top 2 items")
     response, response_token_product = call_text_completion(prompt)
     output = execute_query(prompt, row, response, level,
                            general_product.__name__)
