@@ -97,7 +97,7 @@ def search_product(row, user_input, response_from_gpt):
         response = ""
         raw_response = ""
     bot_response = response + prod_response
-    raw_response = response_from_gpt + prod_response
+    raw_response = response_from_gpt
 
     return bot_response, raw_response, tokens
 
@@ -137,7 +137,6 @@ def chatbot_logic(row, user_input, response_from_gpt):
 
             # Add product response to bot_response, raw_response
             bot_response += prod_response
-            raw_response = raw_response + prod_response
             tokens += prod_tokens
         else:
             bot_response, raw_response, tokens = search_product(
