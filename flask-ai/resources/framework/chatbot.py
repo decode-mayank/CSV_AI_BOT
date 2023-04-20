@@ -49,7 +49,6 @@ def get_chat_response(user_input, message_log=[]):
         response = "Please type a message that is less than 300 characters."
         pr_red(response)
     else:
-        breakpoint()
         response, message_log, row_id = chatbot(user_input, message_log)
     return response, message_log, row_id
 
