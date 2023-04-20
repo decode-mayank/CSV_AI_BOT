@@ -62,7 +62,8 @@ def identify_symptom(row, user_input, level):
     Instructions:
     -  Sleep disorder can be Sleep Apnea, Insomnia, Snoring
     - If you are unsure of the answer, you can say Not a sleep disorder
-    Q: Find symptom Sore throat on awakening A: Snoring Q: Find symptom Excessive daytime sleepiness A: Snoring Q: Find symptom I have fever A: Not a sleep disorder Q: Find symptom Mood Swings A: Sleep Apnea Q: Find symptom Difficulty staying asleep A: Insomnia Q: Find symptom cpap devices A: Not a sleep disorder Q: show me {user_input}? A: """, 100, 0, davinci, ["Q: ", "A: "]
+           
+Q: Sore throat on awakening A: Snoring Q: Excessive daytime sleepiness A: Snoring Q: I have fever A: Not a sleep disorder Q: Why exactly would I need a full face mask? What condition is that for? A: Not a sleep disorder Q: Are there any natural remedies that can help with my sleep apnea? A: Not a sleep disorder Q: Mood Swings A: Sleep Apnea Q: Difficulty staying asleep A: Insomnia Q: I have insomnia A: Not a sleep disorder Q: Find symptom sleep apnea A: Not a sleep disorder  Q: what should I do when not getting sleep in middle of the night A: Question Q: Find symptom {user_input}? A: """, 100, 0, davinci, ["Q: ", "A: "]
     # Multi shot learning
     response = openai.Completion.create(
         model=MODEL,
@@ -167,7 +168,8 @@ def get_props_from_message(message):
     ("Here are some tips to help you get a good night's sleep: \n1. Stick to a regular sleep schedule - go to bed and wake up at the same time every day. \n2. Avoid caffeine, nicotine, and alcohol before bed. \n3. Exercise regularly, but not too close to bedtime. \n4. Avoid large meals and beverages late at night. \n5. Relax before bed by taking a warm bath or reading a book. \n6. Make sure your bedroom is dark, quiet, and comfortable. \n7. If you can't sleep, get out of bed and do something relaxing until you feel tired. \n", 'Healthy Sleep Tips', 'Healthy Sleep Tips', 'Resmed')
     '''
     response = message.split("Intent")[0]
-    if 'sleep assessment' in response or 'sleep test' in response:
+    #breakpoint()
+    if SLEEP_ASSESSMENT_INFO not in response and ('sleep assessment' in response or 'sleep test' in response):
         response += SLEEP_ASSESSMENT_INFO
     intent,entity,product_suggestion="","",""
     # Extracting the Intent
