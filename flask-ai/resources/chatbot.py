@@ -7,6 +7,8 @@ from resources.framework.app.constants import SYSTEM_PROMPT
 from resources.framework.utils import update_feedback
 import glob
 import csv
+from models.chatbot import Product
+
 
 blp = Blueprint("Products", "products", description="Operations on products")
 
