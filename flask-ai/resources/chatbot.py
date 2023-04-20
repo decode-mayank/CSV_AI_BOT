@@ -74,5 +74,5 @@ class ImportProductCSV(MethodView):
                             db.session.add(product)
                             db.session.commit()
                         except:
-                            return Response({"status": False, "message": "Issue while adding Products"})
+                            return {"status": False, "message": "Issue while adding Products"}
         return {'status': True, 'message': 'Products successfully added into DB'}, 200
