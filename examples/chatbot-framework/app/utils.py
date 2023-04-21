@@ -139,8 +139,11 @@ def chatbot_logic(row, user_input, response_from_gpt):
             bot_response += prod_response
             tokens += prod_tokens
         else:
-            bot_response, raw_response, tokens = search_product(
-                row, user_input, response_from_gpt)
+            if product_suggestion.lower() == 'none':
+                bot_response = response
+            else: 
+                bot_response, raw_response, tokens = search_product(
+                    row, user_input, response_from_gpt)
 
     return bot_response, raw_response, tokens
 
