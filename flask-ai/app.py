@@ -3,7 +3,6 @@ from flask_smorest import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from db import db
-import models
 from resources.chatbot import pblp as ProductBlueprint
 from resources.chatbot import blp as ChatBotBlueprint
 import os
@@ -34,3 +33,6 @@ def create_app(db_url=None):
     return app
 
 app = create_app()
+
+if __name__ == "__main__":
+    app.run()

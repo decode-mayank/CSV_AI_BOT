@@ -1,3 +1,3 @@
-FLASK_APP=app
-FLASK_ENV=development
-FLASK_DEBUG=True
+export FLASK_APP=app.py
+export FLASK_ENV=development
+export FLASK_DEBUG=True

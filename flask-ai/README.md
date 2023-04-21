@@ -3,14 +3,14 @@ Reference - https://rest-apis-flask.teclado.com/docs/first_rest_api/getting_set_
 # How to run server
 flask run
 
-# How to apply migrations
+# If migrations folder not exist in the project
 flask db init
-flask db migrate
+
+# How to apply migrations
+flask db migrate -m "Initial migration."
 flask db upgrade
 
 # If you already have migrations file in migrations folder then run below command
-flask db stamp head
-flask db migrate
 flask db upgrade
 
 
