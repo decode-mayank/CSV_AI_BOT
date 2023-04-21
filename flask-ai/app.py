@@ -8,6 +8,7 @@ from resources.chatbot import pblp as ProductBlueprint
 from resources.chatbot import blp as ChatBotBlueprint
 import os
 from dotenv import load_dotenv
+from flask_cors import CORS
 
 load_dotenv()
 
@@ -15,6 +16,7 @@ load_dotenv()
 def create_app(db_url=None):
 
     app = Flask(__name__)
+    CORS(app)
     app.config["PROPAGATE_EXCEPTIONS"] = True
     app.config["API_TITLE"] = "Chatbot API"
     app.config["API_VERSION"] = "v1"

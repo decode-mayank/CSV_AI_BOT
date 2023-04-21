@@ -120,3 +120,4 @@ zope.interface==5.5.2
 Flask==2.2.3
 Flask-Migrate==4.0.4
 flask-sqlalchemy==3.0.3
+flask-cors==3.0.10
