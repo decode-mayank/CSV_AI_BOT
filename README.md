@@ -1,4 +1,4 @@
-# Bitcot AI Cookbook
+# Bitcot AI
 
 ## Prerequisites:
 
@@ -82,11 +82,12 @@
 
 #### 7. Open .env and Update OPENAI_API_KEY
 
-### Format
+
+### Skip virtual environment and Format python code
 
 - To format the code - Use below command
   ```bash
-  $ find . -name '*.py' | tqdm --unit='file' --total=$(find . -name '*.py' | wc -l) | xargs -I{} autopep8 --in-place {}
+  $ find . -path './venv' -prune -o -name '*.py' -print | tqdm --unit='file' --total=$(find . -name '*.py' -not -path './venv/*' | wc -l) | xargs -I{} autopep8 --in-place {}
   ```
 
 ## Example 1 - Chatbot using gpt 3.5 turbo
