@@ -38,9 +38,9 @@ class UserChatBot(MethodView):
                 return {'response': 'Message log should be of type list', 'message_log': []}
             elif len(message_log) == 0:
                 message_log = [SYSTEM_PROMPT]
-            response, message_log, row_id = get_chat_response(
+            response, new_message_log, row_id = get_chat_response(
                 user_input, message_log)
-            return {'status': True, 'id': row_id, 'response': response, 'message_log': message_log}, 200
+            return {'status': True, 'id': row_id, 'response': response, 'message_log': new_message_log}, 200
         except:
             return {'status': False, 'error': 'invalid request'}, 400
 
