@@ -55,12 +55,15 @@ def get_products(row, user_input, query_to_db):
 
 def identify_symptom(row, user_input, level):
     PROMPT, TOKENS, TEMPERATURE, MODEL, STOP = f"""Snoring, sleep apnea, and insomnia are all different sleep disorders with distinct symptoms and causes. Here are some differences that may help you differentiate between the three:
-    Snoring:Characterized by loud, rhythmic breathing sounds during sleep,Usually harmless, although it can still disrupt your sleep or your partner's sleep Typically caused by a partial obstruction in the airway, often due to relaxed muscles in the throat or nasal congestion,Usually associated with pauses in breathing or gasping sensations during sleep,Change in the level of attention, concentration, or memory.
-    Sleep apnea:Characterized by pauses in breathing or shallow breaths during sleep,Often accompanied by loud snoring and gasping or choking sensations during sleep,Can lead to excessive daytime sleepiness,Being Overweight(adds fat around the neck and airway),Having inflamed tonsils and adenoids,Having blocked nose due to allergy or cold,Structural problem with shape of the nose, neck or jaw,Frequently urinating at night,Waking up with night sweats,High blood pressure,Mood swings,Impotence and reduced sex drive.
-    Insomnia:A sleep disorder characterized by difficulty falling asleep,staying asleep,or waking up too early in the morning,Often associated with anxiety, stress, or other psychological factors, as well as medical conditions or medications,Can lead to excessive daytime sleepiness, fatigue, irritability, difficulty concentrating, and other health problems,Making more mistakes or having accidents,Feel tired or sleepy during the day.
-    Extract intent from user input.
-    Intent can be Sleep Apnea, Insomnia, Snoring, Not a sleep disorder, Question
-    Q: Sore throat on awakening A: Snoring Q: Excessive daytime sleepiness A: Snoring Q: I have fever A: Not a sleep disorder Q: Mood Swings A: Sleep Apnea Q: Difficulty staying asleep A: Insomnia Q: I have insomnia A: Not a sleep disorder Q: Find symptom sleep apnea A: Not a sleep disorder  Q: what should I do when not getting sleep in middle of the night A: Question Q: Find symptom {user_input}? A: """, 100, 0, davinci, ["Q: ", "A: "]
+    Snoring: Characterized by loud, rhythmic breathing sounds during sleep,Usually harmless, although it can still disrupt your sleep or your partner's sleep Typically caused by a partial obstruction in the airway, often due to relaxed muscles in the throat or nasal congestion,Usually associated with pauses in breathing or gasping sensations during sleep,Change in the level of attention, concentration, or memory.
+    Sleep apnea: Characterized by pauses in breathing or shallow breaths during sleep,Often accompanied by loud snoring and gasping or choking sensations during sleep,Can lead to excessive daytime sleepiness,Being Overweight(adds fat around the neck and airway),Having inflamed tonsils and adenoids,Having blocked nose due to allergy or cold,Structural problem with shape of the nose, neck or jaw,Frequently urinating at night,Waking up with night sweats,High blood pressure,Mood swings,Impotence and reduced sex drive.
+    Insomnia: A sleep disorder characterized by difficulty falling asleep,staying asleep,or waking up too early in the morning,Often associated with anxiety, stress, or other psychological factors, as well as medical conditions or medications,Can lead to excessive daytime sleepiness, fatigue, irritability, difficulty concentrating, and other health problems,Making more mistakes or having accidents,Feel tired or sleepy during the day.
+    Find sleep disorder from user input.
+    Instructions:
+    -  Sleep disorder can be Sleep Apnea, Insomnia, Snoring
+    - If you are unsure of the answer, you can say Not a sleep disorder
+           
+Q: Sore throat on awakening A: Snoring Q: Excessive daytime sleepiness A: Snoring Q: I have fever A: Not a sleep disorder Q: Why exactly would I need a full face mask? What condition is that for? A: Not a sleep disorder Q: Are there any natural remedies that can help with my sleep apnea? A: Not a sleep disorder Q: Mood Swings A: Sleep Apnea Q: Difficulty staying asleep A: Insomnia Q: I have insomnia A: Not a sleep disorder Q: Find symptom sleep apnea A: Not a sleep disorder  Q: what should I do when not getting sleep in middle of the night A: Question Q: Find symptom {user_input}? A: """, 100, 0, davinci, ["Q: ", "A: "]
     # Multi shot learning
     response = openai.Completion.create(
         model=MODEL,
@@ -94,7 +97,7 @@ def search_product(row, user_input, response_from_gpt):
         response = ""
         raw_response = ""
     bot_response = response + prod_response
-    raw_response = response_from_gpt + prod_response
+    raw_response = response_from_gpt
 
     return bot_response, raw_response, tokens
 
@@ -134,11 +137,13 @@ def chatbot_logic(row, user_input, response_from_gpt):
 
             # Add product response to bot_response, raw_response
             bot_response += prod_response
-            raw_response = raw_response + prod_response
             tokens += prod_tokens
         else:
-            bot_response, raw_response, tokens = search_product(
-                row, user_input, response_from_gpt)
+            if product_suggestion.lower() == 'none':
+                bot_response = response
+            else: 
+                bot_response, raw_response, tokens = search_product(
+                    row, user_input, response_from_gpt)
 
     return bot_response, raw_response, tokens
 
@@ -165,7 +170,10 @@ def get_props_from_message(message):
     ("Here are some tips to help you get a good night's sleep: \n1. Stick to a regular sleep schedule - go to bed and wake up at the same time every day. \n2. Avoid caffeine, nicotine, and alcohol before bed. \n3. Exercise regularly, but not too close to bedtime. \n4. Avoid large meals and beverages late at night. \n5. Relax before bed by taking a warm bath or reading a book. \n6. Make sure your bedroom is dark, quiet, and comfortable. \n7. If you can't sleep, get out of bed and do something relaxing until you feel tired. \n", 'Healthy Sleep Tips', 'Healthy Sleep Tips', 'Resmed')
     '''
     response = message.split("Intent")[0]
-    intent, entity, product_suggestion, price_range = "", "", "", ""
+    #breakpoint()
+    if SLEEP_ASSESSMENT_INFO not in response and ('sleep assessment' in response or 'sleep test' in response):
+        response += SLEEP_ASSESSMENT_INFO
+    intent,entity,product_suggestion="","",""
     # Extracting the Intent
     intent = extract_data(r'Intent: (.*), Entity', message)
     # Extracting the Entity

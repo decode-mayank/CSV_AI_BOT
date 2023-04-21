@@ -43,7 +43,7 @@ def get_answer_from_gpt(row, prompt, level):
     return response_text, response_token
 
 
-def chatbot(user_input, message_log, discord_id="", db=True):
+def chatbot(user_input, message_log, time_stamp, discord_id="", db=True):
     MODE = 'w'
     fields = ["user_input", "bot_response", "level1", "level2", "level3", "level4",
               INITIAL_PROMPT, INITIAL_RESPONSE, COST]
@@ -62,7 +62,6 @@ def chatbot(user_input, message_log, discord_id="", db=True):
 
     debug_steps(row, f"Prompt - {prompt}", level=INITIAL_PROMPT)
 
-    time_stamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     response_accepted = True
     bot_response = ""
 

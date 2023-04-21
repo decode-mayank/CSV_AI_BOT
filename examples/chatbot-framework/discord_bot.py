@@ -1,4 +1,6 @@
 import os
+from datetime import datetime, timezone
+
 import discord
 from chatbot import chatbot
 from app.constants import SYSTEM_PROMPT
@@ -19,7 +21,7 @@ THUMBS_UP = "👍"
 THUMBS_DOWN = "👎"
 VALID_REACTION = f"Valid reaction are {THUMBS_UP} or {THUMBS_DOWN}"
 REPLY_MESSAGE = "Not handling reply message for now"
-
+CLEAR_COMMAND = "/clear"
 
 @client.event
 async def on_ready():
@@ -51,9 +53,37 @@ def get_last_n_message_log(message_log, n):
 
 @client.event
 async def on_message(message):
-    if message.author == client.user:
+    if message.author == client.user:       
         return
+    
+    channel = message.channel
+    async for older_messages in channel.history(limit=1, oldest_first=True):
+        first_message = older_messages
+        break
+    first_message_timestamp = first_message.created_at.replace(
+        tzinfo=timezone.utc).timestamp()
+    time_stamp = datetime.utcfromtimestamp(
+        first_message_timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
+    if "Health-Check-Bot" in message.author.name and message.content == "ping":
+        # Health check condition
+        await message.channel.send('online')
+        return
+    
+    if message.content == CLEAR_COMMAND:
+        print("User requested to clear channel history")
+        channel = message.channel
+        if isinstance(channel, discord.TextChannel):
+            message_ids = []
+            async for message in channel.history(limit=None):
+                message_ids.append(message)
+
+            await channel.delete_messages(message_ids)
+        else:
+            await channel.send("I can't delete messages in a DM channel.")
+        
+        return
+    
     if message.reference is not None:
         await message.reply(REPLY_MESSAGE)
     elif message.content:
@@ -67,7 +97,7 @@ async def on_message(message):
         message_log = add_seperators(SYSTEM_PROMPT)
 
         async for msg in channel.history(limit=num_messages):
-            if VALID_REACTION not in msg.content and REPLY_MESSAGE not in msg.content:
+            if msg.content != CLEAR_COMMAND or (VALID_REACTION not in msg.content and REPLY_MESSAGE not in msg.content):
                 author = msg.author.name
                 if "Bot" in author:
                     messages.append(f" Bot: {msg.content}")
@@ -80,7 +110,8 @@ async def on_message(message):
         messages = messages[::-1]
         message_log = message_log + SEPARATORS.join(messages)
         message_log = get_last_n_message_log(message_log, 2)
-        response, _ = chatbot(message.content, message_log, message.id)
+        response, _ = chatbot(
+            message.content, message_log, time_stamp,message.id)
         await message.reply(response)
 
 

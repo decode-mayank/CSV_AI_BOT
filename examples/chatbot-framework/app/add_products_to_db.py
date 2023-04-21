@@ -8,10 +8,10 @@ from psycopg2.errors import DuplicateTable
 
 load_dotenv()
 
-conn = connect(host='localhost',
-               database=os.getenv('DB'),
-               user=os.getenv('DB_USERNAME'),
-               password=os.getenv('DB_PASSWORD'))
+conn = connect(host=os.getenv("DATABASE_HOST"),
+                            database=os.getenv('DATABASE_NAME'),
+                            user=os.getenv('DATABASE_USER'),
+                            password=os.getenv('DATABASE_PASSWORD'))
 cur = conn.cursor()
 
 
