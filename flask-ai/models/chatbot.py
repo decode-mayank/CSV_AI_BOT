@@ -33,10 +33,8 @@ class ChatbotData(db.Model):
     response_accepted = db.Column(db.Boolean, default=False)
     response_time = db.Column(db.SmallInteger)
     discord_id = db.Column(db.String(50), default='')
-    cost = db.Column(db.Numeric(5,3))
+    cost = db.Column(db.Numeric(5, 3))
     time_stamp = db.Column(db.DateTime())
     created_at = db.Column(db.DateTime, server_default=db.func.now())
-    updated_at = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
-
-
-
+    updated_at = db.Column(
+        db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())

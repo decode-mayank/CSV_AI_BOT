@@ -81,6 +81,7 @@ def update_feedback(id, feedback, discord=False):
         row.response_accepted = feedback
         db.session.add(row)
         db.session.commit()
+        success = True
 
     return success
 
@@ -103,7 +104,6 @@ def write_logs_to_csv(mode, fields, row, max_columns, bot_response):
             # writing the data rows
             row[1] = bot_response
             csvwriter.writerows([row])
-
 
 
 def get_or_create(session, model, **kwargs):

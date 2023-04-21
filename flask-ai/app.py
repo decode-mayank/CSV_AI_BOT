@@ -1,13 +1,14 @@
-from flask import Flask
-from flask_smorest import Api
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from db import db
-from resources.chatbot import pblp as ProductBlueprint
-from resources.chatbot import blp as ChatBotBlueprint
 import os
+
 from dotenv import load_dotenv
+from flask import Flask
 from flask_cors import CORS
+from flask_migrate import Migrate
+from flask_smorest import Api
+
+from db import db
+from resources.routes import pblp as ProductBlueprint
+from resources.routes import blp as ChatBotBlueprint
 
 load_dotenv()
 
@@ -33,6 +34,7 @@ def create_app(db_url=None):
     api.register_blueprint(ChatBotBlueprint)
 
     return app
+
 
 app = create_app()
 

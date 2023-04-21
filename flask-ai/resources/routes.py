@@ -1,18 +1,21 @@
-import uuid
-from flask.views import MethodView
-from flask_smorest import Blueprint, abort
+import csv
+import glob
+
 from flask import request
+from flask_smorest import Blueprint
+from flask.views import MethodView
+
+from db import db
+from models.chatbot import Product
 from resources.framework.chatbot import get_chat_response
 from resources.framework.app.constants import SYSTEM_PROMPT
-from resources.framework.utils import update_feedback
-import glob
-import csv
-from models.chatbot import Product
-from db import db
-from resources.framework.utils import get_or_create
+from resources.framework.utils import update_feedback, get_or_create
 
-blp = Blueprint("ChatbotData", "chatbot_data", description="Provide answer of user questions by chatbot")
-pblp = Blueprint("Product", "products", description="Insert products from csv to db")
+
+blp = Blueprint("ChatbotData", "chatbot_data",
+                description="Provide answer of user questions by chatbot")
+pblp = Blueprint("Product", "products",
+                 description="Insert products from csv to db")
 
 
 @blp.route("/api/chat/")
@@ -37,9 +40,9 @@ class UserChatBot(MethodView):
                 message_log = [SYSTEM_PROMPT]
             response, message_log, row_id = get_chat_response(
                 user_input, message_log)
-            return {'status':True, 'id': row_id, 'response': response, 'message_log': message_log}, 200
+            return {'status': True, 'id': row_id, 'response': response, 'message_log': message_log}, 200
         except:
-            return {'status':False, 'error': 'invalid request'}, 400
+            return {'status': False, 'error': 'invalid request'}, 400
 
 
 @blp.route("/api/feedback/")
@@ -48,11 +51,11 @@ class Feedback(MethodView):
     def post(self):
         data = request.json
         if 'id' not in data or 'feedback' not in data:
-            return {'status':False, 'error': 'id or feedback parameter is missing'}, 400
+            return {'status': False, 'error': 'id or feedback parameter is missing'}, 400
 
         update_feedback(data['id'], data['feedback'])
 
-        return {'status':True, 'success': True}
+        return {'status': True, 'success': True}
 
 
 @blp.route("/api/hc/")
@@ -74,9 +77,9 @@ class ImportProductCSV(MethodView):
                     for row in reader:
                         try:
                             get_or_create(db.session, Product, category=row['category'], sku=row['sku'], product=row['product'], description=row['description'],
-                                                      price=row['price'], breadcrumb=row['breadcrumb'], product_url=row['product_url'], money_back=eval(row['money_back']),
-                                                      rating=row['rating'], total_reviews=row['total_reviews'], tags=row['tags'])
+                                          price=row['price'], breadcrumb=row['breadcrumb'], product_url=row['product_url'], money_back=eval(
+                                              row['money_back']),
+                                          rating=row['rating'], total_reviews=row['total_reviews'], tags=row['tags'])
                         except:
                             return {"status": False, "message": "Issue while adding Products"}
         return {'status': True, 'message': 'Products successfully added into DB'}, 200
-
