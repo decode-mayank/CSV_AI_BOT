@@ -8,3 +8,5 @@ flask db init
 flask db migrate
 flask db upgrade
 
+# Flask server run on default port 5000
+http://127.0.0.1:5000/

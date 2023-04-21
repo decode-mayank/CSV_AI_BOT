@@ -8,7 +8,7 @@ class Product(db.Model):
     category = db.Column(db.String(500))
     sku = db.Column(db.String(500))
     product = db.Column(db.String(500))
-    description = db.Column(db.String(500), nullable=True)
+    description = db.Column(db.String(5000), nullable=True)
     price = db.Column(db.Float)
     breadcrumb = db.Column(db.String(500), nullable=True)
     product_url = db.Column(db.String(500), nullable=True)

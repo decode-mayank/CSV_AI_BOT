@@ -8,13 +8,15 @@ from resources.framework.utils import update_feedback
 import glob
 import csv
 from models.chatbot import Product
+from db import db
 
 
-blp = Blueprint("Products", "products", description="Operations on products")
+blp = Blueprint("ChatbotData", "chatbot_data", description="Provide answer of user questions by chatbot")
+pblp = Blueprint("Product", "products", description="Insert products from csv to db")
 
 
 @blp.route("/api/chat/")
-class Product(MethodView):
+class UserChatBot(MethodView):
 
     def post(self):
         try:
@@ -59,7 +61,8 @@ class HealthCheck(MethodView):
     def get(self):
         return {"status": True}
 
-@blp.route("/api/import/")
+
+@pblp.route("/api/import/")
 class ImportProductCSV(MethodView):
 
     def get(self):
@@ -71,7 +74,7 @@ class ImportProductCSV(MethodView):
                     for row in reader:
                         try:
                             product = Product(category=row['category'], sku=row['sku'], product=row['product'], description=row['description'],
-                                                          price=row['price'], breadcrumb=row['breadcrumb'], product_url=row['product_url'], money_back=row['money_back'],
+                                                          price=row['price'], breadcrumb=row['breadcrumb'], product_url=row['product_url'], money_back=eval(row['money_back']),
                                                           rating=row['rating'], total_reviews=row['total_reviews'], tags=row['tags'])
                             db.session.add(product)
                             db.session.commit()

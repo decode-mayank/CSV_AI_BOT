@@ -4,7 +4,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from db import db
 import models
-from resources.chatbot import blp as ProductBlueprint
+from resources.chatbot import pblp as ProductBlueprint
+from resources.chatbot import blp as ChatBotBlueprint
 import os
 from dotenv import load_dotenv
 
@@ -28,6 +29,7 @@ def create_app(db_url=None):
     api = Api(app)
 
     api.register_blueprint(ProductBlueprint)
+    api.register_blueprint(ChatBotBlueprint)
 
     return app
 
