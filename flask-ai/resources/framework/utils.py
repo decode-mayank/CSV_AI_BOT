@@ -103,3 +103,20 @@ def write_logs_to_csv(mode, fields, row, max_columns, bot_response):
             # writing the data rows
             row[1] = bot_response
             csvwriter.writerows([row])
+
+
+
+def get_or_create(session, model, **kwargs):
+    '''
+    Creates an object or returns the object if exists
+    '''
+    instance = session.query(model).filter_by(**kwargs).first()
+    if instance:
+        session.merge(instance)
+        session.commit()
+        return instance
+    else:
+        instance = model(**kwargs)
+        session.add(instance)
+        session.commit()
+        return instance

@@ -9,7 +9,7 @@ import glob
 import csv
 from models.chatbot import Product
 from db import db
-
+from resources.framework.utils import get_or_create
 
 blp = Blueprint("ChatbotData", "chatbot_data", description="Provide answer of user questions by chatbot")
 pblp = Blueprint("Product", "products", description="Insert products from csv to db")
@@ -73,11 +73,10 @@ class ImportProductCSV(MethodView):
                     reader = csv.DictReader(decoded_file)
                     for row in reader:
                         try:
-                            product = Product(category=row['category'], sku=row['sku'], product=row['product'], description=row['description'],
-                                                          price=row['price'], breadcrumb=row['breadcrumb'], product_url=row['product_url'], money_back=eval(row['money_back']),
-                                                          rating=row['rating'], total_reviews=row['total_reviews'], tags=row['tags'])
-                            db.session.add(product)
-                            db.session.commit()
+                            get_or_create(db.session, Product, category=row['category'], sku=row['sku'], product=row['product'], description=row['description'],
+                                                      price=row['price'], breadcrumb=row['breadcrumb'], product_url=row['product_url'], money_back=eval(row['money_back']),
+                                                      rating=row['rating'], total_reviews=row['total_reviews'], tags=row['tags'])
                         except:
                             return {"status": False, "message": "Issue while adding Products"}
         return {'status': True, 'message': 'Products successfully added into DB'}, 200
+
