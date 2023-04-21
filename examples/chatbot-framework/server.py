@@ -12,7 +12,7 @@ PORT = 8001
 
 def call_api(url, method, data=None):
     headers = {
-        "Authorization": f"Bot {os.getenv('DISCORD_HEALTH_CHECK_TOKENS')}",
+        "Authorization": f"Bot {os.getenv('DISCORD_HEALTH_CHECK_TOKEN')}",
         "Content-Type": "application/json"
     }
 
