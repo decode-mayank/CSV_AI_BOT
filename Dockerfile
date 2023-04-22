@@ -1,11 +1,14 @@
 FROM python:3.10.0
 
-
 WORKDIR /app
 
 COPY ./requirements.txt /app/requirements.txt
 
+COPY ./requirements.txt /app/start.sh
+
 COPY . /app
+
+RUN pip install flask-smorest
 
 RUN pip install -r requirements.txt
 
@@ -15,6 +18,10 @@ RUN virtualenv venv
 
 RUN /bin/bash -c "source venv/bin/activate"
 
-EXPOSE 8000
+ENV PATH="/app:$PATH"
 
-CMD ["python3", "examples/chatbot-framework/discord_bot.py", "0.0.0.0:8000"]
+RUN chmod +x /app/start.sh
+
+EXPOSE 5000
+
+CMD ["start.sh", "0.0.0.0:5000"]
