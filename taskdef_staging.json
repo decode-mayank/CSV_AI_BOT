@@ -9,7 +9,7 @@
         "logDriver": "awslogs",
         "secretOptions": null,
         "options": {
-          "awslogs-group": "/ecs/Python-features-discord",
+          "awslogs-group": "/ecs/bitcot-flask-ai",
           "awslogs-region": "us-west-2",
           "awslogs-stream-prefix": "ecs"
         }
@@ -19,7 +19,7 @@
         {
           "hostPort": 0,
           "protocol": "tcp",
-          "containerPort": 8000
+          "containerPort": 5000
         }
       ],
       "command": [],
@@ -37,7 +37,7 @@
       "memoryReservation": null,
       "volumesFrom": [],
       "stopTimeout": null,
-      "image": "<IMAGE_NAME>",
+      "image": <IMAGE_NAME>,
       "startTimeout": null,
       "firelensConfiguration": null,
       "dependsOn": null,
@@ -54,7 +54,7 @@
       "dockerLabels": null,
       "systemControls": null,
       "privileged": null,
-      "name": "Python-features-discord"
+      "name": "bitcot-flask-ai"
     }
   ],
   "placementConstraints": [],
@@ -64,8 +64,8 @@
     "EXTERNAL",
     "EC2"
   ],
-  "taskDefinitionArn": "arn:aws:ecs:us-west-2:686878367233:task-definition/Python-features-discord:10",
-  "family": "Python-features-discord",
+  "taskDefinitionArn": "arn:aws:ecs:us-west-2:686878367233:task-definition/bitcot-flask-ai:2",
+  "family": "bitcot-flask-ai",
   "requiresAttributes": [
     {
       "targetId": null,
@@ -111,7 +111,7 @@
   "networkMode": "bridge",
   "runtimePlatform": null,
   "cpu": null,
-  "revision": 10,
+  "revision": 2,
   "status": "ACTIVE",
   "inferenceAccelerators": null,
   "proxyConfiguration": null,
