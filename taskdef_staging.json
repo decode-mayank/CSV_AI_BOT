@@ -33,11 +33,11 @@
       "workingDirectory": null,
       "secrets": null,
       "dockerSecurityOptions": null,
-      "memory": 500,
+      "memory": 400,
       "memoryReservation": null,
       "volumesFrom": [],
       "stopTimeout": null,
-      "image": <IMAGE_NAME>,
+      "image": <IMAGE_NAME,
       "startTimeout": null,
       "firelensConfiguration": null,
       "dependsOn": null,
@@ -58,13 +58,13 @@
     }
   ],
   "placementConstraints": [],
-  "memory": "700",
+  "memory": "500",
   "taskRoleArn": "arn:aws:iam::686878367233:role/ecsTaskExecutionRole",
   "compatibilities": [
     "EXTERNAL",
     "EC2"
   ],
-  "taskDefinitionArn": "arn:aws:ecs:us-west-2:686878367233:task-definition/bitcot-flask-ai:2",
+  "taskDefinitionArn": "arn:aws:ecs:us-west-2:686878367233:task-definition/bitcot-flask-ai:6",
   "family": "bitcot-flask-ai",
   "requiresAttributes": [
     {
@@ -111,7 +111,7 @@
   "networkMode": "bridge",
   "runtimePlatform": null,
   "cpu": null,
-  "revision": 2,
+  "revision": 6,
   "status": "ACTIVE",
   "inferenceAccelerators": null,
   "proxyConfiguration": null,
