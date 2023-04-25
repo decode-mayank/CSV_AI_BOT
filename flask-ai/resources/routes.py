@@ -72,8 +72,8 @@ class ImportProductCSV(MethodView):
         status = False
         import os
         print(os.getcwd())
-        print(files)
         files = glob.glob("**.csv")
+        print(files)
         PRODUCTS_CSV = "products.csv"
         if PRODUCTS_CSV in files:
             with open(PRODUCTS_CSV, encoding='utf-8-sig') as csv_file:
