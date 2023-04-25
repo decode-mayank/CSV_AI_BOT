@@ -70,11 +70,8 @@ class ImportProductCSV(MethodView):
 
     def get(self):
         status = False
-        import os
-        print(os.getcwd())
-        files = glob.glob("**.csv")
-        print(files)
         PRODUCTS_CSV = "products.csv"
+        files = glob.glob(PRODUCTS_CSV)
         if PRODUCTS_CSV in files:
             with open(PRODUCTS_CSV, encoding='utf-8-sig') as csv_file:
                 decoded_file = csv_file.read().splitlines()
