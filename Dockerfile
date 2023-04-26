@@ -20,4 +20,4 @@ RUN /bin/bash -c "source venv/bin/activate"
 
 EXPOSE 5000
 
-CMD ["python3", "flask-ai/app.py", "flask-ai/db.py", "0.0.0.0:5000"]
+CMD ["python3", "flask_ai/app.py", "flask_ai/db.py", "0.0.0.0:5000"]

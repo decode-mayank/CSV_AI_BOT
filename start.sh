@@ -1,3 +1,3 @@
 #!/bin/bash
 
-cd flask-ai && flask db upgrade && flask run
+cd flask_ai && flask db upgrade && flask run

@@ -22,27 +22,27 @@ pblp = Blueprint("Product", "products",
 class UserChatBot(MethodView):
 
     def post(self):
-        try:
-            user_req = request.json
+        # try:
+        user_req = request.json
 
-            # check that the required user_input parameter is present in the JSON data
-            if 'user_input' not in user_req:
-                return {'error': 'user_input parameter is required'}, 400
+        # check that the required user_input parameter is present in the JSON data
+        if 'user_input' not in user_req:
+            return {'error': 'user_input parameter is required'}, 400
 
-            # extract the user_input parameter from the JSON data
-            user_input = user_req['user_input']
+        # extract the user_input parameter from the JSON data
+        user_input = user_req['user_input']
 
-            # extract the optional message_log parameter from the JSON data, if present
-            message_log = user_req.get('message_log', [SYSTEM_PROMPT])
+        # extract the optional message_log parameter from the JSON data, if present
+        message_log = user_req.get('message_log', [SYSTEM_PROMPT])
 
-            if not (isinstance(message_log, list)):
-                return {'response': 'Message log should be of type list', 'message_log': []}
+        if not (isinstance(message_log, list)):
+            return {'response': 'Message log should be of type list', 'message_log': []}
 
-            response, new_message_log, row_id = get_chat_response(
-                user_input, message_log)
-            return {'status': True, 'id': row_id, 'response': response, 'message_log': new_message_log}, 200
-        except:
-            return {'status': False, 'error': 'invalid request'}, 400
+        response, new_message_log, row_id = get_chat_response(
+            user_input, message_log)
+        return {'status': True, 'id': row_id, 'response': response, 'message_log': new_message_log}, 200
+        # except:
+        #     return {'status': False, 'error': 'invalid request'}, 400
 
 
 @blp.route("/api/feedback/")
