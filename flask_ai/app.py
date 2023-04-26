@@ -50,6 +50,6 @@ app = create_app()
 if __name__ == "__main__":
     with app.app_context():
         # Uncomment below line to run migrations
-        # upgrade()
+        upgrade()
         port = int(os.getenv('FLASK_PORT', 5000))
         app.run(host='0.0.0.0', port=port)
