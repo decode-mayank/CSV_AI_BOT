@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Added
+- Only show resmed au websites
+- Show products,sleep assessment with html tags
+- Show only 2 products
+- if product_suggestion is None, then don't suggest products
+- Don't include products in message log
+
+
+### Added
 - For discord, store first message timestamp in database
 
 ### Changed

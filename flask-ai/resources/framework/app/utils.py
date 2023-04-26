@@ -4,7 +4,7 @@ import openai
 
 from ..constants import davinci
 from ..debug_utils import debug_attribute, debug_steps
-from .constants import SLEEP_ASSESSMENT_INFO, UNABLE_TO_FIND_PRODUCTS_IN_DB, OUTPUTS
+from .constants import SLEEP_ASSESSMENT_HTML_RESPONSE, SLEEP_ASSESSMENT_RAW_RESPONSE, UNABLE_TO_FIND_PRODUCTS_IN_DB, OUTPUTS
 from .products import product, cheap_products, general_product, other_products
 
 
@@ -16,8 +16,8 @@ def show_products(output):
         debug_attribute("DB Output", output)
         if (len(items) == 3):
             for prod, url, price in output:
-                products = prod + " - " + url + " - $" + str(price)
-                prod_response += products + "\n"
+                html_response = f'<a href="{url}">{prod}</a> - {price}\n </br>'
+                prod_response += html_response
     return prod_response
 
 
@@ -62,8 +62,8 @@ def identify_symptom(row, user_input, level):
     Instructions:
     -  Sleep disorder can be Sleep Apnea, Insomnia, Snoring
     - If you are unsure of the answer, you can say Not a sleep disorder
-    Q: Find symptom Sore throat on awakening A: Snoring Q: Find symptom Excessive daytime sleepiness A: Snoring Q: Find symptom I have fever A: Not a sleep disorder Q: Find symptom Mood Swings A: Sleep Apnea Q: Find symptom Difficulty staying asleep A: Insomnia Q: Find symptom cpap devices A: Not a sleep disorder Q: show me {user_input}? A: """, 100, 0, davinci, ["Q: ", "A: "]
-
+           
+Q: Sore throat on awakening A: Snoring Q: Excessive daytime sleepiness A: Snoring Q: I have fever A: Not a sleep disorder Q: Why exactly would I need a full face mask? What condition is that for? A: Not a sleep disorder Q: Are there any natural remedies that can help with my sleep apnea? A: Not a sleep disorder Q: Mood Swings A: Sleep Apnea Q: Difficulty staying asleep A: Insomnia Q: I have insomnia A: Not a sleep disorder Q: Find symptom sleep apnea A: Not a sleep disorder  Q: what should I do when not getting sleep in middle of the night A: Question Q: Find symptom {user_input}? A: """, 100, 0, davinci, ["Q: ", "A: "]
     # Multi shot learning
     response = openai.Completion.create(
         model=MODEL,
@@ -97,7 +97,7 @@ def search_product(row, user_input, response_from_gpt):
         response = ""
         raw_response = ""
     bot_response = response + prod_response
-    raw_response = response_from_gpt + prod_response
+    raw_response = response_from_gpt
 
     return bot_response, raw_response, tokens
 
@@ -129,19 +129,21 @@ def chatbot_logic(row, user_input, response_from_gpt):
             debug_steps(row, "Found symptom & suggest products", level=4)
             MSG = f"This appears to be a condition called {symptom}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor."
             # We found out symptom of the user. So, let's override the response came from chatgpt
-            bot_response = f"{MSG}\n{SLEEP_ASSESSMENT_INFO}"
-            raw_response = bot_response
+            bot_response = f"{MSG}\n{SLEEP_ASSESSMENT_HTML_RESPONSE}"
+            raw_response = f"{MSG}\n{SLEEP_ASSESSMENT_RAW_RESPONSE}"
 
             output, prod_tokens = product(row, symptom, level=3)
             prod_response = show_products(output)
 
             # Add product response to bot_response, raw_response
             bot_response += prod_response
-            raw_response = raw_response + prod_response
             tokens += prod_tokens
         else:
-            bot_response, raw_response, tokens = search_product(
-                row, user_input, response_from_gpt)
+            if product_suggestion.lower() == 'none':
+                bot_response = response
+            else:
+                bot_response, raw_response, tokens = search_product(
+                    row, user_input, response_from_gpt)
 
     return bot_response, raw_response, tokens
 
@@ -149,7 +151,6 @@ def chatbot_logic(row, user_input, response_from_gpt):
 def extract_data(pattern, message):
     results = re.search(pattern, message)
     return results.group(1) if results else ""
-
 
 def get_props_from_message(message):
     '''
