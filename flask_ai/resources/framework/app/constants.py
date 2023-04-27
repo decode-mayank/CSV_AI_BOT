@@ -12,6 +12,7 @@ sleep apnea
 symptoms
 '''
 
+# Below prompts consumes 690 Tokens
 SYSTEM_PROMPT = """
 ResMed is a global leader in developing and manufacturing medical devices and software solutions for the diagnosis, treatment, and management of sleep apnea, chronic obstructive pulmonary disease (COPD), and other respiratory conditions. ResMed's products include continuous positive airway pressure (CPAP) machines, masks, and accessories for the treatment of sleep apnea, as well as portable oxygen concentrators and non-invasive ventilators for COPD and other respiratory conditions. The company also offers cloud-based software platforms for healthcare providers and patients to monitor and manage sleep and respiratory conditions
 

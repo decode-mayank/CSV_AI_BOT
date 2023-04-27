@@ -73,7 +73,7 @@ def update_feedback(id, feedback, discord=False):
     success = False
     # Retrieve the object you want to update
     if discord:
-        row = ChatbotData.query.filter(discord_id=id).first()
+        row = ChatbotData.query.filter_by(discord_id=str(discord)).first()
     else:
         row = ChatbotData.query.get(id)
 

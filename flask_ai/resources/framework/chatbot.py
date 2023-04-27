@@ -43,18 +43,18 @@ def get_answer_from_gpt(row, prompt, level):
     return response_text, response_token
 
 
-def get_chat_response(user_input, message_log=[],html_response=None,discord_id="",db=True):
+def get_chat_response(user_input, message_log, time_stamp,html_response, discord_id, db=True):
     updated_message_log, row_id = "", ""
     if len(user_input) > 300:
         response = "Please type a message that is less than 300 characters."
         pr_red(response)
     else:
         response, updated_message_log, row_id = chatbot(
-            user_input, message_log, html_response, discord_id,db)
+            user_input, message_log, time_stamp, html_response, discord_id, db)
     return response, updated_message_log, row_id
 
 
-def chatbot(user_input, message_log, html_response, discord_id, db):
+def chatbot(user_input, message_log, time_stamp, html_response, discord_id, db):
     # Store only last 2 conversation and prompt conversation
     message_log = get_last_n_message_log(message_log, 2)
     MODE = 'w'
@@ -73,7 +73,6 @@ def chatbot(user_input, message_log, html_response, discord_id, db):
 
     debug_steps(row, f"Prompt - {prompt}", level=INITIAL_PROMPT)
 
-    time_stamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     response_accepted = True
     bot_response = ""
 

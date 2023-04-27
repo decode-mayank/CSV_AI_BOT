@@ -127,11 +127,13 @@ async def on_reaction_add(reaction, user):
             # Replace with the actual URL of the API endpoint
             data["feedback"] = True
             call_api(url, data)
+            print("Updated feedback in DB")
             # await reaction.message.reply(f'Hey {user}! you reacted {reaction.emoji} for the message {message}')
         elif reaction.emoji == THUMBS_DOWN:
             data["feedback"] = False
-            # await reaction.message.reply(f'Hey {user}! you reacted {reaction.emoji} for the message {message}')
             call_api(url, data)
+            # await reaction.message.reply(f'Hey {user}! you reacted {reaction.emoji} for the message {message}')
+            print("Updated feedback in DB")
         else:
             await reaction.message.reply(f'Hey {user}! you reacted with {reaction.emoji} - {VALID_REACTION}')
 

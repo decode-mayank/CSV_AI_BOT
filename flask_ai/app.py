@@ -8,6 +8,7 @@ from flask_smorest import Api
 
 from resources.routes import pblp as ProductBlueprint
 from resources.routes import blp as ChatBotBlueprint
+from resources.routes import dhcblp as DiscordHealthCheckerBlueprint
 from db import db
 
 load_dotenv()
@@ -41,7 +42,8 @@ def create_app():
 
     api.register_blueprint(ProductBlueprint)
     api.register_blueprint(ChatBotBlueprint)
-
+    api.register_blueprint(DiscordHealthCheckerBlueprint)
+    
     return app
 
 

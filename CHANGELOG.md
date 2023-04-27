@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Added & Changed
+- chatbot.py - Handle time_stamp in get_chat_response()
+- utils.py - Fix update_feedback for discord
+- routes.py
+  a) Created Discord Health Check blueprint & Added health check for /api/discord-health-check
+  b) /api/feedback/ - Update this API to support discord feedback update requests
+  c) /api/chat/ - Update this API to handle time_stamp, discord_id request payloads
+- app.py
+  Added DiscordHealthCheckerBlueprint
+- discord_bot.py - Added logs for update_feedback
+
+
+### Added & Changed
 - Added discord_bot.py while requires flask to be in running state
 - Discord doesn't parse html response, so added html_response in chat API request payload if found use it otherwise set html_response to True
 - Discord requires raw response - So, discord_bot.py will pass html_response as False
