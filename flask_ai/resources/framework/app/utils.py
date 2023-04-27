@@ -16,7 +16,7 @@ def show_products(output, html_response):
         debug_attribute("DB Output", output)
         if (len(items) == 3):
             for prod, url, price in output:
-                prod_response += f'</br><a href="{url}">{prod}</a> - $ {price}\n </br>' if html_response else f"{prod} - {url} - $ {str(price)}\n"
+                prod_response += f'</br><a href="{url}" target="_blank">{prod}</a> - $ {price}\n </br>' if html_response else f"{prod} - {url} - $ {str(price)}\n"
     return prod_response
 
 

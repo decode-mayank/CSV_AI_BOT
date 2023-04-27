@@ -1,7 +1,7 @@
 RESPONSE_FOR_INVALID_QUERY = "I am a Resmed chatbot, I can't help with that"
 
 # Link for sleep assessment
-SLEEP_ASSESSMENT_HTML_RESPONSE = "For more information please visit <a href='https://www.resmed.com.au/online-sleep-assessment'>Sleep Assessment</a><br/>"
+SLEEP_ASSESSMENT_HTML_RESPONSE = "For more information please visit <a href='https://www.resmed.com.au/online-sleep-assessment' target='_blank'>Sleep Assessment</a><br/>"
 SLEEP_ASSESSMENT_RAW_RESPONSE = "For more information please visit Sleep Assessment - https://www.resmed.com.au/online-sleep-assessment"
 
 
