@@ -8,7 +8,7 @@ from .constants import SLEEP_ASSESSMENT_HTML_RESPONSE, SLEEP_ASSESSMENT_RAW_RESP
 from .products import product, cheap_products, general_product, other_products
 
 
-def show_products(output,html_response):
+def show_products(output, html_response):
     prod_response = '\n'
     if (len(output) > 0):
         items = output[0]
@@ -47,7 +47,7 @@ def get_products(row, user_input, query_to_db, html_response):
         prod_response += show_products(output, html_response)
     else:
         response, response_token_product = get_general_product(
-            row, user_input, query_to_db, html_response,level=3)
+            row, user_input, query_to_db, html_response, level=3)
         prod_response += response
     return prod_response, response_token_product
 
@@ -101,8 +101,8 @@ def search_product(row, user_input, response_from_gpt, html_response):
     return bot_response, raw_response, tokens
 
 
-def chatbot_logic(row, user_input, response_from_gpt,html_response):
-    print("->>>>",html_response)
+def chatbot_logic(row, user_input, response_from_gpt, html_response):
+    print("->>>>", html_response)
     response, intent, entity, product_suggestion, price_range = get_props_from_message(
         response_from_gpt)
     product_suggestion = product_suggestion.lower().replace("resmed", "")
@@ -119,7 +119,7 @@ def chatbot_logic(row, user_input, response_from_gpt,html_response):
     user_input_in_lower_case = user_input.lower()
     if "insomnia" in user_input_in_lower_case or "sleep apnea" in user_input_in_lower_case or "snoring" in user_input_in_lower_case:
         bot_response, raw_response, tokens = search_product(
-            row, user_input, response_from_gpt,html_response)
+            row, user_input, response_from_gpt, html_response)
     else:
         symptom, symptom_tokens = identify_symptom(row, user_input, level=2)
         found_symptom = symptom == "Sleep Apnea" or symptom == "Insomnia" or symptom == "Snoring"
@@ -151,6 +151,7 @@ def chatbot_logic(row, user_input, response_from_gpt,html_response):
 def extract_data(pattern, message):
     results = re.search(pattern, message)
     return results.group(1) if results else ""
+
 
 def get_props_from_message(message):
     '''

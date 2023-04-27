@@ -43,7 +43,7 @@ def get_answer_from_gpt(row, prompt, level):
     return response_text, response_token
 
 
-def get_chat_response(user_input, message_log, time_stamp,html_response, discord_id, db=True):
+def get_chat_response(user_input, message_log, time_stamp, html_response, discord_id, db=True):
     updated_message_log, row_id = "", ""
     if len(user_input) > 300:
         response = "Please type a message that is less than 300 characters."

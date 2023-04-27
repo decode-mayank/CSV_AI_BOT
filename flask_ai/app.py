@@ -19,6 +19,7 @@ app = Flask(__name__)
 MIGRATIONS_FOLDER = "./migrations" if "flask_ai" in os.getcwd() else "flask_ai/migrations"
 print(MIGRATIONS_FOLDER)
 
+
 @app.route('/')
 def home():
     return redirect(url_for('api-docs.openapi_swagger_ui'))
@@ -43,7 +44,7 @@ def create_app():
     api.register_blueprint(ProductBlueprint)
     api.register_blueprint(ChatBotBlueprint)
     api.register_blueprint(DiscordHealthCheckerBlueprint)
-    
+
     return app
 
 

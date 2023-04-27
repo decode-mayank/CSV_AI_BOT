@@ -23,10 +23,11 @@ blp = Blueprint("ChatbotData", "chatbot_data",
 pblp = Blueprint("Product", "products",
                  description="Insert products from csv to db")
 dhcblp = Blueprint("Discord Health Check", "discord health check",
-                 description="Discord Health Check API")
+                   description="Discord Health Check API")
 
 CHANNEL_ID = os.getenv('HEALTH_CHECK_CHANNEL_ID')
 URL = f"https://discord.com/api/v9/channels/{CHANNEL_ID}/messages"
+
 
 @blp.route("/api/chat/")
 class UserChatBot(MethodView):
@@ -44,18 +45,18 @@ class UserChatBot(MethodView):
 
             # extract the optional message_log parameter from the JSON data, if present
             message_log = user_req.get('message_log', [SYSTEM_PROMPT])
-            html_response = user_req.get('html_response',True)
+            html_response = user_req.get('html_response', True)
             time_stamp = user_req.get(
                 'time_stamp', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
             discord_id = user_req.get('discord_id', None)
 
             if not (isinstance(message_log, list)):
                 return {'response': 'Message log should be of type list', 'message_log': [], "status": False}, 400
-            
+
             pattern = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$")
 
-            if not(pattern.match(time_stamp)):
-                return {'response': 'time_stamp is not in expected format - Example: 2023-04-27 08:16:07', "status": False},400
+            if not (pattern.match(time_stamp)):
+                return {'response': 'time_stamp is not in expected format - Example: 2023-04-27 08:16:07', "status": False}, 400
 
             response, new_message_log, row_id = get_chat_response(
                 user_input, message_log, time_stamp, html_response, discord_id)
@@ -72,7 +73,8 @@ class Feedback(MethodView):
         if ('id' not in data or 'discord' not in data) and 'feedback' not in data:
             return {'status': False, 'error': 'id or feedback parameter is missing'}, 400
 
-        update_feedback(data.get('id', None),data['feedback'], data.get('discord', None))
+        update_feedback(data.get('id', None),
+                        data['feedback'], data.get('discord', None))
 
         return {'status': True, 'success': True}
 
@@ -98,10 +100,10 @@ class ImportProductCSV(MethodView):
                 for row in reader:
                     try:
                         get_or_create(db.session, Product, category=row['category'], sku=row['sku'], product=row['product'], description=row['description'],
-                                        price=row['price'], breadcrumb=row['breadcrumb'], product_url=row['product_url'], money_back=eval(
-                                            row['money_back']),
-                                        rating=row['rating'], total_reviews=row['total_reviews'], tags=row['tags'])
-                        status=True
+                                      price=row['price'], breadcrumb=row['breadcrumb'], product_url=row['product_url'], money_back=eval(
+                            row['money_back']),
+                            rating=row['rating'], total_reviews=row['total_reviews'], tags=row['tags'])
+                        status = True
                     except:
                         return {"status": status, "message": "Issue while adding Products"}, 500
         else:

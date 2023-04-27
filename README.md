@@ -86,7 +86,7 @@
 
 - To format the code - Use below command
   ```bash
-  $ find . -name '*.py' | tqdm --unit='file' --total=$(find . -name '*.py' | wc -l) | xargs -I{} autopep8 --in-place {}
+  $ find . -path './venv' -prune -o -name '*.py' -print | tqdm --unit='file' --total=$(find . -name '*.py' -not -path './venv/*' | wc -l) | xargs -I{} autopep8 --in-place {}
   ```
 
 ## Example 1 - Chatbot using gpt 3.5 turbo
@@ -111,6 +111,17 @@
 - On Windows:
   If you get python command not found then run with py command
 
-## Example 3 - Chatbot framework
 
-Please check the readme at examples/chatbot-framework/README.md
+## Example 3 - Chatbot Flask API
+  1. Change directory to flask_ai
+     cd flask_ai
+  2. Run flask server
+     flask run
+     For more information please check README.md in this path - flask_ai/README.md
+  3. Run discord 
+     ```bash
+      $ python discord_bot.py
+    ```
+    
+    Note: discord requires flask to be running
+    

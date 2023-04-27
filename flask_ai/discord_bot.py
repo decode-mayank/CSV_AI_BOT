@@ -27,6 +27,7 @@ VALID_REACTION = f"Valid reaction are {THUMBS_UP} or {THUMBS_DOWN}"
 REPLY_MESSAGE = "Not handling reply message for now"
 CLEAR_COMMAND = "/clear"
 
+
 def call_api(url, data):
     return requests.post(url, json=data)
 
@@ -107,10 +108,9 @@ async def on_message(message):
 
         raw_response = requests.post(url, json=data)
         json_response = json.loads(raw_response.text)
-        
+
         await message.reply(json_response["response"])
 
-        
 
 @client.event
 async def on_reaction_add(reaction, user):
@@ -137,10 +137,10 @@ async def on_reaction_add(reaction, user):
         else:
             await reaction.message.reply(f'Hey {user}! you reacted with {reaction.emoji} - {VALID_REACTION}')
 
-if __name__=='__main__':
+if __name__ == '__main__':
     try:
         response = requests.get(BASE_URL)
-        if response.status_code==200:
+        if response.status_code == 200:
             client.run(os.getenv("DISCORD_TOKEN"))
         else:
             raise Exception(
@@ -151,5 +151,3 @@ if __name__=='__main__':
         print("You might be not connected to internet! - Please connect and try again")
     except requests.exceptions.ConnectionError:
         print("Flask server is not running in localhost. Please run this command inside flask_ai directory - flask run command")
-    
-
