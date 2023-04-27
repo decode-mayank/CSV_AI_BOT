@@ -34,12 +34,13 @@ class UserChatBot(MethodView):
 
         # extract the optional message_log parameter from the JSON data, if present
         message_log = user_req.get('message_log', [SYSTEM_PROMPT])
+        html_response = user_req.get('html_response',True)
 
         if not (isinstance(message_log, list)):
             return {'response': 'Message log should be of type list', 'message_log': []}
 
         response, new_message_log, row_id = get_chat_response(
-            user_input, message_log)
+            user_input, message_log, html_response)
         return {'status': True, 'id': row_id, 'response': response, 'message_log': new_message_log}, 200
         # except:
         #     return {'status': False, 'error': 'invalid request'}, 400

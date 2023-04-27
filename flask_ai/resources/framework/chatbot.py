@@ -43,17 +43,18 @@ def get_answer_from_gpt(row, prompt, level):
     return response_text, response_token
 
 
-def get_chat_response(user_input, message_log=[]):
+def get_chat_response(user_input, message_log=[],html_response=None,discord_id="",db=True):
     updated_message_log, row_id = "", ""
     if len(user_input) > 300:
         response = "Please type a message that is less than 300 characters."
         pr_red(response)
     else:
-        response, updated_message_log, row_id = chatbot(user_input, message_log)
+        response, updated_message_log, row_id = chatbot(
+            user_input, message_log, html_response, discord_id,db)
     return response, updated_message_log, row_id
 
 
-def chatbot(user_input, message_log, discord_id="", db=True):
+def chatbot(user_input, message_log, html_response, discord_id, db):
     # Store only last 2 conversation and prompt conversation
     message_log = get_last_n_message_log(message_log, 2)
     MODE = 'w'
@@ -100,7 +101,7 @@ def chatbot(user_input, message_log, discord_id="", db=True):
         valid_query = False
     else:
         bot_response, raw_response, tokens = chatbot_logic(
-            row, user_input, raw_gpt_response)
+            row, user_input, raw_gpt_response, html_response)
         query_to_tokens = tokens
 
     if ((not bot_response or len(bot_response) < 10) and bot_response != RESPONSE_FOR_INVALID_QUERY):

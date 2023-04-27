@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+### Added & Changed
+- Added discord_bot.py while requires flask to be in running state
+- Discord doesn't parse html response, so added html_response in chat API request payload if found use it otherwise set html_response to True
+- Discord requires raw response - So, discord_bot.py will pass html_response as False
+
+
 ### Changed
 - Show swagger-ui in backend home page
 - Remove flask, flask-smorest installation from DockerFile

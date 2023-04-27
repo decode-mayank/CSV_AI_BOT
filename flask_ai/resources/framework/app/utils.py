@@ -8,7 +8,7 @@ from .constants import SLEEP_ASSESSMENT_HTML_RESPONSE, SLEEP_ASSESSMENT_RAW_RESP
 from .products import product, cheap_products, general_product, other_products
 
 
-def show_products(output):
+def show_products(output,html_response):
     prod_response = '\n'
     if (len(output) > 0):
         items = output[0]
@@ -16,23 +16,22 @@ def show_products(output):
         debug_attribute("DB Output", output)
         if (len(items) == 3):
             for prod, url, price in output:
-                html_response = f'<a href="{url}">{prod}</a> - {price}\n </br>'
-                prod_response += html_response
+                prod_response += f'</br><a href="{url}">{prod}</a> - $ {price}\n </br>' if html_response else f"{prod} - {url} - $ {str(price)}\n"
     return prod_response
 
 
-def get_general_product(row, user_input, query_to_db, level):
+def get_general_product(row, user_input, query_to_db, html_response, level):
     output, response_token_product = general_product(
         row, user_input, query_to_db, level)
 
     if len(output) == 0:
         bot_response = UNABLE_TO_FIND_PRODUCTS_IN_DB
     else:
-        bot_response = show_products(output)
+        bot_response = show_products(output, html_response)
     return bot_response, response_token_product
 
 
-def get_products(row, user_input, query_to_db):
+def get_products(row, user_input, query_to_db, html_response):
     prod_response = ""
     if "cheap" in user_input or "cheapest" in user_input:
         if "Product" in query_to_db and OUTPUTS != []:
@@ -41,14 +40,14 @@ def get_products(row, user_input, query_to_db):
         else:
             output, response_token_product = cheap_products(
                 row, user_input, query_to_db, level=3)
-        prod_response += show_products(output)
+        prod_response += show_products(output, html_response)
     elif "Load More" in query_to_db:
         output, response_token_product = other_products(
             row, OUTPUTS[-2], level=3)
-        prod_response += show_products(output)
+        prod_response += show_products(output, html_response)
     else:
         response, response_token_product = get_general_product(
-            row, user_input, query_to_db, level=3)
+            row, user_input, query_to_db, html_response,level=3)
         prod_response += response
     return prod_response, response_token_product
 
@@ -79,7 +78,7 @@ Q: Sore throat on awakening A: Snoring Q: Excessive daytime sleepiness A: Snorin
     return response_text, response_token_symptom
 
 
-def search_product(row, user_input, response_from_gpt):
+def search_product(row, user_input, response_from_gpt, html_response):
     response, _, entity, product_suggestion, price_range = get_props_from_message(
         response_from_gpt)
     query_to_db = ""
@@ -90,7 +89,7 @@ def search_product(row, user_input, response_from_gpt):
         query_to_db = f"{entity},{product_suggestion},{price_range}"
     debug_attribute("query_to_db", query_to_db)
     prod_response, response_token_product = get_products(
-        row, user_input, query_to_db)
+        row, user_input, query_to_db, html_response)
     tokens = response_token_product
     if "$" in response:
         # What is the price of BongoRx Starter Kit
@@ -102,7 +101,8 @@ def search_product(row, user_input, response_from_gpt):
     return bot_response, raw_response, tokens
 
 
-def chatbot_logic(row, user_input, response_from_gpt):
+def chatbot_logic(row, user_input, response_from_gpt,html_response):
+    print("->>>>",html_response)
     response, intent, entity, product_suggestion, price_range = get_props_from_message(
         response_from_gpt)
     product_suggestion = product_suggestion.lower().replace("resmed", "")
@@ -119,7 +119,7 @@ def chatbot_logic(row, user_input, response_from_gpt):
     user_input_in_lower_case = user_input.lower()
     if "insomnia" in user_input_in_lower_case or "sleep apnea" in user_input_in_lower_case or "snoring" in user_input_in_lower_case:
         bot_response, raw_response, tokens = search_product(
-            row, user_input, response_from_gpt)
+            row, user_input, response_from_gpt,html_response)
     else:
         symptom, symptom_tokens = identify_symptom(row, user_input, level=2)
         found_symptom = symptom == "Sleep Apnea" or symptom == "Insomnia" or symptom == "Snoring"
@@ -129,11 +129,11 @@ def chatbot_logic(row, user_input, response_from_gpt):
             debug_steps(row, "Found symptom & suggest products", level=4)
             MSG = f"This appears to be a condition called {symptom}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor."
             # We found out symptom of the user. So, let's override the response came from chatgpt
-            bot_response = f"{MSG}\n{SLEEP_ASSESSMENT_HTML_RESPONSE}"
+            bot_response = f"{MSG}\n{SLEEP_ASSESSMENT_HTML_RESPONSE if html_response else SLEEP_ASSESSMENT_RAW_RESPONSE}"
             raw_response = f"{MSG}\n{SLEEP_ASSESSMENT_RAW_RESPONSE}"
 
             output, prod_tokens = product(row, symptom, level=3)
-            prod_response = show_products(output)
+            prod_response = show_products(output, html_response)
 
             # Add product response to bot_response, raw_response
             bot_response += prod_response
@@ -143,7 +143,7 @@ def chatbot_logic(row, user_input, response_from_gpt):
                 bot_response = response
             else:
                 bot_response, raw_response, tokens = search_product(
-                    row, user_input, response_from_gpt)
+                    row, user_input, response_from_gpt, html_response)
 
     return bot_response, raw_response, tokens
 
