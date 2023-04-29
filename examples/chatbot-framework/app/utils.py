@@ -35,7 +35,8 @@ def get_general_product(row, user_input, query_to_db, level):
 def get_products(row, user_input, query_to_db):
     prod_response = ""
     if "cheap" in user_input or "cheapest" in user_input:
-        if "Product" in query_to_db and OUTPUTS != []:
+        breakpoint()
+        if "Product" in query_to_db and len(OUTPUTS) > 2:
             output, response_token_product = cheap_products(
                 row, OUTPUTS[-2], query_to_db, level=3)
         else:
@@ -80,14 +81,16 @@ Q: Sore throat on awakening A: Snoring Q: Excessive daytime sleepiness A: Snorin
 
 
 def search_product(row, user_input, response_from_gpt):
-    response, _, entity, product_suggestion, price_range = get_props_from_message(
+    response, _, entity, product_suggestion, price_range, Type = get_props_from_message(
         response_from_gpt)
     query_to_db = ""
+    if "Product" in product_suggestion:
+        product_suggestion = "None"
     if "None" in price_range:
-        query_to_db = f"{entity}"
+        query_to_db = f"entity: {entity}#product_suggestion: None#price_range: None#Type: {Type}"
     else:
         price_range = price_range.replace("$", "")
-        query_to_db = f"{entity},{product_suggestion},{price_range}"
+        query_to_db = f"entity: {entity}#product_suggestion: {product_suggestion}#price_range: {price_range}#Type: {Type}"
     debug_attribute("query_to_db", query_to_db)
     prod_response, response_token_product = get_products(
         row, user_input, query_to_db)
@@ -103,7 +106,7 @@ def search_product(row, user_input, response_from_gpt):
 
 
 def chatbot_logic(row, user_input, response_from_gpt):
-    response, intent, entity, product_suggestion, price_range = get_props_from_message(
+    response, intent, entity, product_suggestion, price_range, Type = get_props_from_message(
         response_from_gpt)
     product_suggestion = product_suggestion.lower().replace("resmed", "")
     debug_attribute("Response", response)
@@ -111,6 +114,7 @@ def chatbot_logic(row, user_input, response_from_gpt):
     debug_attribute("entity", entity)
     debug_attribute("product_suggestion", product_suggestion)
     debug_attribute("price_range", price_range)
+    debug_attribute("Type", Type)
     raw_response = ""
     bot_response = ""
     tokens = 0
@@ -182,5 +186,7 @@ def get_props_from_message(message):
     product_suggestion = extract_data(
         r'Product Suggestion: (.*), Price Range', message)
     # Extract price range
-    price_range = extract_data(r'Price Range:\s*(.*)', message)
-    return response, intent, entity, product_suggestion, price_range
+    price_range = extract_data(r'Price Range:\s*(.*), Type', message)
+    # Extarct type
+    Type = extract_data(r'Type: (.*)', message)
+    return response, intent, entity, product_suggestion, price_range, Type
