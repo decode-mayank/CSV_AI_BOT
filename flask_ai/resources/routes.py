@@ -103,7 +103,7 @@ class ImportProductCSV(MethodView):
                         get_or_create(db.session, Product, category=row['category'], sku=row['sku'], product=row['product'], description=row['description'],
                                       price=row['price'], breadcrumb=row['breadcrumb'], product_url=row['product_url'], money_back=eval(
                             row['money_back']),
-                            rating=row['rating'], total_reviews=row['total_reviews'], tags=row['tags'])
+                            rating=row['rating'], total_reviews=row['total_reviews'], tags=row['tags'], type=row['type'])
                         status = True
                     except:
                         return {"status": status, "message": "Issue while adding Products"}, 500
