@@ -35,8 +35,7 @@ def get_general_product(row, user_input, query_to_db, level):
 def get_products(row, user_input, query_to_db):
     prod_response = ""
     if "cheap" in user_input or "cheapest" in user_input:
-        breakpoint()
-        if "Product" in query_to_db and len(OUTPUTS) > 2:
+        if len(OUTPUTS) > 2:
             output, response_token_product = cheap_products(
                 row, OUTPUTS[-2], query_to_db, level=3)
         else:

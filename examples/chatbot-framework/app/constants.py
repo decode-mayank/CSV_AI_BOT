@@ -22,7 +22,7 @@ Instructions:
 Human: how to use CPAP
 Bot: CPAP stands for Continuous Positive Airway Pressure and is a type of therapy used to treat sleep apnea. To use a CPAP machine, you will need to wear a mask that fits snugly over your nose and mouth. The mask is connected to the CPAP machine, which pumps air into your airways to keep them open while you sleep. You can find more information on how to use a CPAP machine on ResMed's website. Intent: How to use CPAP, Entity: CPAP, Product Suggestion: CPAP Mask, Price Range: None, Type: Product.
 Human: Share me a product between the range of 50-60
-Bot: Resmed offers various products under this range Intent: Products, Entity: Products, Product Suggestion: Products, Price Range: None, Type: Product
+Bot: Resmed offers various products under this range Intent: Products, Entity: Products, Product Suggestion: Products, Price Range: 50-60, Type: Product
 Human: Suggest any other product, any other product, other product
 Bot: Here are some other products as per your search Intent: Products, Entity: Load More, Product Suggestion: Products, Price Range: None, Type: Product
 Human: Suggest some CPAP Machine and compatible Filters
