@@ -7,7 +7,7 @@ import requests
 import time
 from datetime import datetime
 
-from flask import request, make_response
+from flask import request, make_response, Response
 from flask_smorest import Blueprint
 from flask.views import MethodView
 
@@ -16,6 +16,7 @@ from models.chatbot import Product
 from resources.framework.chatbot import get_chat_response
 from resources.framework.app.constants import SYSTEM_PROMPT
 from resources.framework.utils import update_feedback, get_or_create
+import openai
 
 
 blp = Blueprint("ChatbotData", "chatbot_data",
@@ -175,3 +176,39 @@ def discord_health():
             write_json_response({"success": False, "error": "In env, HEALTH_CHECK_CHANNEL_ID is missing"}))
         response.status_code = 500
         return response
+
+def generate_response():
+    response_text = ""
+    response_token = 0
+    # Multi shot learning
+    response = openai.Completion.create(
+        model="text-davinci-003",
+        prompt="A CPAP trial is a period of time in which you can try out a CPAP machine and mask to see if it is the right fit for you. During the trial, you will receive a CPAP machine, mask, and accessories",
+        temperature=0,
+        max_tokens=200,
+        stream=True
+    )
+    for index, chunk in enumerate(response):
+        text = chunk["choices"][0]["text"]
+        response_text += text
+        token_count = sum(1 for _ in text.split())  # Count tokens in the chunk
+        response_token += token_count
+        time.sleep(0.1)
+
+        yield text
+
+@blp.route('/stream', methods=['GET'])
+def streamed_response():
+    return Response(generate_response(), mimetype="text/event-stream")
+
+
+
+
+
+
+
+
+
+
+
+
