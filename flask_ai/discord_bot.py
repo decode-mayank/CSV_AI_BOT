@@ -5,10 +5,13 @@ from datetime import datetime, timezone
 
 import discord
 import requests
+from dotenv import load_dotenv
 
 from resources.framework.app.constants import SYSTEM_PROMPT
 
 # Reference - https://www.pragnakalp.com/create-discord-bot-using-python-tutorial-with-examples/
+
+load_dotenv()
 
 intents = discord.Intents.all()
 client = discord.Client(command_prefix='!', intents=intents)
@@ -16,14 +19,14 @@ client = discord.Client(command_prefix='!', intents=intents)
 message_log = SYSTEM_PROMPT
 
 
-BASE_URL = f'http://localhost:{os.getenv("FLASK_PORT")}'
-
-# Don't reply in thread
+BASE_URL = f'http://localhost:{os.getenv("FLASK_PORT") or 5000}' if os.getenv(
+    "DATABASE_HOST") == 'localhost' else os.getenv("FLASK_API_URL")
 
 EYES = "👀"
 THUMBS_UP = "👍"
 THUMBS_DOWN = "👎"
 VALID_REACTION = f"Valid reaction are {THUMBS_UP} or {THUMBS_DOWN}"
+# Don't reply in thread
 REPLY_MESSAGE = "Not handling reply message for now"
 CLEAR_COMMAND = "/clear"
 
@@ -150,4 +153,4 @@ if __name__ == '__main__':
         print("*"*15)
         print("You might be not connected to internet! - Please connect and try again")
     except requests.exceptions.ConnectionError:
-        print("Flask server is not running in localhost. Please run this command inside flask_ai directory - flask run command")
+        print("Flask server is not running. Please run this command inside flask_ai directory - flask run command")
