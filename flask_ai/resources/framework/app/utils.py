@@ -2,13 +2,13 @@ import re
 
 import openai
 
-from debug_utils import debug_attribute, debug_steps
-from constants import davinci
-from app.constants import SLEEP_ASSESSMENT_INFO, UNABLE_TO_FIND_PRODUCTS_IN_DB, OUTPUTS
-from app.products import product, cheap_products, general_product, other_products
+from ..constants import davinci
+from ..debug_utils import debug_attribute, debug_steps
+from .constants import SLEEP_ASSESSMENT_HTML_RESPONSE, SLEEP_ASSESSMENT_RAW_RESPONSE, UNABLE_TO_FIND_PRODUCTS_IN_DB, OUTPUTS
+from .products import product, cheap_products, general_product, other_products
 
 
-def show_products(output):
+def show_products(output, html_response):
     prod_response = '\n'
     if (len(output) > 0):
         items = output[0]
@@ -16,23 +16,22 @@ def show_products(output):
         debug_attribute("DB Output", output)
         if (len(items) == 3):
             for prod, url, price in output:
-                products = prod + " - " + url + " - $" + str(price)
-                prod_response += products + "\n"
+                prod_response += f'</br><a href="{url}" target="_blank">{prod}</a> - $ {price}\n </br>' if html_response else f"{prod} - {url} - $ {str(price)}\n"
     return prod_response
 
 
-def get_general_product(row, user_input, query_to_db, level):
+def get_general_product(row, user_input, query_to_db, html_response, level):
     output, response_token_product = general_product(
         row, user_input, query_to_db, level)
 
     if len(output) == 0:
         bot_response = UNABLE_TO_FIND_PRODUCTS_IN_DB
     else:
-        bot_response = show_products(output)
+        bot_response = show_products(output, html_response)
     return bot_response, response_token_product
 
 
-def get_products(row, user_input, query_to_db):
+def get_products(row, user_input, query_to_db, html_response):
     prod_response = ""
     if "cheap" in user_input or "cheapest" in user_input:
         if len(OUTPUTS) > 2:
@@ -41,14 +40,14 @@ def get_products(row, user_input, query_to_db):
         else:
             output, response_token_product = cheap_products(
                 row, user_input, query_to_db, level=3)
-        prod_response += show_products(output)
+        prod_response += show_products(output, html_response)
     elif "Load More" in query_to_db:
         output, response_token_product = other_products(
             row, OUTPUTS[-2], level=3)
-        prod_response += show_products(output)
+        prod_response += show_products(output, html_response)
     else:
         response, response_token_product = get_general_product(
-            row, user_input, query_to_db, level=3)
+            row, user_input, query_to_db, html_response, level=3)
         prod_response += response
     return prod_response, response_token_product
 
@@ -79,8 +78,9 @@ Q: Sore throat on awakening A: Snoring Q: Excessive daytime sleepiness A: Snorin
     return response_text, response_token_symptom
 
 
-def search_product(row, user_input, response_from_gpt):
+def search_product(row, user_input, response_from_gpt, html_response):
     response, _, entity, product_suggestion, price_range, Type = get_props_from_message(
+
         response_from_gpt)
     query_to_db = ""
     if "Product" in product_suggestion:
@@ -92,7 +92,7 @@ def search_product(row, user_input, response_from_gpt):
         query_to_db = f"entity: {entity}#product_suggestion: {product_suggestion}#price_range: {price_range}#Type: {Type}"
     debug_attribute("query_to_db", query_to_db)
     prod_response, response_token_product = get_products(
-        row, user_input, query_to_db)
+        row, user_input, query_to_db, html_response)
     tokens = response_token_product
     if "$" in response:
         # What is the price of BongoRx Starter Kit
@@ -104,7 +104,8 @@ def search_product(row, user_input, response_from_gpt):
     return bot_response, raw_response, tokens
 
 
-def chatbot_logic(row, user_input, response_from_gpt):
+def chatbot_logic(row, user_input, response_from_gpt, html_response):
+    print("->>>>", html_response)
     response, intent, entity, product_suggestion, price_range, Type = get_props_from_message(
         response_from_gpt)
     product_suggestion = product_suggestion.lower().replace("resmed", "")
@@ -122,7 +123,7 @@ def chatbot_logic(row, user_input, response_from_gpt):
     user_input_in_lower_case = user_input.lower()
     if "insomnia" in user_input_in_lower_case or "sleep apnea" in user_input_in_lower_case or "snoring" in user_input_in_lower_case:
         bot_response, raw_response, tokens = search_product(
-            row, user_input, response_from_gpt)
+            row, user_input, response_from_gpt, html_response)
     else:
         symptom, symptom_tokens = identify_symptom(row, user_input, level=2)
         found_symptom = symptom == "Sleep Apnea" or symptom == "Insomnia" or symptom == "Snoring"
@@ -132,11 +133,11 @@ def chatbot_logic(row, user_input, response_from_gpt):
             debug_steps(row, "Found symptom & suggest products", level=4)
             MSG = f"This appears to be a condition called {symptom}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor."
             # We found out symptom of the user. So, let's override the response came from chatgpt
-            bot_response = f"{MSG}\n{SLEEP_ASSESSMENT_INFO}"
-            raw_response = bot_response
+            bot_response = f"{MSG}\n{SLEEP_ASSESSMENT_HTML_RESPONSE if html_response else SLEEP_ASSESSMENT_RAW_RESPONSE}"
+            raw_response = f"{MSG}\n{SLEEP_ASSESSMENT_RAW_RESPONSE}"
 
             output, prod_tokens = product(row, symptom, level=3)
-            prod_response = show_products(output)
+            prod_response = show_products(output, html_response)
 
             # Add product response to bot_response, raw_response
             bot_response += prod_response
@@ -144,9 +145,9 @@ def chatbot_logic(row, user_input, response_from_gpt):
         else:
             if product_suggestion.lower() == 'none':
                 bot_response = response
-            else: 
+            else:
                 bot_response, raw_response, tokens = search_product(
-                    row, user_input, response_from_gpt)
+                    row, user_input, response_from_gpt, html_response)
 
     return bot_response, raw_response, tokens
 
@@ -173,10 +174,7 @@ def get_props_from_message(message):
     ("Here are some tips to help you get a good night's sleep: \n1. Stick to a regular sleep schedule - go to bed and wake up at the same time every day. \n2. Avoid caffeine, nicotine, and alcohol before bed. \n3. Exercise regularly, but not too close to bedtime. \n4. Avoid large meals and beverages late at night. \n5. Relax before bed by taking a warm bath or reading a book. \n6. Make sure your bedroom is dark, quiet, and comfortable. \n7. If you can't sleep, get out of bed and do something relaxing until you feel tired. \n", 'Healthy Sleep Tips', 'Healthy Sleep Tips', 'Resmed')
     '''
     response = message.split("Intent")[0]
-    #breakpoint()
-    if SLEEP_ASSESSMENT_INFO not in response and ('sleep assessment' in response or 'sleep test' in response):
-        response += SLEEP_ASSESSMENT_INFO
-    intent,entity,product_suggestion="","",""
+    intent, entity, product_suggestion, price_range = "", "", "", ""
     # Extracting the Intent
     intent = extract_data(r'Intent: (.*), Entity', message)
     # Extracting the Entity

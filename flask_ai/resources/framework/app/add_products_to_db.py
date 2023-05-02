@@ -1,17 +1,16 @@
 import csv
 import os
 
-from psycopg2 import connect
+import psycopg2
 from dotenv import load_dotenv
-from psycopg2.errors import DuplicateTable
 
 
 load_dotenv()
 
-conn = connect(host=os.getenv("DATABASE_HOST"),
-                            database=os.getenv('DATABASE_NAME'),
-                            user=os.getenv('DATABASE_USER'),
-                            password=os.getenv('DATABASE_PASSWORD'))
+conn = psycopg2.connect(host=os.getenv("DATABASE_HOST"),
+                        database=os.getenv('DATABASE_NAME'),
+                        user=os.getenv('DATABASE_USER'),
+                        password=os.getenv('DATABASE_PASSWORD'))
 cur = conn.cursor()
 
 
@@ -51,7 +50,6 @@ if __name__ == '__main__':
 
     # Open a cursor to perform database operations
     cur = conn.cursor()
-    create_product_table()
     add_csv_to_db()
     conn.commit()
     cur.close()

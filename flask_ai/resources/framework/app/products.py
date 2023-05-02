@@ -3,12 +3,11 @@ import os
 
 import openai
 import sqlparse
-import psycopg2
 from dotenv import load_dotenv
 
-from debug_utils import debug_steps, debug_attribute
-from utils import get_db_connection
-from constants import davinci
+from ..debug_utils import debug_steps, debug_attribute
+from ..utils import get_db_connection
+from ..constants import davinci
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")

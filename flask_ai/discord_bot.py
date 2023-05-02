@@ -1,61 +1,50 @@
+import aiohttp
 import os
+import json
 from datetime import datetime, timezone
 
 import discord
-from chatbot import chatbot
-from app.constants import SYSTEM_PROMPT
-from constants import SEPARATORS
-from utils import add_seperators, update_feedback
+import requests
+from dotenv import load_dotenv
+
+from resources.framework.app.constants import SYSTEM_PROMPT
 
 # Reference - https://www.pragnakalp.com/create-discord-bot-using-python-tutorial-with-examples/
+
+load_dotenv()
 
 intents = discord.Intents.all()
 client = discord.Client(command_prefix='!', intents=intents)
 
 message_log = SYSTEM_PROMPT
 
-# Don't reply in thread
+
+BASE_URL = f'http://localhost:{os.getenv("FLASK_PORT") or 5000}' if os.getenv(
+    "DATABASE_HOST") == 'localhost' else os.getenv("FLASK_API_URL")
 
 EYES = "👀"
 THUMBS_UP = "👍"
 THUMBS_DOWN = "👎"
 VALID_REACTION = f"Valid reaction are {THUMBS_UP} or {THUMBS_DOWN}"
+# Don't reply in thread
 REPLY_MESSAGE = "Not handling reply message for now"
 CLEAR_COMMAND = "/clear"
+
+
+def call_api(url, data):
+    return requests.post(url, json=data)
+
 
 @client.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
 
 
-def get_last_n_message_log(message_log, n):
-    '''
-        system
-        ***
-        msg
-        ***
-        msg
-        ***
-        msg
-    '''
-    # if we need to get last two messages then we will have 3 *** seperators
-    if message_log.find(SEPARATORS) >= n+1:
-        messages = message_log.split(SEPARATORS)
-        last_n_messages = messages[-n:]
-
-        message_log = messages[0] + SEPARATORS
-        for message in last_n_messages:
-            message_log += f"{message}{SEPARATORS}"
-    else:
-        message_log = add_seperators(message_log)
-    return message_log
-
-
 @client.event
 async def on_message(message):
-    if message.author == client.user:       
+    if message.author == client.user:
         return
-    
+
     channel = message.channel
     async for older_messages in channel.history(limit=1, oldest_first=True):
         first_message = older_messages
@@ -69,7 +58,7 @@ async def on_message(message):
         # Health check condition
         await message.channel.send('online')
         return
-    
+
     if message.content == CLEAR_COMMAND:
         print("User requested to clear channel history")
         channel = message.channel
@@ -81,9 +70,9 @@ async def on_message(message):
             await channel.delete_messages(message_ids)
         else:
             await channel.send("I can't delete messages in a DM channel.")
-        
+
         return
-    
+
     if message.reference is not None:
         await message.reply(REPLY_MESSAGE)
     elif message.content:
@@ -93,8 +82,6 @@ async def on_message(message):
         num_messages = 10
         channel = message.channel
         messages = []
-
-        message_log = add_seperators(SYSTEM_PROMPT)
 
         async for msg in channel.history(limit=num_messages):
             if msg.content != CLEAR_COMMAND or (VALID_REACTION not in msg.content and REPLY_MESSAGE not in msg.content):
@@ -106,13 +93,29 @@ async def on_message(message):
                 else:
                     print("Got message which sent recently. So, skipping it")
 
-        # Store only last 2 conversation and prompt conversation
+        # Reverse the conversation, so that latest will be shown first
         messages = messages[::-1]
-        message_log = message_log + SEPARATORS.join(messages)
-        message_log = get_last_n_message_log(message_log, 2)
-        response, _ = chatbot(
-            message.content, message_log, time_stamp,message.id)
-        await message.reply(response)
+        # Insert System prompt at 0 th index
+        messages.insert(0, SYSTEM_PROMPT)
+
+        # Replace with the actual URL of the API endpoint
+        url = f"{BASE_URL}/api/chat/"
+
+        data = {
+            "user_input": message.content,
+            "time_stamp": time_stamp,
+            "message_log": messages,
+            "discord_id": message.id,
+            "html_response": False,
+        }
+
+        raw_response = requests.post(url, json=data)
+        json_response = json.loads(raw_response.text)
+        
+        if json_response["status"]==True:
+            await message.reply(json_response["response"])
+        else:
+            await message.reply("INTERNAL SERVER ERROR")
 
 
 @client.event
@@ -121,13 +124,36 @@ async def on_reaction_add(reaction, user):
     parent_id = message_object.reference.message_id if message_object.reference else None
 
     if parent_id:
+        url = f"{BASE_URL}/api/feedback/"
+        data = {
+            "id": None,
+            "discord": parent_id
+        }
         if reaction.emoji == THUMBS_UP:
-            update_feedback(parent_id, True)
+            # Replace with the actual URL of the API endpoint
+            data["feedback"] = True
+            call_api(url, data)
+            print("Updated feedback in DB")
             # await reaction.message.reply(f'Hey {user}! you reacted {reaction.emoji} for the message {message}')
         elif reaction.emoji == THUMBS_DOWN:
+            data["feedback"] = False
+            call_api(url, data)
             # await reaction.message.reply(f'Hey {user}! you reacted {reaction.emoji} for the message {message}')
-            update_feedback(parent_id, False)
+            print("Updated feedback in DB")
         else:
             await reaction.message.reply(f'Hey {user}! you reacted with {reaction.emoji} - {VALID_REACTION}')
 
-client.run(os.getenv("DISCORD_TOKEN"))
+if __name__ == '__main__':
+    try:
+        response = requests.get(BASE_URL)
+        if response.status_code == 200:
+            client.run(os.getenv("DISCORD_TOKEN"))
+        else:
+            raise Exception(
+                f"Got response status code as {response.status_code}! Please check")
+    except aiohttp.ClientConnectorError as e:
+        print("Error connecting to Discord server: ", e)
+        print("*"*15)
+        print("You might be not connected to internet! - Please connect and try again")
+    except requests.exceptions.ConnectionError:
+        print("Flask server is not running. Please run this command inside flask_ai directory - flask run command")

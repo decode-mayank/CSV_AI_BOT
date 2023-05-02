@@ -1,6 +1,6 @@
 import os
-from colors import pr_light_purple, pr_yellow, pr_pink, pr_green, pr_red
-from constants import fields_dict
+from .colors import pr_light_purple, pr_yellow, pr_pink, pr_green, pr_red
+from .constants import fields_dict
 
 VERBOSE = os.getenv('VERBOSE')
 

@@ -2,8 +2,10 @@ import os
 import csv
 import psycopg2
 
-from constants import SEPARATORS
-from debug_utils import debug, debug_error
+from .constants import SEPARATORS
+from .debug_utils import debug
+from models.chatbot import ChatbotData
+from db import db
 
 VERBOSE = os.getenv('VERBOSE')
 DEBUG_CSV = os.getenv("DEBUG_CSV")
@@ -28,24 +30,13 @@ def add_seperators(message):
 def get_last_n_message_log(message_log, n):
     '''
         system
-        ***
         msg
-        ***
-        msg
-        ***
         msg
     '''
-    # if we need to get last two messages then we will have 3 *** seperators
-    if message_log.find(SEPARATORS) >= n+1:
-        messages = message_log.split(SEPARATORS)
-        last_n_messages = messages[-n:]
-
-        message_log = messages[0] + SEPARATORS
-        for message in last_n_messages:
-            message_log += f"{message}{SEPARATORS}"
+    if len(message_log) <= n+1:
+        return message_log
     else:
-        message_log = add_seperators(message_log)
-    return message_log
+        return [message_log[0]] + message_log[-n:]
 
 
 def replace_quotes(datas):
@@ -61,32 +52,38 @@ def replace_quotes(datas):
     return record
 
 
-def write_to_db(db, record):
-    if db:
+def write_to_db(db_status, record):
+    row_id = ""
+    if db_status:
         [user_input, bot_response, prompt, raw_gpt_response, level1, level2, level3,
             level4, response_accepted, response_time, discord_id, cost, time_stamp] = record
-        query = f"INSERT INTO chatbot_datas (user_input,bot_response,initial_prompt,initial_response,level1,level2,level3,level4,response_accepted,response_time,discord_id,cost,time_stamp) VALUES('{user_input}','{bot_response}','{prompt}','{raw_gpt_response}','{level1}','{level2}','{level3}','{level4}',{response_accepted},{response_time},'{discord_id}','{cost}','{time_stamp}');"
-        debug(f"Query to execute - {query}")
-        conn, cur = get_db_connection()
-        try:
-            cur.execute(query)
-            conn.commit()
-            debug("Data added successfully")
-        except:
-            debug_error(f"Some error on executing this query - {query}")
+
+        my_model = ChatbotData(user_input=user_input, bot_response=bot_response, initial_prompt=prompt, initial_response=raw_gpt_response, level1=level1, level2=level2,
+                               level3=level3, level4=level4, response_accepted=response_accepted, response_time=response_time, discord_id=discord_id, cost=cost, time_stamp=time_stamp)
+        db.session.add(my_model)
+        db.session.commit()
+        row_id = my_model.id
     else:
         debug("DB insert is disabled")
 
+    return row_id
 
-def update_feedback(discord_id, feedback):
-    query = f"UPDATE chatbot_datas SET response_accepted={feedback} where discord_id='{discord_id}'"
-    conn, cur = get_db_connection()
-    try:
-        cur.execute(query)
-        conn.commit()
-        debug("Updated the data successfully")
-    except:
-        debug_error(f"Some error on executing this query - {query}")
+
+def update_feedback(id, feedback, discord=False):
+    success = False
+    # Retrieve the object you want to update
+    if discord:
+        row = ChatbotData.query.filter_by(discord_id=str(discord)).first()
+    else:
+        row = ChatbotData.query.get(id)
+
+    if row:
+        row.response_accepted = feedback
+        db.session.add(row)
+        db.session.commit()
+        success = True
+
+    return success
 
 
 def write_logs_to_csv(mode, fields, row, max_columns, bot_response):
@@ -107,3 +104,19 @@ def write_logs_to_csv(mode, fields, row, max_columns, bot_response):
             # writing the data rows
             row[1] = bot_response
             csvwriter.writerows([row])
+
+
+def get_or_create(session, model, **kwargs):
+    '''
+    Creates an object or returns the object if exists
+    '''
+    instance = session.query(model).filter_by(**kwargs).first()
+    if instance:
+        session.merge(instance)
+        session.commit()
+        return instance
+    else:
+        instance = model(**kwargs)
+        session.add(instance)
+        session.commit()
+        return instance
