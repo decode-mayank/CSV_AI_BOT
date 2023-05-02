@@ -111,8 +111,11 @@ async def on_message(message):
 
         raw_response = requests.post(url, json=data)
         json_response = json.loads(raw_response.text)
-
-        await message.reply(json_response["response"])
+        
+        if json_response["status"]==True:
+            await message.reply(json_response["response"])
+        else:
+            await message.reply("INTERNAL SERVER ERROR")
 
 
 @client.event

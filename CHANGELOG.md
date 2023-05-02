@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Changed
+- discord_bot.py
+  a) If DATABASE_HOST is localhost then use flask localhost server otherwise use FLASK_API_URL
+  b) Load env
+- Updated .example.env file
+- Check Chat API Response, If status is false then return internal server to discord
+
+### Changed
 - Added target="_blank" for sleep assessment link & products (This will open link in new tab)
 
 ### Changed
