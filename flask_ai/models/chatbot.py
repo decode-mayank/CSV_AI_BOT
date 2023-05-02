@@ -16,7 +16,7 @@ class Product(db.Model):
     rating = db.Column(db.Float, nullable=True)
     total_reviews = db.Column(db.Integer, nullable=True)
     tags = db.Column(db.String(500), nullable=True)
-
+    type = db.Column(db.String(100), nullable=True)
 
 class ChatbotData(db.Model):
     __tablename__ = 'chatbot_datas'
