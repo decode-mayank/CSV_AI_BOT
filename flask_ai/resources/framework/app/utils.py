@@ -78,18 +78,16 @@ Q: Sore throat on awakening A: Snoring Q: Excessive daytime sleepiness A: Snorin
     return response_text, response_token_symptom
 
 
-def search_product(row, user_input, response_from_gpt, html_response):
-    response, _, entity, product_suggestion, price_range, Type = get_props_from_message(
-
-        response_from_gpt)
+def search_product(props,row, user_input, response_from_gpt, html_response):
+    response, _, entity, product_suggestion, price_range, product_type = props
     query_to_db = ""
     if "Product" in product_suggestion:
         product_suggestion = "None"
     if "None" in price_range:
-        query_to_db = f"entity: {entity}#product_suggestion: None#price_range: None#Type: {Type}"
+        query_to_db = f"entity: {entity}#product_suggestion: None#price_range: None#Type: {product_type}"
     else:
         price_range = price_range.replace("$", "")
-        query_to_db = f"entity: {entity}#product_suggestion: {product_suggestion}#price_range: {price_range}#Type: {Type}"
+        query_to_db = f"entity: {entity}#product_suggestion: {product_suggestion}#price_range: {price_range}#Type: {product_type}"
     debug_attribute("query_to_db", query_to_db)
     prod_response, response_token_product = get_products(
         row, user_input, query_to_db, html_response)
@@ -104,50 +102,46 @@ def search_product(row, user_input, response_from_gpt, html_response):
     return bot_response, raw_response, tokens
 
 
-def chatbot_logic(row, user_input, response_from_gpt, html_response):
-    print("->>>>", html_response)
-    response, intent, entity, product_suggestion, price_range, Type = get_props_from_message(
-        response_from_gpt)
+def chatbot_logic(props, row, user_input, response_from_gpt, html_response):
+    response, intent, entity, product_suggestion, price_range, product_type = props
     product_suggestion = product_suggestion.lower().replace("resmed", "")
     debug_attribute("Response", response)
     debug_attribute("intent", intent)
     debug_attribute("entity", entity)
     debug_attribute("product_suggestion", product_suggestion)
     debug_attribute("price_range", price_range)
-    debug_attribute("Type", Type)
+    debug_attribute("Type", product_type)
     raw_response = ""
     bot_response = ""
     tokens = 0
     OUTPUTS.append(entity)
 
-    user_input_in_lower_case = user_input.lower()
-    if "insomnia" in user_input_in_lower_case or "sleep apnea" in user_input_in_lower_case or "snoring" in user_input_in_lower_case:
-        bot_response, raw_response, tokens = search_product(
-            row, user_input, response_from_gpt, html_response)
+    symptom, symptom_tokens = identify_symptom(row, user_input, level=2)
+    found_symptom = symptom == "Sleep Apnea" or symptom == "Insomnia" or symptom == "Snoring"
+    if found_symptom:
+        debug_attribute("Identify symptom", symptom)
+        tokens = symptom_tokens
+        debug_steps(row, "Found symptom & suggest products", level=4)
+        MSG = f"This appears to be a condition called {symptom}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor."
+        # We found out symptom of the user. So, let's override the response came from chatgpt
+        bot_response = f"{MSG}\n{SLEEP_ASSESSMENT_HTML_RESPONSE if html_response else SLEEP_ASSESSMENT_RAW_RESPONSE}"
+        raw_response = f"{MSG}\n{SLEEP_ASSESSMENT_RAW_RESPONSE}"
+
+        output, prod_tokens = product(row, symptom, level=3)
+        prod_response = show_products(output, html_response)
+
+        # Add product response to bot_response, raw_response
+        bot_response += prod_response
+        tokens += prod_tokens
     else:
-        symptom, symptom_tokens = identify_symptom(row, user_input, level=2)
-        found_symptom = symptom == "Sleep Apnea" or symptom == "Insomnia" or symptom == "Snoring"
-        if found_symptom:
-            debug_attribute("Identify symptom", symptom)
-            tokens = symptom_tokens
-            debug_steps(row, "Found symptom & suggest products", level=4)
-            MSG = f"This appears to be a condition called {symptom}.It is a fairly common condition, which can be addressed. We recommend you take an assessment and also speak to a Doctor."
-            # We found out symptom of the user. So, let's override the response came from chatgpt
-            bot_response = f"{MSG}\n{SLEEP_ASSESSMENT_HTML_RESPONSE if html_response else SLEEP_ASSESSMENT_RAW_RESPONSE}"
-            raw_response = f"{MSG}\n{SLEEP_ASSESSMENT_RAW_RESPONSE}"
-
-            output, prod_tokens = product(row, symptom, level=3)
-            prod_response = show_products(output, html_response)
-
-            # Add product response to bot_response, raw_response
-            bot_response += prod_response
-            tokens += prod_tokens
+        if product_suggestion.lower() == 'none':
+            bot_response = response
         else:
-            if product_suggestion.lower() == 'none':
-                bot_response = response
-            else:
-                bot_response, raw_response, tokens = search_product(
-                    row, user_input, response_from_gpt, html_response)
+            bot_response, raw_response, tokens = search_product(
+                props,row, user_input, response_from_gpt, html_response)
+            
+    if (not bot_response or len(bot_response) < 10):
+        bot_response = response
 
     return bot_response, raw_response, tokens
 
@@ -185,5 +179,5 @@ def get_props_from_message(message):
     # Extract price range
     price_range = extract_data(r'Price Range:\s*(.*), Type', message)
     # Extarct type
-    Type = extract_data(r'Type: (.*)', message)
-    return response, intent, entity, product_suggestion, price_range, Type
+    product_type = extract_data(r'Type: (.*)', message)
+    return response, intent, entity, product_suggestion, price_range, product_type
