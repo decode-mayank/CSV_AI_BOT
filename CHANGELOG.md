@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Removed
+-   Removed the code where we does the string matching for disorders  
+    user_input_in_lower_case = user_input.lower()
+    if "insomnia" in user_input_in_lower_case or "sleep apnea" in user_input_in_lower_case or "snoring" in user_input_in_lower_case:
+        bot_response, raw_response, tokens = search_product(
+            row, user_input, response_from_gpt, html_response)
+
+### Changed
+- Call get_props_from_message() only once
+- Move this code to chatbot_logic()
+   if (not bot_response or len(bot_response) < 10):
+        bot_response = response
+
+### Removed
 - Dropped main.py from flask_ai/resources/framework
 
 ### Changed
