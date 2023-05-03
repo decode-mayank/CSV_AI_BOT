@@ -87,24 +87,21 @@ def chatbot(user_input, message_log, time_stamp, html_response, discord_id, db):
 
     query_to_tokens = 0
 
-    response_in_lower_case = raw_gpt_response.lower()
+    props = get_props_from_message(raw_gpt_response)
+    response, *_ = props
 
-    if ("sorry" in response_in_lower_case or CHATBOT_NAME in response_in_lower_case):
+    if ("sorry" in response.lower() or CHATBOT_NAME in response.lower()):
         '''
         We will reach this if query in this order
         i) Suggest me good songs which I can listen before sleep 
         ii) Write a poem for sleep
         '''
-        response, *_ = get_props_from_message(raw_gpt_response)
         bot_response = response
         valid_query = False
     else:
         bot_response, raw_response, tokens = chatbot_logic(
-            row, user_input, raw_gpt_response, html_response)
+            row, props, user_input, raw_gpt_response, html_response)
         query_to_tokens = tokens
-
-    if ((not bot_response or len(bot_response) < 10) and bot_response != RESPONSE_FOR_INVALID_QUERY):
-        bot_response = raw_gpt_response
 
     debug_attribute("query_to_tokens - ", query_to_tokens)
     response_time = time.time() - start_time
