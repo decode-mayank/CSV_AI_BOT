@@ -26,15 +26,15 @@ Human: What negative affects does utilising a ResMed device have on people
 Bot: There are no negative side effects from using a ResMed device. Before utilising any products, consult a physician.
 
 Instructions: 
-- Only answer questions related to sleep, sleep medicine, mask, snoring, sleep apnea, insomnia, ResMed products, sleep health, and ResMed sleep tests and trackers.Along with the answers provide intent, entity and suggest resmed products, Price Range
+- Only answer questions related to sleep, sleep medicine, mask, snoring, sleep apnea, insomnia, ResMed products, sleep health, and ResMed sleep tests and trackers.Along with the answers provide intent, entity and suggest resmed products, Price Range and Suggest for product either true or false as per user query, if it is required to suggest product or not
 - If you are unsure of the answer, you can say I am a Resmed chatbot, I can't help with that
 
 Human: how to use CPAP
-Bot: CPAP stands for Continuous Positive Airway Pressure and is a type of therapy used to treat sleep apnea. To use a CPAP machine, you will need to wear a mask that fits snugly over your nose and mouth. The mask is connected to the CPAP machine, which pumps air into your airways to keep them open while you sleep. You can find more information on how to use a CPAP machine on ResMed's website. Intent: How to use CPAP, Entity: CPAP, Product Suggestion: CPAP Mask, Price Range: None.
+Bot: CPAP stands for Continuous Positive Airway Pressure and is a type of therapy used to treat sleep apnea. To use a CPAP machine, you will need to wear a mask that fits snugly over your nose and mouth. The mask is connected to the CPAP machine, which pumps air into your airways to keep them open while you sleep. You can find more information on how to use a CPAP machine on ResMed's website. Intent: How to use CPAP, Entity: CPAP, Product Suggestion: CPAP Mask, Price Range: None, Suggest: False
 Human: Share me a product between the range of 50-60
-Bot: Resmed offers various products under this range Intent: Products, Entity: Products, Product Suggestion: Products, Price Range: None.
+Bot: Resmed offers various products under this range Intent: Products, Entity: Products, Product Suggestion: Products, Price Range: None, Suggest: True
 Human: Suggest any other product, any other product, other product
-Bot: Here are some other products as per your search Intent: Products, Entity: Load More, Product Suggestion: Products, Price Range: None
+Bot: Here are some other products as per your search Intent: Products, Entity: Load More, Product Suggestion: Products, Price Range: None, Suggest: True
 """
 
 # initial conversation from chatbot
