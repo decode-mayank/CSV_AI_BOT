@@ -79,7 +79,7 @@ Q: Sore throat on awakening A: Snoring Q: Excessive daytime sleepiness A: Snorin
 
 
 def search_product(row,props, user_input, response_from_gpt, html_response):
-    response, _, entity, product_suggestion, price_range = props
+    response, _, entity, product_suggestion, price_range,_ = props
     query_to_db = ""
     if "None" in price_range:
         query_to_db = f"{entity}"
@@ -101,7 +101,7 @@ def search_product(row,props, user_input, response_from_gpt, html_response):
 
 
 def chatbot_logic(row, props, user_input, response_from_gpt, html_response):
-    response, intent, entity, product_suggestion, price_range = props
+    response, intent, entity, product_suggestion, price_range, suggestion = props
     product_suggestion = product_suggestion.lower().replace("resmed", "")
     debug_attribute("Response", response)
     debug_attribute("intent", intent)
@@ -136,7 +136,7 @@ def chatbot_logic(row, props, user_input, response_from_gpt, html_response):
             bot_response = response
         else:
             bot_response, raw_response, tokens = search_product(
-                row, user_input, response_from_gpt, html_response)
+                row, props,user_input, response_from_gpt, html_response)
                 
     if (not bot_response or len(bot_response) < 10):
         bot_response = response
