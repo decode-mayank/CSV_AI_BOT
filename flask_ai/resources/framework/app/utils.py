@@ -108,9 +108,11 @@ def chatbot_logic(row,props, user_input, response_from_gpt, html_response):
         can you explain me on what scenarios does the above two product work?
         '''
         bot_response = response
+        raw_response = response
     else:
         if suggest.lower() == 'false' or product_suggestion.lower() == 'none' or entity.lower() == 'product':
             bot_response = response
+            raw_response = response
         else:
             bot_response, raw_response, tokens = search_product(
                 row, props,user_input, response_from_gpt, html_response)
@@ -118,6 +120,7 @@ def chatbot_logic(row,props, user_input, response_from_gpt, html_response):
                 
     if (not bot_response or len(bot_response) < 10):
         bot_response = response
+        raw_response = response
 
     return bot_response, raw_response, tokens
 

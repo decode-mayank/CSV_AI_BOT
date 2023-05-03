@@ -75,6 +75,7 @@ def chatbot(user_input, message_log, time_stamp, html_response, discord_id, db):
 
     response_accepted = True
     bot_response = ""
+    raw_response=""
 
     response_time = 0
 
@@ -102,6 +103,11 @@ def chatbot(user_input, message_log, time_stamp, html_response, discord_id, db):
         bot_response, raw_response, tokens = chatbot_logic(
             row, props, user_input, raw_gpt_response, html_response)
         query_to_tokens = tokens
+        print("COmplere", bot_response, "gap", raw_response, "gap",  tokens,"gap" )
+
+    print("->>>>> Here", raw_response)
+    print("COmplere", bot_response, "gap", raw_response, "gap",  tokens, "gap")
+
 
     debug_attribute("query_to_tokens - ", query_to_tokens)
     response_time = time.time() - start_time
@@ -120,7 +126,7 @@ def chatbot(user_input, message_log, time_stamp, html_response, discord_id, db):
     write_logs_to_csv(MODE, fields, row, MAX_COLUMNS, bot_response)
 
     # Add the chatbot's response to the conversation history
-    if raw_gpt_response not in UNABLE_TO_FIND_PRODUCTS_IN_DB and valid_query and raw_gpt_response not in RESPONSE_FOR_INVALID_QUERY:
+    if raw_response not in UNABLE_TO_FIND_PRODUCTS_IN_DB and valid_query and raw_response not in RESPONSE_FOR_INVALID_QUERY:
         message_log.append(f"{HUMAN}{user_input}\n{BOT}{raw_response}")
 
     pr_bot_response(bot_response)
