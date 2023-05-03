@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Changed
+- Handle below scenario
+  Q1: suggest humidifier
+  Q2: can you explain me on what scenarios does the above two product work?
+
+### Changed
 - Updated prompt to return symptoms
 
 ### Removed

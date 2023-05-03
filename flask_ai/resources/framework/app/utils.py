@@ -7,6 +7,7 @@ from .products import product, cheap_products, general_product, other_products
 
 def show_products(output, html_response):
     prod_response = '\n'
+    raw_prod_response = "\n"
     if (len(output) > 0):
         items = output[0]
         output = output if len(output) == 1 else output[0:4]
@@ -14,7 +15,8 @@ def show_products(output, html_response):
         if (len(items) == 3):
             for prod, url, price in output:
                 prod_response += f'</br><a href="{url}" target="_blank">{prod}</a> - $ {price}\n </br>' if html_response else f"{prod} - {url} - $ {str(price)}\n"
-    return prod_response
+                raw_prod_response += f'{prod}-{url}\n'
+    return prod_response, raw_prod_response
 
 
 def get_general_product(row, user_input, query_to_db, html_response, level):
@@ -22,14 +24,15 @@ def get_general_product(row, user_input, query_to_db, html_response, level):
         row, user_input, query_to_db, level)
 
     if len(output) == 0:
-        bot_response = UNABLE_TO_FIND_PRODUCTS_IN_DB
+        prod_response = UNABLE_TO_FIND_PRODUCTS_IN_DB
     else:
-        bot_response = show_products(output, html_response)
-    return bot_response, response_token_product
+        prod_response, raw_prod_response = show_products(output, html_response)
+    return prod_response, raw_prod_response, response_token_product
 
 
 def get_products(row, user_input, query_to_db, html_response):
     prod_response = ""
+    raw_prod_response=""
     if "cheap" in user_input or "cheapest" in user_input:
         if "Product" in query_to_db and OUTPUTS != []:
             output, response_token_product = cheap_products(
@@ -37,16 +40,15 @@ def get_products(row, user_input, query_to_db, html_response):
         else:
             output, response_token_product = cheap_products(
                 row, user_input, query_to_db, level=3)
-        prod_response += show_products(output, html_response)
+        prod_response, raw_prod_response = show_products(output, html_response)
     elif "Load More" in query_to_db:
         output, response_token_product = other_products(
             row, OUTPUTS[-2], level=3)
-        prod_response += show_products(output, html_response)
+        prod_response, raw_prod_response = show_products(output, html_response)
     else:
-        response, response_token_product = get_general_product(
+        prod_response, raw_prod_response, response_token_product = get_general_product(
             row, user_input, query_to_db, html_response, level=3)
-        prod_response += response
-    return prod_response, response_token_product
+    return prod_response, raw_prod_response, response_token_product
 
 
 def search_product(row, props,user_input, response_from_gpt, html_response):
@@ -58,7 +60,7 @@ def search_product(row, props,user_input, response_from_gpt, html_response):
         price_range = price_range.replace("$", "")
         query_to_db = f"{entity},{product_suggestion},{price_range}"
     debug_attribute("query_to_db", query_to_db)
-    prod_response, response_token_product = get_products(
+    prod_response, raw_prod_response, response_token_product = get_products(
         row, user_input, query_to_db, html_response)
     tokens = response_token_product
     if "$" in response:
@@ -66,7 +68,7 @@ def search_product(row, props,user_input, response_from_gpt, html_response):
         response = ""
         raw_response = ""
     bot_response = response + prod_response
-    raw_response = response_from_gpt
+    raw_response = response_from_gpt + raw_prod_response
 
     return bot_response, raw_response, tokens
 
@@ -93,17 +95,25 @@ def chatbot_logic(row,props, user_input, response_from_gpt, html_response):
         raw_response = f"{MSG}\n{SLEEP_ASSESSMENT_RAW_RESPONSE}"
 
         output, prod_tokens = product(row, symptom, level=4)
-        prod_response = show_products(output, html_response)
+        prod_response,raw_prod_response = show_products(output, html_response)
 
         # Add product response to bot_response, raw_response
         bot_response += prod_response
+        raw_response+=raw_prod_response
         tokens += prod_tokens
+    elif not intent and not entity:
+        '''
+        suggest humidifier
+        can you explain me on what scenarios does the above two product work?
+        '''
+        bot_response = response
     else:
         if suggest.lower() == 'false' or product_suggestion.lower() == 'none' or entity.lower() == 'product':
             bot_response = response
         else:
             bot_response, raw_response, tokens = search_product(
                 row, props,user_input, response_from_gpt, html_response)
+            
                 
     if (not bot_response or len(bot_response) < 10):
         bot_response = response
