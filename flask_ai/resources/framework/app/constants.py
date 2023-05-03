@@ -3,8 +3,8 @@ SLEEP_ASSESSMENT_URL = "https://www.resmed.com.au/online-sleep-assessment"
 
 
 # Link for sleep assessment
-SLEEP_ASSESSMENT_HTML_RESPONSE = f"For more information please visit <a href='{SLEEP_ASSESSMENT_URL}' target='_blank'>Sleep Assessment</a><br/>"
-SLEEP_ASSESSMENT_RAW_RESPONSE = f"For more information please visit Sleep Assessment - {SLEEP_ASSESSMENT_URL}"
+SLEEP_ASSESSMENT_HTML_RESPONSE = f"We recommend you take an <a href='{SLEEP_ASSESSMENT_URL}' target='_blank'>Sleep Assessment</a><br/>"
+SLEEP_ASSESSMENT_RAW_RESPONSE = f"We recommend you take an {SLEEP_ASSESSMENT_URL}"
 
 
 '''

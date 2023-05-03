@@ -95,7 +95,7 @@ def chatbot_logic(row,props, user_input, response_from_gpt, html_response):
         
     if intent.lower().strip() == "symptom query":
         if SLEEP_ASSESSMENT_URL not in response:
-            bot_response = f"{response}\nWe recommend you take an assessment and also speak to a Doctor.\n{SLEEP_ASSESSMENT_HTML_RESPONSE if html_response else SLEEP_ASSESSMENT_RAW_RESPONSE}"
+            bot_response = f"{response}\n{SLEEP_ASSESSMENT_HTML_RESPONSE if html_response else SLEEP_ASSESSMENT_RAW_RESPONSE}"
             ''' 
             Don't include sleep assessment link in raw_response 
             Reason:

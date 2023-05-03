@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Don't pass sleep assessment link in raw response(This is to avoid GPT generating sleep assessment in symptom queries)
 - Use search product for symptom related queries(This will suggest different products for insomnia and sleep apnea)
 - Formatted product response 
-- Don't include "We recommend you take an assessment and also speak to a Doctor." in raw_response(message_log). Because it gets repeated in future when user ask query which suggest assessment
+- Don't include "We recommend you take an assessment and also speak to a Doctor." in raw_response(message_log) & bot_response(shown to the user). Because it gets repeated in future when user ask query which suggest assessment
 
 ### Changed
 - Updated SYSTEM_PROMPT
