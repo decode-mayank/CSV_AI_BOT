@@ -20,6 +20,7 @@ def show_products(output, html_response):
 
 
 def get_general_product(row, user_input, query_to_db, html_response, level):
+    raw_prod_response=""
     output, response_token_product = general_product(
         row, user_input, query_to_db, level)
 
