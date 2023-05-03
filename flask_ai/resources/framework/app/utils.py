@@ -1,7 +1,7 @@
 import re
 
 from ..debug_utils import debug_attribute, debug_steps
-from .constants import SLEEP_ASSESSMENT_HTML_RESPONSE, SLEEP_ASSESSMENT_RAW_RESPONSE, UNABLE_TO_FIND_PRODUCTS_IN_DB, OUTPUTS
+from .constants import SLEEP_ASSESSMENT_HTML_RESPONSE,SLEEP_ASSESSMENT_URL, SLEEP_ASSESSMENT_RAW_RESPONSE, UNABLE_TO_FIND_PRODUCTS_IN_DB, OUTPUTS
 from .products import product, cheap_products, general_product, other_products
 
 
@@ -52,10 +52,12 @@ def get_products(row, user_input, query_to_db, html_response):
     return prod_response, raw_prod_response, response_token_product
 
 
-def search_product(row, props,user_input, response_from_gpt, html_response):
+def search_product(row, props,user_input, html_response):
     response, symptom, suggest, intent, entity, product_suggestion, price_range, product_type = props
     query_to_db = ""
-    if "None" in price_range:
+    if "None" not in symptom:
+        query_to_db = symptom
+    elif "None" in price_range:
         query_to_db = f"{entity}"
     else:
         price_range = price_range.replace("$", "")
@@ -64,14 +66,8 @@ def search_product(row, props,user_input, response_from_gpt, html_response):
     prod_response, raw_prod_response, response_token_product = get_products(
         row, user_input, query_to_db, html_response)
     tokens = response_token_product
-    if "$" in response:
-        # What is the price of BongoRx Starter Kit
-        response = ""
-        raw_response = ""
-    bot_response = response + prod_response
-    raw_response = response_from_gpt + raw_prod_response
 
-    return bot_response, raw_response, tokens
+    return prod_response, raw_prod_response, tokens
 
 
 def chatbot_logic(row,props, user_input, response_from_gpt, html_response):
@@ -90,13 +86,29 @@ def chatbot_logic(row,props, user_input, response_from_gpt, html_response):
     tokens = 0
     OUTPUTS.append(entity)
 
+    if "$" in response:
+        # What is the price of BongoRx Starter Kit
+        response = ""
+        raw_response = ""
+    else: 
+        bot_response = response
+        raw_response = response
+        
     if intent.lower().strip() == "symptom query":
-        MSG = f"{response} \n We recommend you take an assessment and also speak to a Doctor."
-        bot_response = f"{MSG}\n{SLEEP_ASSESSMENT_HTML_RESPONSE if html_response else SLEEP_ASSESSMENT_RAW_RESPONSE}"
-        raw_response = f"{MSG}\n{SLEEP_ASSESSMENT_RAW_RESPONSE}"
+        if SLEEP_ASSESSMENT_URL not in response:
+            bot_response = f"{response}\nWe recommend you take an assessment and also speak to a Doctor.\n{SLEEP_ASSESSMENT_HTML_RESPONSE if html_response else SLEEP_ASSESSMENT_RAW_RESPONSE}"
+            ''' 
+            Don't include sleep assessment link in raw_response 
+            Reason:
+            Say user asks 2 queries both related to symptom
+            For first query, if we return html code in raw_response
+            then for second query, instead of us suggesting sleep assessment chatgpt will suggest by itself
+            on that case it will not formulate the sleep assessment link in HTML format 
+            '''
+            raw_response = f"{response}\nWe recommend you take an assessment and also speak to a Doctor.\n"
 
-        output, prod_tokens = product(row, symptom, level=4)
-        prod_response,raw_prod_response = show_products(output, html_response)
+        prod_response, raw_prod_response, prod_tokens = search_product(
+            row, props, user_input, html_response)
 
         # Add product response to bot_response, raw_response
         bot_response += prod_response
@@ -104,18 +116,19 @@ def chatbot_logic(row,props, user_input, response_from_gpt, html_response):
         tokens += prod_tokens
     elif not intent and not entity:
         '''
-        suggest humidifier
-        can you explain me on what scenarios does the above two product work?
+        If user asks same query more than once then we will not get props in response
+        on that case use response_from_gpt(complete response from gpt)
         '''
-        bot_response = response
-        raw_response = response
+        bot_response = response_from_gpt
+        raw_response = response_from_gpt
     else:
         if suggest.lower() == 'false' or product_suggestion.lower() == 'none' or entity.lower() == 'product':
-            bot_response = response
-            raw_response = response
+            print("No need to suggest products")
         else:
-            bot_response, raw_response, tokens = search_product(
-                row, props,user_input, response_from_gpt, html_response)
+            prod_response, raw_prod_response, tokens = search_product(
+                row, props,user_input, html_response)
+            bot_response += prod_response
+            raw_response += raw_prod_response
             
                 
     if (not bot_response or len(bot_response) < 10):
@@ -123,6 +136,7 @@ def chatbot_logic(row,props, user_input, response_from_gpt, html_response):
         raw_response = response
 
     return bot_response, raw_response, tokens
+
 
 
 def extract_data(pattern, message):
