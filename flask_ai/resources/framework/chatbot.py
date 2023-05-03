@@ -103,11 +103,6 @@ def chatbot(user_input, message_log, time_stamp, html_response, discord_id, db):
         bot_response, raw_response, tokens = chatbot_logic(
             row, props, user_input, raw_gpt_response, html_response)
         query_to_tokens = tokens
-        print("COmplere", bot_response, "gap", raw_response, "gap",  tokens,"gap" )
-
-    print("->>>>> Here", raw_response)
-    print("COmplere", bot_response, "gap", raw_response, "gap",  tokens, "gap")
-
 
     debug_attribute("query_to_tokens - ", query_to_tokens)
     response_time = time.time() - start_time
