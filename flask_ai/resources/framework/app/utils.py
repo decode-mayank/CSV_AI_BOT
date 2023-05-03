@@ -14,7 +14,7 @@ def show_products(output, html_response):
         debug_attribute("DB Output", output)
         if (len(items) == 3):
             for prod, url, price in output:
-                prod_response += f'</br><a href="{url}" target="_blank">{prod}</a> - $ {price}\n </br>' if html_response else f"{prod} - {url} - $ {str(price)}\n"
+                prod_response += f'</br><a href="{url}" target="_blank">{prod}</a> - $ {price}' if html_response else f"{prod} - {url} - $ {str(price)}\n"
                 raw_prod_response += f'{prod}-{url}\n'
     return prod_response, raw_prod_response
 
@@ -69,7 +69,6 @@ def search_product(row, props,user_input, html_response):
 
     return prod_response, raw_prod_response, tokens
 
-
 def chatbot_logic(row,props, user_input, response_from_gpt, html_response):
     response, symptom, suggest, intent, entity, product_suggestion, price_range, product_type = props
     product_suggestion = product_suggestion.lower().replace("resmed", "")
@@ -105,7 +104,7 @@ def chatbot_logic(row,props, user_input, response_from_gpt, html_response):
             then for second query, instead of us suggesting sleep assessment chatgpt will suggest by itself
             on that case it will not formulate the sleep assessment link in HTML format 
             '''
-            raw_response = f"{response}\nWe recommend you take an assessment and also speak to a Doctor.\n"
+            raw_response = f"{response}"
 
         prod_response, raw_prod_response, prod_tokens = search_product(
             row, props, user_input, html_response)
