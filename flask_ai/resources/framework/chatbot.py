@@ -83,7 +83,7 @@ def chatbot(user_input, message_log, time_stamp, html_response, discord_id, db):
     raw_gpt_response, gpt_tokens = get_answer_from_gpt(row, prompt, level=1)
     debug_attribute("gpt_tokens - ", gpt_tokens)
     debug_steps(
-        row, f"webpage response - {raw_gpt_response}", level=INITIAL_RESPONSE)
+        row, f"GPT Initial response - {raw_gpt_response}", level=INITIAL_RESPONSE)
 
     query_to_tokens = 0
 
