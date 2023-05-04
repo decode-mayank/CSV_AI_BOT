@@ -87,7 +87,6 @@ def chatbot(user_input, message_log, time_stamp, html_response, discord_id, db):
         row, f"GPT Initial response - {raw_gpt_response}", level=INITIAL_RESPONSE)
 
     query_to_tokens = 0
-
     props = get_props_from_message(raw_gpt_response)
     response, *_ = props
 

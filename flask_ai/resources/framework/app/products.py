@@ -106,10 +106,16 @@ def general_product(row, user_input, query_to_db, level):
     output = execute_query(prompt, row, response, level,
                            general_product.__name__)
     if output == []:
-        prompt = generate_prompt(
-            user_input, f"""Following are the WHERE conditions it should have:
-            1. The product tags include {query_to_db.split('entity: ', 1)[1].split('#')[0]}
-            Use Order_by command to order the rating in Descending order and list top {PRODUCTS_COUNT} items""")
+        if 'Product' in query_to_db.split('entity: ', 1)[1].split('#')[0]:
+            prompt = generate_prompt(
+                user_input, f"""Following are the WHERE conditions it should have:
+                1. The product tags include %Bestseller% or %Sleep%
+                Use Order_by command to order the rating in Descending order and list top {PRODUCTS_COUNT} items""")
+        else:    
+            prompt = generate_prompt(
+                user_input, f"""Following are the WHERE conditions it should have:
+                1. The product tags or product name include {query_to_db.split('entity: ', 1)[1].split('#')[0]}
+                Use Order_by command to order the rating in Descending order and list top {PRODUCTS_COUNT} items""")
     response, response_token_product = call_text_completion(prompt)
     output = execute_query(prompt, row, response, level,
                            general_product.__name__)
