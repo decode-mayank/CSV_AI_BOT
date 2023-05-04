@@ -35,7 +35,7 @@ def get_products(row, user_input, query_to_db, html_response):
     prod_response = ""
     raw_prod_response=""
     if "cheap" in user_input or "cheapest" in user_input:
-        if "Product" in query_to_db and OUTPUTS != []:
+        if len(OUTPUTS) > 2:
             output, response_token_product = cheap_products(
                 row, OUTPUTS[-2], query_to_db, level=3)
         else:
@@ -55,13 +55,15 @@ def get_products(row, user_input, query_to_db, html_response):
 def search_product(row, props,user_input, html_response):
     response, symptom, suggest, intent, entity, product_suggestion, price_range, product_type = props
     query_to_db = ""
+    if "Product" in product_suggestion:
+        product_suggestion = "None"
     if "None" not in symptom:
-        query_to_db = symptom
+        query_to_db = f"entity: {symptom}#product_suggestion: None#price_range: None#Type: {product_type}"
     elif "None" in price_range:
-        query_to_db = f"{entity}"
+        query_to_db = f"entity: {entity}#product_suggestion: None#price_range: None#Type: {product_type}"
     else:
         price_range = price_range.replace("$", "")
-        query_to_db = f"{entity},{product_suggestion},{price_range}"
+        query_to_db = f"entity: {entity}#product_suggestion: {product_suggestion}#price_range: {price_range}#Type: {product_type}"
     debug_attribute("query_to_db", query_to_db)
     prod_response, raw_prod_response, response_token_product = get_products(
         row, user_input, query_to_db, html_response)
@@ -92,7 +94,6 @@ def chatbot_logic(row,props, user_input, response_from_gpt, html_response):
     else: 
         bot_response = response
         raw_response = response
-        
     if intent.lower().strip() == "symptom query":
         if SLEEP_ASSESSMENT_URL not in response:
             bot_response = f"{response}\n{SLEEP_ASSESSMENT_HTML_RESPONSE if html_response else SLEEP_ASSESSMENT_RAW_RESPONSE}"
@@ -121,7 +122,7 @@ def chatbot_logic(row,props, user_input, response_from_gpt, html_response):
         bot_response = response_from_gpt
         raw_response = response_from_gpt
     else:
-        if suggest.lower() == 'false' or product_suggestion.lower() == 'none' or entity.lower() == 'product':
+        if suggest.lower() == 'false' or product_suggestion.lower() == 'none':
             print("No need to suggest products")
         else:
             prod_response, raw_prod_response, tokens = search_product(

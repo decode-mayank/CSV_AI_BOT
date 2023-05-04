@@ -56,8 +56,8 @@ def execute_query(prompt, row, response, level, fn_name):
 
 
 def generate_prompt(text, instruction):
-    return f"You are a SQL Query generator. Given an input question, respond with syntactically correct PostgreSQL. Be creative but the query must be correct. Only use table called product. The product table has columns: category (character varying), sku (character varying), product (character varying), description (character varying), price (character varying), breadcrumb (character varying), product_url (character varying), money_back (BOOLEAN), rating (FLOAT), total_reviews (INTEGER), tags(character varying).{text} Write an SQL Select query for product, product_url and price that retrieves data from a given table, which should use Where clause to filter data on {text} use only tags column in the WHERE condition if specified by the user query, but can also work without using the tags column if the user query does not require it. Showcase the flexibility and versatility of the query by allowing users to input a parameter to determine whether to use the specified column or not. It should also have only three WHERE conditions that use only the OR operator, while not using category and sku column and AND operator in the WHERE conditions. Showcase how the OR operator can be used effectively to filter data while optimizing query performance, and demonstrate how excluding a column from the WHERE conditions can improve query execution time. Format the query in the correct format. Use case insensitive search for tags column.{instruction}"
-
+    return f"""You are a SQL Query generator. Given an input question, respond with syntactically correct SQL. Only use table called product. The product table has columns: category (character varying), sku (character varying), product (character varying), description (character varying), price (character varying), breadcrumb (character varying), product_url (character varying), money_back (BOOLEAN), rating (FLOAT), total_reviews (INTEGER), tags(character varying), type(character varying).{text} 
+    Write an SQL Select query for product, product_url and price that retrieves data from a given table. Use case insensitive search for tags column. Follow the {instruction} strictly."""
 
 def product(row, text, level):
     prompt = generate_prompt(
@@ -77,12 +77,14 @@ def other_products(row, text, level):
 
 
 def cheap_products(row, user_input, query_to_db, level):
-    if "Product" in query_to_db:
+    if (query_to_db.split('entity: ', 1)[1].split('#')[0] == '')or ("Products" in query_to_db.split('entity: ', 1)[1].split('#')[0]):
         prompt = generate_prompt(
-            user_input, f"Don't use Where clause, Use Order_by command to order the price in Ascending order and list top {PRODUCTS_COUNT} items")
+            query_to_db, f"Strictly Don't use WHERE conditions, Use Order_by command to order the price in Ascending order and list top {PRODUCTS_COUNT} items")
     else:
         prompt = generate_prompt(
-            user_input, f"Use Order_by command to order the price in Ascending order and list top {PRODUCTS_COUNT} items")
+            query_to_db, f"""Following are the WHERE conditions it should have:
+            1. The product type is {query_to_db.split('Type: ', 1)[1]} AND 
+            2. The product tags include {query_to_db.split('entity: ', 1)[1].split('#')[0]}, using the AND operator. Use Order_by command to order the price in Ascending order and list top {PRODUCTS_COUNT} items""")
     response, response_token_product = call_text_completion(prompt)
     output = execute_query(prompt, row, response, level,
                            cheap_products.__name__)
@@ -93,13 +95,27 @@ def general_product(row, user_input, query_to_db, level):
     debug_attribute("User input for sql query", query_to_db)
     # Use only tags in condition if there is any product OR category mentioned in user input and
     prompt = generate_prompt(
-        query_to_db, f"Use Order_by command to order the rating in Descending order and list top {PRODUCTS_COUNT} items")
+        query_to_db, f"""Following are the WHERE conditions it should have:
+        1. The product type is {query_to_db.split('Type: ', 1)[1]} AND the product tags include {query_to_db.split('entity: ', 1)[1].split('#')[0]}, using the AND operator.
+        2. Either the product name IS {query_to_db.split('product_suggestion: ', 1)[1].split('#')[0]}, OR the product price IS {query_to_db.split('price_range: ', 1)[1].split('#')[0]}, using the OR operator.
+        Use OR operator between the above mentioned conditions. 
+        Use only the above mentioned column in the WHERE condition if specified by the user query, but can also work without using the tags column if the user query does not have it. 
+        Showcase the flexibility and versatility of the query by allowing users to input a parameter to determine whether to use the specified column or not. It should also have only four WHERE conditions, while not using category and sku column in the WHERE conditions. Demonstrate how excluding a column from the WHERE conditions can improve query execution time.
+        Use Order_by command to order the rating in Descending order and list top {PRODUCTS_COUNT} items""")
     response, response_token_product = call_text_completion(prompt)
     output = execute_query(prompt, row, response, level,
                            general_product.__name__)
     if output == []:
-        prompt = generate_prompt(
-            user_input, f"Use Order_by command to order the rating in Descending order and list top {PRODUCTS_COUNT} items")
+        if 'Product' in query_to_db.split('entity: ', 1)[1].split('#')[0]:
+            prompt = generate_prompt(
+                user_input, f"""Following are the WHERE conditions it should have:
+                1. The product tags include %Bestseller% or %Sleep%
+                Use Order_by command to order the rating in Descending order and list top {PRODUCTS_COUNT} items""")
+        else:    
+            prompt = generate_prompt(
+                user_input, f"""Following are the WHERE conditions it should have:
+                1. The product tags or product name include {query_to_db.split('entity: ', 1)[1].split('#')[0]}
+                Use Order_by command to order the rating in Descending order and list top {PRODUCTS_COUNT} items""")
     response, response_token_product = call_text_completion(prompt)
     output = execute_query(prompt, row, response, level,
                            general_product.__name__)
