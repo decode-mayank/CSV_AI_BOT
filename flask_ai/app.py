@@ -1,7 +1,8 @@
 import os
+import json
 
 from dotenv import load_dotenv
-from flask import Flask, redirect, url_for
+from flask import Flask, redirect, url_for, jsonify
 from flask_cors import CORS
 from flask_migrate import Migrate, upgrade
 from flask_smorest import Api
@@ -24,6 +25,12 @@ print(MIGRATIONS_FOLDER)
 def home():
     return redirect(url_for('api-docs.openapi_swagger_ui'))
 
+
+@app.route("/version.json")
+def health_check():
+    with open('version.json') as f:
+        data = json.load(f)
+    return jsonify(data)
 
 def create_app():
     CORS(app)

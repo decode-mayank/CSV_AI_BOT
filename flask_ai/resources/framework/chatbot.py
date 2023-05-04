@@ -75,6 +75,7 @@ def chatbot(user_input, message_log, time_stamp, html_response, discord_id, db):
 
     response_accepted = True
     bot_response = ""
+    raw_response=""
 
     response_time = 0
 
@@ -83,25 +84,24 @@ def chatbot(user_input, message_log, time_stamp, html_response, discord_id, db):
     raw_gpt_response, gpt_tokens = get_answer_from_gpt(row, prompt, level=1)
     debug_attribute("gpt_tokens - ", gpt_tokens)
     debug_steps(
-        row, f"webpage response - {raw_gpt_response}", level=INITIAL_RESPONSE)
+        row, f"GPT Initial response - {raw_gpt_response}", level=INITIAL_RESPONSE)
 
     query_to_tokens = 0
 
-    response_in_lower_case = raw_gpt_response.lower()
     props = get_props_from_message(raw_gpt_response)
+    response, *_ = props
 
-    if ("sorry" in response_in_lower_case or CHATBOT_NAME in response_in_lower_case):
+    if ("sorry" in response.lower() or CHATBOT_NAME in response.lower()):
         '''
         We will reach this if query in this order
         i) Suggest me good songs which I can listen before sleep 
         ii) Write a poem for sleep
         '''
-        response, *_ = props
         bot_response = response
         valid_query = False
     else:
         bot_response, raw_response, tokens = chatbot_logic(
-            props, row, user_input, raw_gpt_response, html_response)
+            row, props, user_input, raw_gpt_response, html_response)
         query_to_tokens = tokens
 
     debug_attribute("query_to_tokens - ", query_to_tokens)
@@ -121,7 +121,7 @@ def chatbot(user_input, message_log, time_stamp, html_response, discord_id, db):
     write_logs_to_csv(MODE, fields, row, MAX_COLUMNS, bot_response)
 
     # Add the chatbot's response to the conversation history
-    if raw_gpt_response not in UNABLE_TO_FIND_PRODUCTS_IN_DB and valid_query and raw_gpt_response not in RESPONSE_FOR_INVALID_QUERY:
+    if raw_response not in UNABLE_TO_FIND_PRODUCTS_IN_DB and valid_query and raw_response not in RESPONSE_FOR_INVALID_QUERY:
         message_log.append(f"{HUMAN}{user_input}\n{BOT}{raw_response}")
 
     pr_bot_response(bot_response)

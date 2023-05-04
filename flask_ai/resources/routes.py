@@ -80,12 +80,6 @@ class Feedback(MethodView):
         return {'status': True, 'success': True}
 
 
-@blp.route("/api/hc/")
-class HealthCheck(MethodView):
-
-    def get(self):
-        return {"status": True}
-
 
 @pblp.route("/api/import/")
 class ImportProductCSV(MethodView):
