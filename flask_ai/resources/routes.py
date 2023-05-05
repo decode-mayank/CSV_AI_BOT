@@ -17,6 +17,7 @@ from resources.framework.chatbot import get_chat_response
 from resources.framework.app.constants import SYSTEM_PROMPT
 from resources.framework.utils import update_feedback, get_or_create
 import openai
+from resources.framework.stream import chatbot_stream
 
 
 blp = Blueprint("ChatbotData", "chatbot_data",
@@ -171,29 +172,52 @@ def discord_health():
         response.status_code = 500
         return response
 
-def generate_response():
-    response_text = ""
-    response_token = 0
-    # Multi shot learning
-    response = openai.Completion.create(
-        model="text-davinci-003",
-        prompt="A CPAP trial is a period of time in which you can try out a CPAP machine and mask to see if it is the right fit for you. During the trial, you will receive a CPAP machine, mask, and accessories",
-        temperature=0,
-        max_tokens=200,
-        stream=True
-    )
-    for index, chunk in enumerate(response):
-        text = chunk["choices"][0]["text"]
-        response_text += text
-        token_count = sum(1 for _ in text.split())  # Count tokens in the chunk
-        response_token += token_count
-        time.sleep(0.1)
 
-        yield text
+@blp.route("/api/stream/")
+class ChatBotStream(MethodView):
 
-@blp.route('/stream', methods=['GET'])
-def streamed_response():
-    return Response(generate_response(), mimetype="text/event-stream")
+    def post(self):
+        # try:
+        user_req = request.json
+
+        # check that the required user_input parameter is present in the JSON data
+        if 'user_input' not in user_req:
+            return {'error': 'user_input parameter is required'}, 400
+
+        # extract the user_input parameter from the JSON data
+        user_input = user_req['user_input']
+
+        # extract the optional message_log parameter from the JSON data, if present
+        message_log = user_req.get('message_log', [SYSTEM_PROMPT])
+        html_response = user_req.get('html_response', True)
+        time_stamp = user_req.get(
+            'time_stamp', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        discord_id = user_req.get('discord_id', None)
+
+        if not (isinstance(message_log, list)):
+            return {'response': 'Message log should be of type list', 'message_log': [], "status": False}, 400
+
+        pattern = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$")
+
+        if not (pattern.match(time_stamp)):
+            return {'response': 'time_stamp is not in expected format - Example: 2023-04-27 08:16:07', "status": False}, 400
+
+        bot_response, message_log, row_id = chatbot_stream(user_input, message_log, time_stamp, html_response, discord_id)
+        def generate_response():
+            for response_chunk in bot_response.split(' '):
+                chunk = response_chunk + ' '
+                yield f'data: {{"stream": "{chunk}"}}\n\n'
+                time.sleep(0.2)
+            yield f'data: {{"message_log": {message_log}, "row_id": "{row_id}"}}\n\n'
+
+        headers={
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive'
+        }
+        return Response(generate_response(), mimetype="text/event-stream", headers=headers)
+        # except:
+        #     return {'status': False}, 500
 
 
 
