@@ -10,6 +10,7 @@ from datetime import datetime
 from flask import request, make_response, Response
 from flask_smorest import Blueprint
 from flask.views import MethodView
+import openai
 
 from db import db
 from models.chatbot import Product
@@ -40,7 +41,7 @@ class UserChatBot(MethodView):
 
             # check that the required user_input parameter is present in the JSON data
             if 'user_input' not in user_req:
-                return {'error': 'user_input parameter is required'}, 400
+                return {'status': False, 'response': 'user_input parameter is required'}, 400
 
             # extract the user_input parameter from the JSON data
             user_input = user_req['user_input']
@@ -53,18 +54,20 @@ class UserChatBot(MethodView):
             discord_id = user_req.get('discord_id', None)
 
             if not (isinstance(message_log, list)):
-                return {'response': 'Message log should be of type list', 'message_log': [], "status": False}, 400
+                return {"status": False,'response': 'Message log should be of type list', 'message_log': []}, 400
 
             pattern = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$")
 
             if not (pattern.match(time_stamp)):
-                return {'response': 'time_stamp is not in expected format - Example: 2023-04-27 08:16:07', "status": False}, 400
+                return {"status": False,'response': 'time_stamp is not in expected format - Example: 2023-04-27 08:16:07'}, 400
 
             response, new_message_log, row_id = get_chat_response(
                 user_input, message_log, time_stamp, html_response, discord_id)
             return {'status': True, 'id': row_id, 'response': response, 'message_log': new_message_log}, 200
+        except openai.error.RateLimitError:
+            return {'status': False, "response": "OpenAI API Rate Limit Error"}, 429
         except:
-            return {'status': False}, 500
+            return {'status': False, "response": "We are unable to serve your request at this time"}, 500
 
 
 @blp.route("/api/feedback/")
