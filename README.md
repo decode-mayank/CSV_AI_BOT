@@ -1,4 +1,4 @@
-# Bitcot AI Cookbook
+# Bitcot AI
 
 ## Prerequisites:
 
@@ -82,7 +82,8 @@
 
 #### 7. Open .env and Update OPENAI_API_KEY
 
-### Format
+
+### Skip virtual environment and Format python code
 
 - To format the code - Use below command
   ```bash

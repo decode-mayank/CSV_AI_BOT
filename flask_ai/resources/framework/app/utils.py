@@ -15,7 +15,7 @@ def show_products(output, html_response):
         if (len(items) == 3):
             for prod, url, price in output:
                 prod_response += f'</br><a href="{url}" target="_blank">{prod}</a> - $ {price}' if html_response else f"{prod} - {url} - $ {str(price)}\n"
-                raw_prod_response += f'{prod}-{url}\n'
+                raw_prod_response += f'</br><a href="{url}" target="_blank">{prod}</a> - $ {price}' if html_response else f"{prod} - {url} - $ {str(price)}\n" + f'{prod}-{url}\n'
     return prod_response, raw_prod_response
 
 
@@ -86,13 +86,14 @@ def chatbot_logic(row,props, user_input, response_from_gpt, html_response):
     bot_response = ""
     tokens = 0
     OUTPUTS.append(entity)
-    if "$" in response:
-        # What is the price of BongoRx Starter Kit
-        response = ""
-        raw_response = ""
-    else: 
-        bot_response = response
-        raw_response = response
+
+    bot_response = response
+    raw_response = response
+
+    if "Here is the link" in bot_response or "Here is one" in bot_response:
+        index = bot_response.index("Here is the link" if "Here is the link" in bot_response else "Here is one")
+        bot_response = bot_response[:index]
+    
     if intent.lower().strip() == "symptom query":
         if SLEEP_ASSESSMENT_URL not in response:
             bot_response = f"{response}\n{SLEEP_ASSESSMENT_HTML_RESPONSE if html_response else SLEEP_ASSESSMENT_RAW_RESPONSE}"
