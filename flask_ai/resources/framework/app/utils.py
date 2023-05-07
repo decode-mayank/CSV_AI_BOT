@@ -58,7 +58,7 @@ def search_product(row, props,user_input, html_response):
     if "Product" in product_suggestion:
         product_suggestion = "None"
     if "None" not in symptom:
-        query_to_db = f"entity: {symptom}#product_suggestion: None#price_range: None#Type: {product_type}"
+        query_to_db = f"entity: {symptom}#product_suggestion: {product_suggestion}#price_range: None#Type: {product_type}"
     elif "None" in price_range:
         query_to_db = f"entity: {entity}#product_suggestion: None#price_range: None#Type: {product_type}"
     else:
@@ -122,7 +122,7 @@ def chatbot_logic(row,props, user_input, response_from_gpt, html_response):
         bot_response = response_from_gpt
         raw_response = response_from_gpt
     else:
-        if suggest.lower() == 'false' or product_suggestion.lower() == 'none':
+        if suggest.lower() == 'false' or product_suggestion.lower() == 'none' or product_type.lower() == 'none':
             print("No need to suggest products")
         else:
             prod_response, raw_prod_response, tokens = search_product(
@@ -170,7 +170,7 @@ def get_props_from_message(message):
     # Extract price range
     price_range = extract_data(r'Price Range:\s*(.*), Type', message)
     # Extract type
-    product_type = extract_data(r'Type: (.*) Response:', message)
+    product_type = extract_data(r'Type: (.*), Response:', message)
     # Response
     response = extract_data(r'Response: (.*)', message)
     return response, symptom,suggest_product, intent, entity, product_suggestion, price_range, product_type
