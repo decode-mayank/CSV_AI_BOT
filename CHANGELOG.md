@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Changed
+- Updated the prompt to not answer outside scope queries
+
+### Changed
+- Chat API Improvements
+  a) Catch openai rate limit error and return 429
+  b) Include response field in chat responses
+
+### Changed
 - Don't pass sleep assessment link in raw response(This is to avoid GPT generating sleep assessment in symptom queries)
 - Use search product for symptom related queries(This will suggest different products for insomnia and sleep apnea)
 - Formatted product response 

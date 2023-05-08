@@ -96,7 +96,7 @@ def general_product(row, user_input, query_to_db, level):
     # Use only tags in condition if there is any product OR category mentioned in user input and
     prompt = generate_prompt(
         query_to_db, f"""Following are the WHERE conditions it should have:
-        1. The product type is {query_to_db.split('Type: ', 1)[1]} AND the product tags include {query_to_db.split('entity: ', 1)[1].split('#')[0]}, using the AND operator.
+        1. The product type is {query_to_db.split('Type: ', 1)[1]} AND the product tags include {query_to_db.split('entity: ', 1)[1].split('#')[0]} or {query_to_db.split('product_suggestion: ', 1)[1].split('#')[0]}, using the AND operator.
         2. Either the product name IS {query_to_db.split('product_suggestion: ', 1)[1].split('#')[0]}, OR the product price IS {query_to_db.split('price_range: ', 1)[1].split('#')[0]}, using the OR operator.
         Use OR operator between the above mentioned conditions. 
         Use only the above mentioned column in the WHERE condition if specified by the user query, but can also work without using the tags column if the user query does not have it. 
@@ -114,7 +114,7 @@ def general_product(row, user_input, query_to_db, level):
         else:    
             prompt = generate_prompt(
                 user_input, f"""Following are the WHERE conditions it should have:
-                1. The product tags or product name include {query_to_db.split('entity: ', 1)[1].split('#')[0]}
+                1. The product tags or product name include {query_to_db.split('entity: ', 1)[1].split('#')[0]} 
                 Use Order_by command to order the rating in Descending order and list top {PRODUCTS_COUNT} items""")
     response, response_token_product = call_text_completion(prompt)
     output = execute_query(prompt, row, response, level,
