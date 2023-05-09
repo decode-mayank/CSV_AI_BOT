@@ -117,7 +117,7 @@
   1. Change directory to flask_ai
      cd flask_ai
   2. Run flask server
-     flask run
+     python app.py
      For more information please check README.md in this path - flask_ai/README.md
   3. Run discord 
      ```bash
