@@ -1,6 +1,6 @@
 # Bitcot AI
 
-## Prerequisites:
+## Prerequisites :
 
 #### 1. If you don’t have Python installed, [install it from here](https://www.python.org/downloads/)
 
