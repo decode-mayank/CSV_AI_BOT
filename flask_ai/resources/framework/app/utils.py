@@ -51,7 +51,7 @@ def get_products(row, user_input, query_to_db, html_response):
             row, user_input, query_to_db, html_response, level=3)
     return prod_response, raw_prod_response, response_token_product
 
-
+@time_it
 def search_product(row, props,user_input, html_response):
     response, symptom, suggest, intent, entity, product_suggestion, price_range, product_type = props
     query_to_db = ""
@@ -145,7 +145,7 @@ def extract_data(pattern, message):
     results = re.search(pattern, message)
     return results.group(1) if results else ""
 
-
+@time_it
 def get_props_from_message(message):
     '''
     Sample Input:

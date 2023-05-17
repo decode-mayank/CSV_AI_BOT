@@ -3,7 +3,7 @@ import csv
 import psycopg2
 
 from .constants import SEPARATORS
-from .debug_utils import debug
+from .debug_utils import debug,time_it
 from models.chatbot import ChatbotData
 from db import db
 
@@ -38,7 +38,7 @@ def get_last_n_message_log(message_log, n):
     else:
         return [message_log[0]] + message_log[-n:]
 
-
+@time_it
 def replace_quotes(datas):
     # Bot response may include single quotes when we pass that with conn.execute will return syntax error
     # So, let's replace single quotes with double quotes
@@ -51,7 +51,7 @@ def replace_quotes(datas):
             record.append(data)
     return record
 
-
+@time_it
 def write_to_db(db_status, record):
     row_id = ""
     if db_status:
@@ -86,6 +86,7 @@ def update_feedback(id, feedback, discord=False):
     return success
 
 
+@time_it
 def write_logs_to_csv(mode, fields, row, max_columns, bot_response):
     if VERBOSE == "True":
         debug(f"Writing the logs in {DEBUG_CSV}")

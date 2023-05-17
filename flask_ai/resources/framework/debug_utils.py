@@ -1,7 +1,7 @@
 import os
 import time
 
-from .colors import pr_light_purple, pr_yellow, pr_pink, pr_green, pr_red
+from .colors import pr_light_purple, pr_yellow, pr_pink, pr_green, pr_red, pr_light_gray
 from .constants import fields_dict
 
 VERBOSE = os.getenv('VERBOSE')
@@ -37,6 +37,7 @@ def time_it(func):
         result = func(*args, **kwargs)
         end_time = time.perf_counter()
         execution_time = end_time - start_time
-        print(f"{func.__name__} took {execution_time:.5f} seconds to execute.")
+        pr_light_gray(
+            f"{func.__name__} took {execution_time:.5f} seconds to execute.")
         return result
     return wrapper

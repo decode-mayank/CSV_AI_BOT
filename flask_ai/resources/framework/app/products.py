@@ -5,7 +5,7 @@ import openai
 import sqlparse
 from dotenv import load_dotenv
 
-from ..debug_utils import debug_steps, debug_attribute
+from ..debug_utils import debug_steps, debug_attribute,time_it
 from ..utils import get_db_connection
 from ..constants import davinci
 
@@ -31,7 +31,7 @@ def call_text_completion(prompt):
     response_token_product = response.usage['total_tokens']
     return response, response_token_product
 
-
+@time_it
 def execute_query(prompt, row, response, level, fn_name):
     results = []
     debug_attribute("DB response", response)
@@ -116,7 +116,7 @@ def general_product(row, user_input, query_to_db, level):
                 user_input, f"""Following are the WHERE conditions it should have:
                 1. The product tags or product name include {query_to_db.split('entity: ', 1)[1].split('#')[0]} 
                 Use Order_by command to order the rating in Descending order and list top {PRODUCTS_COUNT} items""")
-    response, response_token_product = call_text_completion(prompt)
-    output = execute_query(prompt, row, response, level,
-                           general_product.__name__)
+        response, response_token_product = call_text_completion(prompt)
+        output = execute_query(prompt, row, response, level,
+                            general_product.__name__)
     return (output, response_token_product)
