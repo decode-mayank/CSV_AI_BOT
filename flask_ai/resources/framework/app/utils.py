@@ -1,6 +1,6 @@
 import re
 
-from ..debug_utils import debug_attribute, debug_steps
+from ..debug_utils import debug_attribute, debug_steps, time_it
 from .constants import SLEEP_ASSESSMENT_HTML_RESPONSE,SLEEP_ASSESSMENT_URL, SLEEP_ASSESSMENT_RAW_RESPONSE, UNABLE_TO_FIND_PRODUCTS_IN_DB, OUTPUTS
 from .products import product, cheap_products, general_product, other_products
 
@@ -71,6 +71,8 @@ def search_product(row, props,user_input, html_response):
 
     return prod_response, raw_prod_response, tokens
 
+
+@time_it
 def chatbot_logic(row,props, user_input, response_from_gpt, html_response):
     response, symptom, suggest, intent, entity, product_suggestion, price_range, product_type = props
     product_suggestion = product_suggestion.lower().replace("resmed", "")

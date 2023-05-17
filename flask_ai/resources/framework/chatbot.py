@@ -7,7 +7,7 @@ import openai
 from dotenv import load_dotenv
 
 from .colors import pr_bot_response, pr_red
-from .debug_utils import debug_steps, debug, debug_attribute
+from .debug_utils import debug_steps, debug, debug_attribute, time_it
 from .constants import davinci, HUMAN, BOT, INITIAL_PROMPT, INITIAL_RESPONSE, COST, fields_dict
 from .utils import get_db_connection, replace_quotes, write_to_db, write_logs_to_csv, get_last_n_message_log
 from .app.utils import chatbot_logic, get_props_from_message
@@ -24,7 +24,7 @@ VERBOSE = os.getenv('VERBOSE')
 conn, cur = get_db_connection()
 # constants
 
-
+@time_it
 def get_answer_from_gpt(row, prompt, level):
     # Multi shot learning
     TOKENS, TEMPERATURE, MODEL, STOP = 200, 0, davinci, [HUMAN, BOT]

@@ -1,4 +1,6 @@
 import os
+import time
+
 from .colors import pr_light_purple, pr_yellow, pr_pink, pr_green, pr_red
 from .constants import fields_dict
 
@@ -27,3 +29,14 @@ def debug_attribute(attribute, value):
 
 def debug_error(msg):
     pr_red(f"[ERROR] - {msg}")
+
+
+def time_it(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.perf_counter()
+        result = func(*args, **kwargs)
+        end_time = time.perf_counter()
+        execution_time = end_time - start_time
+        print(f"{func.__name__} took {execution_time:.5f} seconds to execute.")
+        return result
+    return wrapper
