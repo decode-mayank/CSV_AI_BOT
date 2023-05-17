@@ -69,7 +69,7 @@ def chatbot(user_input, message_log, time_stamp, html_response, discord_id, db):
     if os.path.exists(DEBUG_CSV):
         MODE = 'a'
 
-    prompt = "\n".join(message_log) + f"{HUMAN}{user_input}{BOT}"
+    prompt = "\n".join(message_log) + f"{HUMAN}{user_input}\n{BOT}"
 
     debug_steps(row, f"Prompt - {prompt}", level=INITIAL_PROMPT)
 
