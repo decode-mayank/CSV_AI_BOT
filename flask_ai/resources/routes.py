@@ -98,15 +98,19 @@ class ImportProductCSV(MethodView):
                 reader = csv.DictReader(decoded_file)
                 for row in reader:
                     try:
-                        get_or_create(db.session, Product, category=row['category'], sku=row['sku'], product=row['product'], description=row['description'],
-                                      price=row['price'], breadcrumb=row['breadcrumb'], product_url=row['product_url'], money_back=eval(
-                            row['money_back']),
-                            rating=row['rating'], total_reviews=row['total_reviews'], tags=row['tags'], type=row['type'])
-                        status = True
+                        price = row['price'].replace(',','')
+                        if price != 0 and len(price) > 1 and "-" not in price:
+                            sku = row["sku"] if row["sku"] else "SKU"
+                            category=row["category"] if row["category"] else "Category"
+                            get_or_create(db.session, Product, category=category, sku=sku, product=row['product'], description=row['description'],
+                                            price=price, breadcrumb=row['breadcrumb'], product_url=row['product_url'], money_back=eval(
+                                row['money_back']),
+                                rating=row['rating'], total_reviews=row['total_reviews'], tags=row['tags'], type=row['type'])
+                            status = True
                     except:
                         return {"status": status, "message": "Issue while adding Products"}, 500
         else:
-            return {"status": status, "message": "Issue while adding Products"}, 500
+            return {"status": status, "message": "Products CSV not in path"}, 500
         return {'status': status}, 200
 
 

@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Changed
+- Update Import API 
+  a) Skip below products
+  if price != 0 and len(price) > 1 and "-" not in price:
+  i) price equal to 0
+  ii) len(price) is less than 1
+  iii) price should have not have - in it eg: 169.00 - 349.00
+  b) If Sku / Category is empty then add default value
+  c) Remove 1,100.00 from price because DB consider it has invalid float
+  
+### Changed
 - Updated the prompt to not answer outside scope queries
 
 ### Changed
