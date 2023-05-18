@@ -124,7 +124,7 @@ def chatbot_logic(row,props, user_input, response_from_gpt, html_response):
         bot_response = response_from_gpt
         raw_response = response_from_gpt
     else:
-        if suggest.lower() == 'false' or product_suggestion.lower() == 'none' or product_type.lower() == 'none':
+        if suggest.lower() == 'false' or product_suggestion.lower() == 'none':
             print("No need to suggest products")
         else:
             prod_response, raw_prod_response, tokens = search_product(
