@@ -1,4 +1,5 @@
 # Bitcot AI
+A cutting-edge, artificial intelligence project dedicated to innovating and building AI accelerators for BitCot
 
 ## Prerequisites :
 
@@ -125,4 +126,3 @@
     ```
     
     Note: discord requires flask to be running
-    
