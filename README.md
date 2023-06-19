@@ -12,11 +12,11 @@ Follow these steps to set up and run the service locally :
 # Installation
 Clone the repository :
 
-    git clone 
+    git clone https://github.com/decode-mayank/CSV_AI_BOT
 
 Navigate to the project directory :
 
-    cd Robby-chatbot
+    cd CSV_AI_BOT
 
 Create a virtual environment :
 
