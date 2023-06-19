@@ -37,6 +37,4 @@ env/
 .DS_Store
 Thumbs.db
 
-#directory files 
-data/
 env/

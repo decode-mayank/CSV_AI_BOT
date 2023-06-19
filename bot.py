@@ -14,7 +14,7 @@ os.environ['OPENAI_API_KEY'] = os.getenv('api_key')
 
 
 def generate_response(user_message):
-    loader = CSVLoader(file_path='/home/bitcot/Desktop/Task-folder/csvbot-task/data/people-100.csv')
+    loader = CSVLoader(file_path='data/people-100.csv')
     documents = loader.load()
     
     text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
