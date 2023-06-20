@@ -1,12 +1,12 @@
 from dotenv import load_dotenv
 import os
 
-from langchain.document_loaders.csv_loader import CSVLoader,UnstructuredCSVLoader
-from langchain.text_splitter import CharacterTextSplitter,RecursiveCharacterTextSplitter
+from langchain.document_loaders.csv_loader import CSVLoader
+from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores.pgvector import PGVector
 from langchain.chat_models import ChatOpenAI
 from langchain.embeddings import OpenAIEmbeddings
-from langchain.chains import RetrievalQA,ConversationalRetrievalChain
+from langchain.chains import RetrievalQA
 from langchain import PromptTemplate
 from langchain.agents import create_csv_agent
 
@@ -14,25 +14,16 @@ from config import CONNECTION_STRING
 
 load_dotenv()
 os.environ['OPENAI_API_KEY'] = os.getenv('api_key')
-        
-def generate_response(user_message):
-    loader = CSVLoader(file_path='data/people-100.csv',encoding="utf-8",
-                       csv_args={
-        "delimiter": ",",
-        "quotechar": '"',
-        
-    },source_column="User Id")
 
-    # loader =  UnstructuredCSVLoader(file_path='data/people-100.csv',mode="elements")
+
+def generate_response(user_message):
+    loader = CSVLoader(file_path='data/people-100.csv')
     documents = loader.load()
-    
-    # text_splitter = CharacterTextSplitter.from_tiktoken_encoder(chunk_size=500, chunk_overlap=0)
-    # docs = text_splitter.split_documents(documents)
 
     embeddings = OpenAIEmbeddings()
 
     db = PGVector.from_documents(
-        documents = documents,
+        documents=documents,
         embedding=embeddings,
         collection_name="data_of_demod",
         connection_string=CONNECTION_STRING,
@@ -48,7 +39,7 @@ def generate_response(user_message):
     )
 
     template = """
-    I want you to act as an  Assistant.
+    I want you to act as an Assistant.
     I will share information with you, and you have to respond accordingly. 
     Your response should be a two-line complete sentence. If the user asks a question that is not related to the information, respond with "I am sorry I didn't understand
     your request." without any explanations or additional words. Please follow these instructions strictly and carefully.
@@ -61,22 +52,19 @@ def generate_response(user_message):
     PROMPT = PromptTemplate(template=template, input_variables=["context", "question"])
     chain_type_kwargs = {"prompt": PROMPT}
 
-    
     qa = RetrievalQA.from_chain_type(
         llm=llm,
         chain_type="stuff",
         retriever=db.as_retriever(),
         chain_type_kwargs=chain_type_kwargs
-    
     )
 
     # Generate AI response using prompt templates
-    # try:
-    #     response = qa.run(user_message)
-    # except Exception as e:
-    #     response = "I am sorry I didn't understand your request."
-
-    response = qa.run(user_message)
+    try:
+        response = qa.run(user_message)
+    except Exception as e:
+        response = "I am sorry I didn't understand your request."
 
     return response
+
 
