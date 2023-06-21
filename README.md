@@ -11,19 +11,44 @@ A cutting-edge, artificial intelligence project dedicated to innovating and buil
 
 ## Setup
 
-#### 1. Clone this Repository
+#### 1. Generate a new SSH key:
+ - open terminal in local machine
+ - Paste the following command, replacing "your_email@example.com" with your GitHub email address:
+   ```
+       ssh-keygen -t ed25519 -C "your_email@example.com"
+   ```
+ - Press Enter when prompted to specify the file to save the key (accept the default path).
+ - At the prompt, type a secure passphrase. For more information, see "Working with SSH key passphrases."
+ - Enter a passphrase and confirm it by typing it again.
+ - Copy the SSH public key to your clipboard
+   ```
+      cat ~/.ssh/id_ed25519.pub
+   ```
+   
+#### 2. Add SSH key to GitHub:
+ - Click "Settings" in the repository menu
+ - Click "New SSH key" or "Add SSH key".
+ - Click "Add SSH key" to save.
+
+
+
+#### 3. Clone this Repository
 
 ```bash
   git clone https://bitbucket.org/bitcot/bitcot.ai.git
 ```
+- with SSH Key to clone
+```bash
+  git clone git@github.com:bitcot/bitcot.ai.git
+``` 
 
-#### 2. Navigate into the Project Directory
+#### 4. Navigate into the Project Directory
 
 ```bash
    cd bitcot.ai
 ```
 
-#### 3. Install and configure virtualenv - Run below command
+#### 5. Install and configure virtualenv - Run below command
 
 ```bash
     pip install virtualenv
@@ -57,13 +82,13 @@ A cutting-edge, artificial intelligence project dedicated to innovating and buil
    .\env\Scripts\activate
   ```
 
-#### 4. To install the requirements
+#### 6. To install the requirements
 
 ```bash
   pip install -r requirements.txt
 ```
 
-#### 5. Make a copy of the example environment variables file
+#### 7. Make a copy of the example environment variables file
 
 - On Linux/Mac:
 
@@ -77,11 +102,11 @@ A cutting-edge, artificial intelligence project dedicated to innovating and buil
   $ copy .env.example .env
 ```
 
-#### 6. Follow below steps to get secret key from openai, open .env then assign that key to OPENAI_API_KEY
+#### 8. Follow below steps to get secret key from openai, open .env then assign that key to OPENAI_API_KEY
 
     Login to https://openai.com/ and get API key from https://beta.openai.com/account/api-keys
 
-#### 7. Open .env and Update OPENAI_API_KEY
+#### 9. Open .env and Update OPENAI_API_KEY
 
 
 ### Skip virtual environment and Format python code
