@@ -11,7 +11,7 @@ A cutting-edge, artificial intelligence project dedicated to innovating and buil
 
 ## Setup
 
-#### 1. Generate a new SSH key:
+#### 1. Generate a new SSH key (if you don't have one):
  - open terminal in local machine
  - Paste the following command, replacing "your_email@example.com" with your GitHub email address:
    ```
@@ -28,6 +28,7 @@ A cutting-edge, artificial intelligence project dedicated to innovating and buil
 #### 2. Add SSH key to GitHub:
  - Click "Settings" in the repository menu
  - Click "New SSH key" or "Add SSH key".
+ - Paste your public key into the "Key" field.
  - Click "Add SSH key" to save.
 
 
