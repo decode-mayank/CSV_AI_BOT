@@ -37,10 +37,11 @@ A cutting-edge, artificial intelligence project dedicated to innovating and buil
 ```bash
   git clone https://bitbucket.org/bitcot/bitcot.ai.git
 ```
-- with SSH Key to clone
+- To clone with SSH key
 ```bash
   git clone git@github.com:bitcot/bitcot.ai.git
-``` 
+```
+ 
 
 #### 4. Navigate into the Project Directory
 
